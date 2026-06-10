@@ -1,17 +1,22 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\pages\Onboarding.jsx
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
+import { regenerateRoadmap, getProfile } from '../services/db';
 import { Sparkles, ArrowLeft, ArrowRight, Check } from 'lucide-react';
 
 export default function Onboarding() {
-  const [step, setStep] = useState(1);
-  const { completeOnboarding } = useAuth();
-  const { addXP, unlockBadge } = useGame();
+  const [searchParams] = useSearchParams();
+  const { user, completeOnboarding } = useAuth();
+  const { addXP, unlockBadge, syncGameState } = useGame();
   const navigate = useNavigate();
 
-  // Form states
+  // Detect if re-onboarding
+  const isReonboard = searchParams.get('re') === 'true' || !!user?.profile?.focus_area;
+
+  // Form states (pre-populated with existing profile values if available)
+  const [step, setStep] = useState(1);
   const [age, setAge] = useState(22);
   const [gender, setGender] = useState('Male');
   const [height, setHeight] = useState('');
@@ -20,11 +25,24 @@ export default function Onboarding() {
   const [focusArea, setFocusArea] = useState('Overall');
   const [experience, setExperience] = useState('Beginner');
 
+  // Load baseline profile defaults if present
+  useEffect(() => {
+    const profile = getProfile();
+    if (profile) {
+      if (profile.age) setAge(profile.age);
+      if (profile.gender) setGender(profile.gender);
+      if (profile.height_cm) setHeight(profile.height_cm);
+      if (profile.weight_kg) setWeight(profile.weight_kg);
+      if (profile.goal_description) setGoal(profile.goal_description);
+      if (profile.focus_area) setFocusArea(profile.focus_area);
+      if (profile.previous_experience) setExperience(profile.previous_experience);
+    }
+  }, [user]);
+
   const nextStep = () => setStep(prev => Math.min(4, prev + 1));
   const prevStep = () => setStep(prev => Math.max(1, prev - 1));
 
   const handleFinish = () => {
-    // Process profile updates
     const profileData = {
       age: parseInt(age),
       gender,
@@ -35,14 +53,26 @@ export default function Onboarding() {
       previous_experience: experience
     };
     
-    // Complete onboarding update in context
+    // Complete onboarding core profile
     completeOnboarding(profileData);
 
-    // Reward initial onboarding achievements
+    // Regenerate roadmap template milestones based on new focus area
+    regenerateRoadmap(focusArea);
+
     setTimeout(() => {
-      unlockBadge('first_step');
-      addXP(150, "Complete Onboarding Setup");
-      navigate('/dashboard');
+      // Award achievements only if first time onboarding
+      if (!isReonboard) {
+        unlockBadge('first_step');
+        addXP(150, "Complete Onboarding Setup");
+      } else {
+        addXP(75, "Redefined Transformation Focus Area");
+      }
+      
+      // Force sync context
+      syncGameState();
+      
+      // Redirect directly to roadmap to see the new journey!
+      navigate('/roadmap');
     }, 500);
   };
 
@@ -62,7 +92,9 @@ export default function Onboarding() {
       <div className="w-full max-w-lg mb-8">
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">Step {step} of 4</span>
-          <span className="text-sm font-semibold text-white">{steps[step-1].title}</span>
+          <span className="text-sm font-semibold text-white">
+            {isReonboard ? `Regenerating: ${steps[step-1].title}` : steps[step-1].title}
+          </span>
         </div>
         <div className="w-full h-1.5 bg-neutral-900 rounded-full overflow-hidden border border-neutral-900">
           <div 
@@ -75,7 +107,9 @@ export default function Onboarding() {
       {/* Question Card */}
       <div className="w-full max-w-lg glassmorphism p-8 rounded-2xl border border-neutral-800 flex flex-col shadow-xl min-h-[380px]">
         <div className="flex-1">
-          <h2 className="text-xl font-bold text-white mb-1">{steps[step-1].title}</h2>
+          <h2 className="text-xl font-bold text-white mb-1">
+            {isReonboard ? `Update ${steps[step-1].title}` : steps[step-1].title}
+          </h2>
           <p className="text-xs text-neutral-400 mb-8">{steps[step-1].description}</p>
 
           {/* STEP 1: Basic details */}
@@ -105,7 +139,7 @@ export default function Onboarding() {
                     <button
                       key={g}
                       onClick={() => setGender(g)}
-                      className={`py-3 rounded-xl border text-sm font-semibold transition-all duration-200 ${gender === g ? 'bg-blue-500/10 border-blue-500 text-blue-400 font-bold' : 'bg-neutral-950/40 border-neutral-800/80 text-neutral-400 hover:text-white'}`}
+                      className={`py-3 rounded-xl border text-xs font-semibold transition-all duration-200 ${gender === g ? 'bg-blue-500/10 border-blue-500 text-blue-400 font-bold' : 'bg-neutral-950/40 border-neutral-800/80 text-neutral-400 hover:text-white'}`}
                     >
                       {g}
                     </button>
@@ -122,20 +156,20 @@ export default function Onboarding() {
                 <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Height (cm)</label>
                 <input
                   type="number"
-                  placeholder="e.g. 178"
+                  placeholder="e.g. 180"
                   value={height}
                   onChange={(e) => setHeight(e.target.value)}
-                  className="w-full bg-neutral-950/70 border border-neutral-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-neutral-950/70 border border-neutral-800 rounded-xl py-3 px-4 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
                 />
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Weight (kg)</label>
                 <input
                   type="number"
-                  placeholder="e.g. 72"
+                  placeholder="e.g. 75"
                   value={weight}
                   onChange={(e) => setWeight(e.target.value)}
-                  className="w-full bg-neutral-950/70 border border-neutral-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-neutral-950/70 border border-neutral-800 rounded-xl py-3 px-4 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
                 />
               </div>
             </div>
@@ -151,18 +185,18 @@ export default function Onboarding() {
                   value={goal}
                   onChange={(e) => setGoal(e.target.value)}
                   rows="3"
-                  className="w-full bg-neutral-950/70 border border-neutral-800 rounded-xl py-3 px-4 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors resize-none placeholder-neutral-600"
+                  className="w-full bg-neutral-950/70 border border-neutral-800 rounded-xl py-3 px-4 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors resize-none placeholder-neutral-600"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Primary Improvement Area</label>
+                <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Primary Focus Area</label>
                 <div className="grid grid-cols-2 gap-3">
                   {['Face', 'Fitness', 'Grooming', 'Overall'].map((area) => (
                     <button
                       key={area}
                       onClick={() => setFocusArea(area)}
-                      className={`py-3 rounded-xl border text-sm font-semibold transition-all duration-200 ${focusArea === area ? 'bg-blue-500/10 border-blue-500 text-blue-400 font-bold' : 'bg-neutral-950/40 border-neutral-800/80 text-neutral-400 hover:text-white'}`}
+                      className={`py-3 rounded-xl border text-xs font-semibold transition-all duration-200 ${focusArea === area ? 'bg-blue-500/10 border-blue-500 text-blue-400 font-bold' : 'bg-neutral-950/40 border-neutral-800/80 text-neutral-400 hover:text-white'}`}
                     >
                       {area}
                     </button>
@@ -192,7 +226,7 @@ export default function Onboarding() {
                     </div>
                     <div>
                       <span className="text-sm font-bold text-white block">{exp.id}</span>
-                      <span className="text-[11px] text-neutral-400 mt-0.5 block">{exp.desc}</span>
+                      <span className="text-[10px] text-neutral-400 mt-0.5 block">{exp.desc}</span>
                     </div>
                   </div>
                 ))}
@@ -226,7 +260,7 @@ export default function Onboarding() {
               className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-colors shadow-lg shadow-blue-500/10 flex items-center gap-1.5"
             >
               <Sparkles size={14} />
-              Ascend Now
+              {isReonboard ? 'Regenerate Journey' : 'Ascend Now'}
             </button>
           )}
         </div>

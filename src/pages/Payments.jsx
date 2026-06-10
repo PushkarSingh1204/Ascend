@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
-import { unlockAnalysis } from '../services/db';
+import { unlockAnalysis, updateProfile } from '../services/db';
 import { CreditCard, ShieldCheck, Lock, CheckCircle2, ChevronLeft } from 'lucide-react';
 
 export default function Payments() {
@@ -39,18 +39,21 @@ export default function Payments() {
     // Simulate transaction delay
     setTimeout(() => {
       try {
-        const unlocked = unlockAnalysis(analysisId);
-        if (unlocked) {
-          setSuccess(true);
-          unlockBadge('premium_unlocked');
-          addXP(300, "Unlock Premium Transformation Report");
-          
-          setTimeout(() => {
-            navigate('/analysis');
-          }, 2000);
-        } else {
-          setError('Failed to update analysis status. Please try again.');
+        // Set user is_premium globally for Ascend Plus
+        updateProfile({ is_premium: true });
+
+        // Unlock specific analysis if valid
+        if (analysisId && analysisId !== 'upgrade_profile') {
+          unlockAnalysis(analysisId);
         }
+        
+        setSuccess(true);
+        unlockBadge('premium_unlocked');
+        addXP(300, "Unlock Ascend Plus Premium");
+        
+        setTimeout(() => {
+          navigate(analysisId === 'upgrade_profile' ? '/profile' : '/analysis');
+        }, 2000);
       } catch (err) {
         setError('Transaction failed. Use any mock card info to retry.');
       } finally {

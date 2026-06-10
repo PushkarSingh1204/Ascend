@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { getJournals, addJournalEntry } from '../services/db';
 import { BookOpen, Smile, Calendar, Sparkles, MessageSquare, ChevronDown } from 'lucide-react';
+import EmptyState from '../components/EmptyState';
 
 export default function Journal() {
   const { addXP, unlockBadge } = useGame();
@@ -12,6 +13,7 @@ export default function Journal() {
   const [notes, setNotes] = useState('');
   const [reflections, setReflections] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isDistractionFree, setIsDistractionFree] = useState(false);
 
   useEffect(() => {
     setLogs(getJournals() || []);
@@ -49,6 +51,96 @@ export default function Journal() {
     setTimeout(() => setIsSuccess(false), 3000);
   };
 
+  if (isDistractionFree) {
+    return (
+      <div className="fixed inset-0 z-50 bg-[#07070b] text-neutral-100 flex flex-col p-6 md:p-12 animate-fade-in">
+        <div className="max-w-2xl w-full mx-auto flex-1 flex flex-col justify-between py-6">
+          <div className="flex items-center justify-between border-b border-neutral-900 pb-4 mb-8">
+            <h2 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+              <BookOpen size={18} className="text-purple-400" />
+              Distraction-Free Reflection
+            </h2>
+            <button
+              onClick={() => setIsDistractionFree(false)}
+              className="text-xs font-semibold text-neutral-400 hover:text-white px-3.5 py-2 rounded-xl bg-neutral-900 border border-neutral-850 transition-colors"
+            >
+              Exit Editor
+            </button>
+          </div>
+
+          <div className="flex-1 flex flex-col space-y-6">
+            {/* Mood Indicator */}
+            <div className="space-y-2.5">
+              <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest block">How is your focus/mood?</span>
+              <div className="flex justify-between gap-2 max-w-md">
+                {moodEmojis.map((emoji) => (
+                  <button
+                    key={emoji.value}
+                    type="button"
+                    onClick={() => setMood(emoji.value)}
+                    className={`flex-1 flex flex-col items-center py-2.5 rounded-xl border text-center transition-all duration-200 ${mood === emoji.value ? 'bg-purple-500/15 border-purple-500 text-purple-300 font-bold' : 'bg-neutral-950/40 border-neutral-900 text-neutral-400 hover:text-white'}`}
+                  >
+                    <span className="text-lg block">{emoji.label}</span>
+                    <span className="text-[9px] mt-1 block tracking-tighter">{emoji.text}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Large Activity notes text area */}
+            <div className="flex-1 flex flex-col space-y-2">
+              <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest block">Daily Activity Notes</span>
+              <textarea
+                placeholder="What did you focus on today? (e.g. Cleanser morning check, correct neck posture maintained, 2.5L water...)"
+                required
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="flex-1 w-full bg-neutral-950/40 border border-neutral-900 rounded-2xl p-6 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors resize-none placeholder-neutral-700 font-medium leading-relaxed"
+              />
+            </div>
+
+            {/* Reflections */}
+            <div className="space-y-2">
+              <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest block">Progress Reflections (Optional)</span>
+              <textarea
+                placeholder="What changes have you noticed? (e.g. Jawline feels more aligned, sleep quality has increased...)"
+                rows="3"
+                value={reflections}
+                onChange={(e) => setReflections(e.target.value)}
+                className="w-full bg-neutral-950/40 border border-neutral-900 rounded-2xl p-4 text-xs text-white focus:outline-none focus:border-purple-500 transition-colors resize-none placeholder-neutral-700 leading-relaxed"
+              />
+            </div>
+          </div>
+
+          <div className="mt-8 pt-4 border-t border-neutral-900 flex justify-end gap-4">
+            <button
+              onClick={() => {
+                setNotes('');
+                setReflections('');
+                setMood(4);
+                setIsDistractionFree(false);
+              }}
+              type="button"
+              className="px-5 py-3 rounded-xl text-xs font-semibold text-neutral-400 hover:text-white transition-colors"
+            >
+              Clear & Close
+            </button>
+            <button
+              onClick={(e) => {
+                handleSubmit(e);
+                setIsDistractionFree(false);
+              }}
+              disabled={!notes}
+              className={`px-8 py-3 rounded-xl font-bold text-xs text-white transition-all duration-300 ${notes ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-purple-600/10' : 'bg-neutral-900 border border-neutral-800 text-neutral-500 cursor-not-allowed'}`}
+            >
+              Save Reflection Log (+100 XP)
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-fade-in text-neutral-100 pb-10">
       
@@ -67,9 +159,18 @@ export default function Journal() {
         
         {/* Entry Form (Left Column) */}
         <div className="glassmorphism border border-neutral-800 p-6 rounded-2xl shadow-xl h-fit">
-          <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2 border-b border-neutral-800/50 pb-2">
-            <BookOpen size={18} className="text-purple-400" />
-            Write Today's Entry
+          <h3 className="text-base font-bold text-white mb-6 flex items-center justify-between border-b border-neutral-800/50 pb-2">
+            <span className="flex items-center gap-2">
+              <BookOpen size={18} className="text-purple-400" />
+              Write Today's Entry
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsDistractionFree(true)}
+              className="text-[10px] text-purple-400 hover:text-purple-300 font-bold border border-purple-500/20 px-2 py-0.5 rounded bg-purple-500/5 transition-colors"
+            >
+              Full Screen
+            </button>
           </h3>
 
           {isSuccess && (
@@ -187,8 +288,14 @@ export default function Journal() {
               })}
             </div>
           ) : (
-            <div className="py-20 border border-neutral-900 border-dashed rounded-2xl text-center text-xs text-neutral-500">
-              No journal logs saved. Write your first reflection on your transformation goals.
+            <div className="py-8">
+              <EmptyState
+                icon={BookOpen}
+                title="No Journal Entries"
+                description="Write down your daily activity notes and progress reflections to begin compiling your visual baseline journal."
+                actionText="Write reflection log"
+                onAction={() => setIsDistractionFree(true)}
+              />
             </div>
           )}
         </div>

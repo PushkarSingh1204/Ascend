@@ -1,5 +1,6 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\pages\Analytics.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getAnalyses, getCheckins, getWaterLog, getSleepLog } from '../services/db';
 import { 
   ResponsiveContainer, 
@@ -13,8 +14,10 @@ import {
   Bar
 } from 'recharts';
 import { TrendingUp, CheckCircle, Droplet, Moon, Calendar } from 'lucide-react';
+import EmptyState from '../components/EmptyState';
 
 export default function Analytics() {
+  const navigate = useNavigate();
   const [analysisData, setAnalysisData] = useState([]);
   const [checkins, setCheckins] = useState([]);
   const [water, setWater] = useState({ current: 0, target: 2000 });
@@ -115,8 +118,14 @@ export default function Analytics() {
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="py-20 border border-neutral-900 border-dashed rounded-2xl text-center text-xs text-neutral-500 italic">
-            Complete multiple Face Harmony scans to visualize progression trend lines.
+          <div className="py-6">
+            <EmptyState
+              icon={TrendingUp}
+              title="No Scanning Trends"
+              description="Complete multiple face harmony scans to compile and visualize score progression trend lines."
+              actionText="Start First Scan"
+              onAction={() => navigate('/analysis')}
+            />
           </div>
         )}
       </section>

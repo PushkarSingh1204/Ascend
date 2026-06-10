@@ -217,23 +217,27 @@ export default function Routine() {
               </p>
             </div>
 
-            {/* Interactive Animated Glass */}
-            <div className="my-6 relative w-24 h-36 mx-auto rounded-b-2xl border-4 border-neutral-800/80 bg-neutral-950 overflow-hidden flex items-end justify-center shadow-inner">
-              
-              {/* Blue liquid wave */}
-              <div 
-                className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-blue-600/60 to-sky-400/50 transition-all duration-700"
-                style={{ height: `${waterPercent}%` }}
-              >
-                {/* Simulated wavy overlay */}
-                {waterPercent > 0 && (
-                  <div className="absolute -top-1.5 left-0 w-[200%] h-3 bg-sky-300/30 rounded-[40%] animate-wave"></div>
-                )}
+            {/* Elegant Circular Progress Indicator */}
+            <div className="my-8 relative w-32 h-32 mx-auto flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle cx="64" cy="64" r="50" stroke="rgba(255,255,255,0.03)" strokeWidth="8" fill="transparent" />
+                <circle cx="64" cy="64" r="50" stroke="rgba(56,189,248,0.15)" strokeWidth="8" fill="transparent" />
+                <circle 
+                  cx="64" 
+                  cy="64" 
+                  r="50" 
+                  stroke="#38bdf8" 
+                  strokeWidth="8" 
+                  fill="transparent" 
+                  strokeDasharray={2 * Math.PI * 50}
+                  strokeDashoffset={2 * Math.PI * 50 * (1 - waterPercent / 100)}
+                  className="transition-all duration-700 ease-out"
+                />
+              </svg>
+              <div className="absolute flex flex-col items-center justify-center">
+                <span className="text-xl font-black text-white">{waterPercent}%</span>
+                <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-wider">Hydrated</span>
               </div>
-              
-              <span className="z-10 text-xs font-black text-white filter drop-shadow-md">
-                {waterPercent}%
-              </span>
             </div>
 
             <div className="space-y-4">

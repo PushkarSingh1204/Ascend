@@ -12,7 +12,10 @@ import {
   TrendingUp, 
   LogOut,
   Flame,
-  Award
+  Award,
+  Compass,
+  ClipboardCheck,
+  User
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -25,17 +28,19 @@ export default function Sidebar() {
   const xpInCurrentLevel = xp - prevLevelXp;
   const xpNeededForNext = nextLevelXp - prevLevelXp;
   
-  // Guard against divide by zero
   const rawProgress = xpNeededForNext > 0 ? (xpInCurrentLevel / xpNeededForNext) * 100 : 0;
   const progressPercent = Math.min(100, Math.max(0, Math.round(rawProgress)));
 
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+    { name: 'Roadmap', path: '/roadmap', icon: Compass },
     { name: 'Face Harmony', path: '/analysis', icon: Sparkles },
     { name: 'Progress Slider', path: '/progress', icon: ImageIcon },
     { name: 'Routines', path: '/routine', icon: CalendarDays },
     { name: 'Journal', path: '/journal', icon: BookOpen },
+    { name: 'Weekly Review', path: '/weekly-review', icon: ClipboardCheck },
     { name: 'Analytics', path: '/analytics', icon: TrendingUp },
+    { name: 'Profile', path: '/profile', icon: User },
   ];
 
   const handleLogout = () => {
@@ -65,7 +70,7 @@ export default function Sidebar() {
           </div>
           
           {/* XP Progress Bar */}
-          <div className="w-full h-2 bg-neutral-800 rounded-full overflow-hidden mb-4 border border-neutral-800">
+          <div className="w-full h-2 bg-neutral-850 rounded-full overflow-hidden mb-4 border border-neutral-800">
             <div 
               className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full shadow-lg transition-all duration-500" 
               style={{ width: `${progressPercent}%` }}
@@ -76,16 +81,16 @@ export default function Sidebar() {
             {/* Streak widget */}
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400">
               <Flame size={14} className="fill-orange-400 animate-pulse" />
-              <span className="text-xs font-bold">{streak} Day Streak</span>
+              <span className="text-xs font-bold">{streak}d Streak</span>
             </div>
             
             {/* Premium Indicator */}
             {user?.profile?.is_premium ? (
-              <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-400 px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/25">
-                Premium
+              <span className="text-[9px] uppercase font-bold tracking-widest text-indigo-400 px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/25">
+                Ascend Plus
               </span>
             ) : (
-              <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-400 px-2 py-0.5 rounded bg-neutral-800 border border-neutral-700">
+              <span className="text-[9px] uppercase font-bold tracking-widest text-neutral-400 px-2 py-0.5 rounded bg-neutral-800 border border-neutral-700">
                 Free Tier
               </span>
             )}
@@ -93,20 +98,20 @@ export default function Sidebar() {
         </div>
 
         {/* Nav Links */}
-        <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+        <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               className={({ isActive }) => `
-                flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
+                flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200
                 ${isActive 
                   ? 'bg-gradient-to-r from-blue-600/20 to-indigo-600/10 text-blue-400 border-l-2 border-blue-500 pl-3.5 shadow-md shadow-blue-500/5' 
                   : 'text-neutral-400 hover:text-white hover:bg-neutral-900/60'
                 }
               `}
             >
-              <item.icon size={18} />
+              <item.icon size={16} />
               {item.name}
             </NavLink>
           ))}
@@ -116,9 +121,9 @@ export default function Sidebar() {
         <div className="p-4 border-t border-neutral-800/50">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-neutral-400 hover:text-red-400 hover:bg-red-950/10 transition-all duration-200"
+            className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-xs font-semibold text-neutral-400 hover:text-red-400 hover:bg-red-950/10 transition-all duration-200"
           >
-            <LogOut size={18} />
+            <LogOut size={16} />
             Logout
           </button>
         </div>
@@ -144,30 +149,33 @@ export default function Sidebar() {
         </div>
       </header>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full h-16 glassmorphism border-t border-neutral-800/80 z-20 flex items-center justify-around px-2 pb-safe">
-        {navItems.map((item) => (
+      {/* Mobile Bottom Navigation (Scrollable horizontally or compact icons) */}
+      <nav className="md:hidden fixed bottom-0 left-0 w-full h-16 glassmorphism border-t border-neutral-800/80 z-20 flex items-center justify-around px-1 pb-safe">
+        {navItems.slice(0, 5).map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) => `
-              flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-200
+              flex flex-col items-center justify-center w-10 h-10 rounded-lg transition-all duration-200
               ${isActive ? 'text-blue-400 bg-blue-500/10' : 'text-neutral-500 hover:text-neutral-300'}
             `}
           >
-            <item.icon size={20} />
-            <span className="text-[9px] mt-0.5 font-medium tracking-tight truncate max-w-full">
-              {item.name.split(' ')[0]}
+            <item.icon size={16} />
+            <span className="text-[8px] mt-0.5 font-medium tracking-tight truncate max-w-full">
+              {item.name.substring(0, 5)}
             </span>
           </NavLink>
         ))}
-        <button
-          onClick={handleLogout}
-          className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-neutral-500 hover:text-red-400"
+        <NavLink
+          to="/profile"
+          className={({ isActive }) => `
+            flex flex-col items-center justify-center w-10 h-10 rounded-lg transition-all duration-200
+            ${isActive ? 'text-blue-400 bg-blue-500/10' : 'text-neutral-500'}
+          `}
         >
-          <LogOut size={20} />
-          <span className="text-[9px] mt-0.5 font-medium tracking-tight">Exit</span>
-        </button>
+          <User size={16} />
+          <span className="text-[8px] mt-0.5 font-medium tracking-tight">Profile</span>
+        </NavLink>
       </nav>
     </>
   );

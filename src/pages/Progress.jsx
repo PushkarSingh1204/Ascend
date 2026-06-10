@@ -1,17 +1,19 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\pages\Progress.jsx
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
-import { getProgressPhotos, addProgressPhoto } from '../services/db';
+import { getProgressPhotos, addProgressPhoto, getJournals, getProfile, BADGES } from '../services/db';
 import ImageSlider from '../components/ImageSlider';
-import { Camera, Calendar, PlusCircle, Trash, Sliders, Eye } from 'lucide-react';
+import { Camera, Calendar, PlusCircle, Trash, Sliders, Eye, BookOpen, Trophy } from 'lucide-react';
+import EmptyState from '../components/EmptyState';
 
 export default function Progress() {
   const { addXP } = useGame();
   
-  // Gallery and slider states
+  // Gallery, slider, and timeline states
   const [photos, setPhotos] = useState([]);
   const [beforePhotoIdx, setBeforePhotoIdx] = useState(0);
   const [afterPhotoIdx, setAfterPhotoIdx] = useState(0);
+  const [timelineItems, setTimelineItems] = useState([]);
 
   // Upload modal states
   const [isUploading, setIsUploading] = useState(false);
@@ -19,14 +21,65 @@ export default function Progress() {
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
 
-  // Load photos on mount
-  useEffect(() => {
-    const list = getProgressPhotos();
-    setPhotos(list || []);
-    if (list && list.length > 0) {
+  const loadProgressData = () => {
+    const list = getProgressPhotos() || [];
+    setPhotos(list);
+    if (list.length > 0) {
       setBeforePhotoIdx(0);
       setAfterPhotoIdx(list.length - 1);
     }
+
+    const journals = getJournals() || [];
+    const profile = getProfile();
+    const unlocked = profile?.unlocked_badges || [];
+    const joinDate = profile?.join_date || '2026-05-25';
+
+    const photoItems = list.map(p => ({
+      id: p.id,
+      date: p.date,
+      type: 'photo',
+      title: `Week ${p.week_number} Photo`,
+      notes: p.notes,
+      photoUrl: p.photo_url
+    }));
+
+    const journalItems = journals.map(j => ({
+      id: j.id,
+      date: j.date,
+      type: 'journal',
+      title: `Reflection Journal Entry`,
+      notes: j.notes,
+      reflections: j.reflections,
+      mood: j.mood
+    }));
+
+    const badgeItems = unlocked.map((badgeId) => {
+      const badge = BADGES.find(b => b.id === badgeId);
+      if (!badge) return null;
+      let bDate = joinDate;
+      if (badgeId === 'journal_entry' && journals.length > 0) {
+        bDate = journals[journals.length - 1].date;
+      } else if (badgeId === 'routine_pioneer') {
+        bDate = '2026-06-01';
+      } else if (badgeId === 'premium_unlocked') {
+        bDate = '2026-06-08';
+      }
+      return {
+        id: `badge_${badgeId}`,
+        date: bDate,
+        type: 'badge',
+        title: `Achievement: ${badge.name}`,
+        badge
+      };
+    }).filter(Boolean);
+
+    const combined = [...photoItems, ...journalItems, ...badgeItems].sort((a, b) => new Date(b.date) - new Date(a.date));
+    setTimelineItems(combined);
+  };
+
+  // Load photos on mount
+  useEffect(() => {
+    loadProgressData();
   }, []);
 
   const handleFileChange = (e) => {
@@ -49,8 +102,7 @@ export default function Progress() {
 
     // Add progress photo to DB
     const updated = addProgressPhoto(selectedPhoto, notes);
-    setPhotos(updated);
-
+    
     // Reward XP
     addXP(100, "Log Weekly Progress Photo");
 
@@ -58,7 +110,9 @@ export default function Progress() {
     setSelectedPhoto(null);
     setNotes('');
     setIsUploading(false);
-    setAfterPhotoIdx(updated.length - 1);
+    
+    // Refresh unified timeline data
+    loadProgressData();
   };
 
   return (
@@ -169,41 +223,107 @@ export default function Progress() {
         </section>
       )}
 
-      {/* Chronological Photo Timeline Gallery */}
-      <section className="space-y-4">
-        <h3 className="text-lg font-bold text-white">Progress Log History</h3>
-        
-        {photos.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {photos.map((photo) => (
-              <div key={photo.id} className="glassmorphism border border-neutral-800 rounded-2xl overflow-hidden shadow-lg flex flex-col justify-between">
-                <div className="relative aspect-square w-full bg-neutral-950">
-                  <img 
-                    src={photo.photo_url} 
-                    alt={`Week ${photo.week_number}`} 
-                    className="w-full h-full object-cover"
-                  />
-                  <span className="absolute top-3 left-3 bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-bold tracking-wider text-white px-2.5 py-1 rounded-full">
-                    WEEK {photo.week_number}
+      {/* Unified chronological timeline feed */}
+      <section className="space-y-6">
+        <div>
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <Calendar size={18} className="text-blue-400" />
+            Transformation Timeline Feed
+          </h3>
+          <p className="text-xs text-neutral-400">
+            A chronological feed combining progress photos, reflection journals, and badge milestones.
+          </p>
+        </div>
+
+        {timelineItems.length > 0 ? (
+          <div className="relative border-l border-neutral-800 ml-4 pl-6 space-y-8 py-2">
+            {timelineItems.map((item) => {
+              return (
+                <div key={item.id} className="relative group">
+                  {/* Timeline point indicator icon */}
+                  <span className="absolute -left-10 top-1.5 w-8 h-8 rounded-xl bg-neutral-950 border border-neutral-800 flex items-center justify-center text-xs group-hover:border-neutral-700 transition-colors">
+                    {item.type === 'photo' ? '📸' : item.type === 'journal' ? '📝' : '🏆'}
                   </span>
-                </div>
-                
-                <div className="p-4 space-y-2 flex-1 flex flex-col justify-between">
-                  <p className="text-xs text-neutral-300 leading-normal line-clamp-2 italic">
-                    "{photo.notes || 'No description logged.'}"
-                  </p>
                   
-                  <div className="pt-3 border-t border-neutral-900 flex items-center gap-1.5 text-[10px] text-neutral-500">
-                    <Calendar size={12} />
-                    <span>Logged: {photo.date}</span>
+                  {/* Timeline Card */}
+                  <div className="glassmorphism p-5 rounded-2xl border border-neutral-850 shadow-md space-y-4 max-w-2xl bg-neutral-900/30 hover:bg-neutral-900/50 transition-colors">
+                    
+                    {/* Header */}
+                    <div className="flex justify-between items-center text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white text-sm">{item.title}</span>
+                        <span className="text-[10px] uppercase font-extrabold tracking-widest text-neutral-500 bg-neutral-950 px-2.5 py-0.5 rounded border border-neutral-900">
+                          {item.type}
+                        </span>
+                      </div>
+                      <span className="text-neutral-500">{item.date}</span>
+                    </div>
+
+                    {/* Photo layout */}
+                    {item.type === 'photo' && (
+                      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                        <img 
+                          src={item.photoUrl} 
+                          alt="Progress photo" 
+                          className="w-24 h-24 rounded-xl object-cover border border-neutral-850 shrink-0"
+                        />
+                        <p className="text-xs text-neutral-300 leading-normal italic">
+                          "{item.notes || 'No description logged.'}"
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Journal layout */}
+                    {item.type === 'journal' && (
+                      <div className="space-y-3 text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="text-neutral-500 font-bold uppercase tracking-wider text-[10px]">Mood:</span>
+                          <span className="px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 font-bold text-[10px]">
+                            {item.mood === 1 ? '😫 Stressed' : item.mood === 2 ? '😒 Low' : item.mood === 3 ? '😐 Neutral' : item.mood === 4 ? '🙂 Good' : '⚡ Focused'}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <span className="text-[9px] font-bold text-neutral-500 uppercase">Notes</span>
+                            <p className="text-neutral-300 bg-neutral-950/40 border border-neutral-900 p-2.5 rounded-lg leading-relaxed">{item.notes}</p>
+                          </div>
+                          {item.reflections && (
+                            <div className="space-y-1">
+                              <span className="text-[9px] font-bold text-neutral-500 uppercase">Reflections</span>
+                              <p className="text-neutral-400 bg-neutral-950/40 border border-neutral-900 p-2.5 rounded-lg italic">"{item.reflections}"</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Badge layout */}
+                    {item.type === 'badge' && (
+                      <div className="flex items-center gap-4">
+                        <span className="text-3xl">{item.badge.icon}</span>
+                        <div>
+                          <p className="text-xs font-bold text-yellow-400">"{item.badge.description}"</p>
+                          <span className="text-[9px] font-extrabold text-neutral-500 uppercase tracking-widest mt-1 block">
+                            +{item.badge.xp} XP Bonus Awarded
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
-          <div className="py-12 border border-neutral-900 border-dashed rounded-2xl text-center text-xs text-neutral-500">
-            No progress photos logged. Set your first visual baseline.
+          <div className="py-8">
+            <EmptyState
+              icon={Calendar}
+              title="Empty Timeline Log"
+              description="Establish your visual baseline: complete an analysis scan, log a progress photo, or write in your journal."
+              actionText="Upload First Photo"
+              onAction={() => setIsUploading(true)}
+            />
           </div>
         )}
       </section>

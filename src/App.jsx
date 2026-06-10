@@ -16,6 +16,9 @@ import Routine from './pages/Routine';
 import Journal from './pages/Journal';
 import Analytics from './pages/Analytics';
 import Payments from './pages/Payments';
+import Profile from './pages/Profile';
+import Roadmap from './pages/Roadmap';
+import WeeklyReview from './pages/WeeklyReview';
 
 // Route Guard for Protected Pages
 const ProtectedRoute = ({ children }) => {
@@ -92,6 +95,15 @@ function App() {
             />
             
             <Route 
+              path="/roadmap" 
+              element={
+                <OnboardedRoute>
+                  <Roadmap />
+                </OnboardedRoute>
+              } 
+            />
+
+            <Route 
               path="/analysis" 
               element={
                 <OnboardedRoute>
@@ -128,10 +140,28 @@ function App() {
             />
 
             <Route 
+              path="/weekly-review" 
+              element={
+                <OnboardedRoute>
+                  <WeeklyReview />
+                </OnboardedRoute>
+              } 
+            />
+
+            <Route 
               path="/analytics" 
               element={
                 <OnboardedRoute>
                   <Analytics />
+                </OnboardedRoute>
+              } 
+            />
+
+            <Route 
+              path="/profile" 
+              element={
+                <OnboardedRoute>
+                  <Profile />
                 </OnboardedRoute>
               } 
             />
