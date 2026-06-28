@@ -15,7 +15,8 @@ import {
   Award,
   Compass,
   ClipboardCheck,
-  User
+  User,
+  Users
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -39,6 +40,8 @@ export default function Sidebar() {
     { name: 'Routines', path: '/routine', icon: CalendarDays },
     { name: 'Journal', path: '/journal', icon: BookOpen },
     { name: 'Weekly Review', path: '/weekly-review', icon: ClipboardCheck },
+    { name: 'Community', path: '/community', icon: Users },
+    { name: 'Premium Tools', path: '/premium-tools', icon: Sparkles },
     { name: 'Analytics', path: '/analytics', icon: TrendingUp },
     { name: 'Profile', path: '/profile', icon: User },
   ];

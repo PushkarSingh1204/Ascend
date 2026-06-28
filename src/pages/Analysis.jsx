@@ -42,6 +42,7 @@ export default function Analysis() {
   const [analysesList, setAnalysesList] = useState([]);
   const [compareScanId, setCompareScanId] = useState('');
   const [activeTab, setActiveTab] = useState('suggestions'); // suggestions, comparison
+  const [activeRecCategory, setActiveRecCategory] = useState('skincare');
 
   // Ref elements to measure image sizes for canvas overlay alignment
   const imageRef = useRef(null);
@@ -362,15 +363,15 @@ export default function Analysis() {
                       <circle cx="48" cy="48" r="40" stroke="rgba(255,255,255,0.03)" strokeWidth="6" fill="transparent" />
                       <circle cx="48" cy="48" r="40" stroke="rgba(59,130,246,0.1)" strokeWidth="6" fill="transparent" />
                       <circle 
-                        cx="48" 
-                        cy="48" 
-                        r="40" 
-                        stroke="currentColor" 
-                        strokeWidth="6" 
-                        fill="transparent" 
-                        className={metric.color}
-                        strokeDasharray={2 * Math.PI * 40}
-                        strokeDashoffset={2 * Math.PI * 40 * (1 - metric.score / 100)}
+                         cx="48" 
+                         cy="48" 
+                         r="40" 
+                         stroke="currentColor" 
+                         strokeWidth="6" 
+                         fill="transparent" 
+                         className={metric.color}
+                         strokeDasharray={2 * Math.PI * 40}
+                         strokeDashoffset={2 * Math.PI * 40 * (1 - metric.score / 100)}
                       />
                     </svg>
                     <span className="absolute text-xl font-black text-white">{metric.score}%</span>
@@ -379,6 +380,112 @@ export default function Analysis() {
                 <span className="text-[10px] text-neutral-500 leading-normal block">{metric.desc}</span>
               </div>
             ))}
+          </div>
+
+          {/* Biometric Summary Card */}
+          <div className="glassmorphism p-6 rounded-2xl border border-neutral-800/80 space-y-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Sparkles size={16} className="text-blue-400" />
+                  Subjective Biometric Profile
+                </h3>
+                <p className="text-[11px] text-neutral-400 leading-relaxed mt-1">
+                  Calculated using client-side geometric measurements. Attractiveness is highly subjective and metrics are for entertainment/improvement estimates only.
+                </p>
+              </div>
+              <div className="text-left sm:text-right shrink-0">
+                <span className="text-[10px] font-bold text-neutral-500 uppercase block">Potential Label</span>
+                <span className="text-xs font-black text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3.5 py-1 rounded-full inline-block mt-1">
+                  {currentAnalysis.potential_label || 'MTN (Mid Tier Normal)'}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <div className="flex justify-between text-xs font-semibold">
+                <span className="text-neutral-300">Transformation Potential</span>
+                <span className="text-blue-400">{currentAnalysis.facial_harmony_score}% → {currentAnalysis.improvement_potential_score}%</span>
+              </div>
+              <div className="w-full h-3 rounded-full bg-neutral-950 overflow-hidden border border-neutral-800/80 flex">
+                <div 
+                  className="bg-blue-500/80 transition-all duration-500" 
+                  style={{ width: `${currentAnalysis.facial_harmony_score}%` }}
+                ></div>
+                <div 
+                  className="bg-indigo-500/40 transition-all duration-500" 
+                  style={{ width: `${currentAnalysis.improvement_potential_score - currentAnalysis.facial_harmony_score}%` }}
+                ></div>
+              </div>
+              <div className="flex justify-between text-[10px] text-neutral-500">
+                <span>Current Harmony: {currentAnalysis.facial_harmony_score}%</span>
+                <span>Confidence: {currentAnalysis.confidence_score || 92}%</span>
+                <span>Potential: {currentAnalysis.improvement_potential_score}%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Core Feature Breakdown List */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest pl-1">Core Feature Analysis</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {currentAnalysis.features && Object.keys(currentAnalysis.features).length > 0 ? (
+                Object.keys(currentAnalysis.features).map((key) => {
+                  const feat = currentAnalysis.features[key];
+                  const labelMap = {
+                    symmetry: 'Facial Symmetry',
+                    skin: 'Skin Quality',
+                    jawline: 'Jawline Definition',
+                    eyes: 'Eye Area Balance',
+                    nose: 'Nose Proportion',
+                    lips: 'Lips Symmetry',
+                    hairline: 'Hairline Contour',
+                    posture: 'Neck & Posture',
+                    smile: 'Smile Alignment'
+                  };
+                  const diffColors = {
+                    Easy: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+                    Medium: 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20',
+                    Hard: 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                  };
+                  const impColors = {
+                    Low: 'text-neutral-500',
+                    Medium: 'text-neutral-400',
+                    High: 'text-blue-400 font-semibold'
+                  };
+
+                  return (
+                    <div key={key} className="glassmorphism p-4 rounded-xl border border-neutral-800/80 flex flex-col justify-between space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <span className="text-xs font-bold text-white block">{labelMap[key] || key}</span>
+                          <span className="text-[10px] text-neutral-500 block mt-0.5">{feat.percentile}</span>
+                        </div>
+                        <span className="text-xs font-black text-indigo-450 bg-indigo-500/5 border border-indigo-550/20 w-8 h-8 rounded-lg flex items-center justify-center">
+                          {feat.grade}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center text-[10px] pt-2 border-t border-neutral-900/60">
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] ${diffColors[feat.difficulty]}`}>
+                          {feat.difficulty}
+                        </span>
+                        <span className="text-neutral-500">
+                          Impact: <span className={impColors[feat.impact]}>{feat.impact}</span>
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                ['Symmetry', 'Skin', 'Jawline', 'Eyes', 'Nose', 'Lips', 'Hairline', 'Posture', 'Smile'].map((name) => (
+                  <div key={name} className="glassmorphism p-4 rounded-xl border border-neutral-800/80 flex justify-between items-center">
+                    <span className="text-xs font-bold text-white">{name}</span>
+                    <span className="text-xs font-bold text-neutral-400">80% (Grade B)</span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
           <div className="text-center pt-4">
@@ -453,15 +560,15 @@ export default function Analysis() {
               </div>
 
               {/* Suggestions Panel (Locked if not premium) */}
-              <div className="lg:col-span-3 glassmorphism p-6 rounded-2xl border border-neutral-800/80 relative flex flex-col justify-between min-h-[300px]">
+              <div className="lg:col-span-3 glassmorphism p-6 rounded-2xl border border-neutral-800/80 relative flex flex-col justify-between min-h-[360px]">
                 {!isUnlocked && (
                   <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-[#0c0c12]/75 backdrop-blur-md rounded-2xl text-center">
                     <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/25 text-purple-400 flex items-center justify-center mb-4 glow-accent">
                       <Lock size={20} />
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-2">Unlock Suggestions Checklist</h3>
-                    <p className="text-xs text-neutral-400 max-w-xs mb-6">
-                      Upgrade to Ascend Plus to unlock targeted posture correction guides, skincare regimes, and sleep habit suggestions.
+                    <h3 className="text-lg font-bold text-white mb-2">Unlock suggestions Checklist</h3>
+                    <p className="text-xs text-neutral-400 max-w-xs mb-6 leading-relaxed">
+                      Upgrade to Ascend Plus to unlock targeted posture correction guides, styling advice, and skincare routine suggestions.
                     </p>
                     <button
                       onClick={handleUnlockMock}
@@ -472,48 +579,57 @@ export default function Analysis() {
                   </div>
                 )}
 
-                <div className={`space-y-5 ${!isUnlocked ? 'filter blur-sm select-none pointer-events-none' : ''}`}>
+                <div className={`space-y-4 ${!isUnlocked ? 'filter blur-sm select-none pointer-events-none' : ''}`}>
                   <h3 className="text-sm font-bold text-white border-b border-neutral-800 pb-2 flex items-center gap-2">
                     <Sliders size={16} className="text-indigo-400" />
                     Targeted Suggestions Checklist
                   </h3>
 
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-1.5">Posture & Chewing</h4>
-                      <ul className="space-y-1.5 text-xs text-neutral-300">
-                        {(currentAnalysis.suggestions?.posture || []).map((tip, i) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <CheckCircle2 size={12} className="text-blue-500 mt-0.5 shrink-0" />
-                            <span>{tip}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                  {/* Horizontal Category Selector */}
+                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-neutral-900">
+                    {[
+                      { id: 'skincare', label: '🧴 Skincare' },
+                      { id: 'hairstyle', label: '💇‍♂️ Hair' },
+                      { id: 'beard', label: '🧔 Beard' },
+                      { id: 'glasses', label: '👓 Glasses' },
+                      { id: 'makeup', label: '💄 Makeup' },
+                      { id: 'fashion', label: '👕 Fashion' },
+                      { id: 'color_analysis', label: '🎨 Colors' },
+                      { id: 'fitness', label: '🏋️‍♂️ Fitness' },
+                      { id: 'sleep', label: '💤 Sleep' },
+                      { id: 'dental', label: '🦷 Dental/Mew' },
+                      { id: 'grooming', label: '✂️ Groom' }
+                    ].map(cat => (
+                      <button
+                        key={cat.id}
+                        onClick={() => setActiveRecCategory(cat.id)}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold shrink-0 transition-colors ${activeRecCategory === cat.id ? 'bg-indigo-650 text-white' : 'bg-neutral-900 text-neutral-400 hover:bg-neutral-850 hover:text-white'}`}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
 
-                    <div>
-                      <h4 className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-1.5">Skincare & Cleanse</h4>
-                      <ul className="space-y-1.5 text-xs text-neutral-300">
-                        {(currentAnalysis.suggestions?.skincare || []).map((tip, i) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <CheckCircle2 size={12} className="text-purple-500 mt-0.5 shrink-0" />
+                  <div className="py-2">
+                    <h4 className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-3">
+                      Recommended Routine Hacks
+                    </h4>
+                    <ul className="space-y-3 text-xs text-neutral-300">
+                      {(() => {
+                        const tipsList = currentAnalysis.suggestions?.[activeRecCategory] || 
+                          (activeRecCategory === 'fitness' && currentAnalysis.suggestions?.posture) ||
+                          (activeRecCategory === 'sleep' && currentAnalysis.suggestions?.lifestyle) || [
+                            "Maintain consistent daily habits.",
+                            "Track your routines to log progress and earn badges."
+                          ];
+                        return tipsList.map((tip, i) => (
+                          <li key={i} className="flex items-start gap-2.5 leading-relaxed">
+                            <CheckCircle2 size={13} className="text-indigo-500 mt-0.5 shrink-0" />
                             <span>{tip}</span>
                           </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div>
-                      <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1.5">Lifestyle & Sleep</h4>
-                      <ul className="space-y-1.5 text-xs text-neutral-300">
-                        {(currentAnalysis.suggestions?.lifestyle || []).map((tip, i) => (
-                          <li key={i} className="flex items-start gap-2">
-                            <CheckCircle2 size={12} className="text-emerald-500 mt-0.5 shrink-0" />
-                            <span>{tip}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                        ));
+                      })()}
+                    </ul>
                   </div>
                 </div>
 

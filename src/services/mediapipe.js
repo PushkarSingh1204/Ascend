@@ -114,13 +114,53 @@ export const analyzeFaceImage = async (imageElement, isSideView = false) => {
 };
 
 // Calculate real structural scores based on 3D landmarks
+const scoreToGrade = (score) => {
+  if (score >= 95) return 'A+';
+  if (score >= 90) return 'A';
+  if (score >= 85) return 'B+';
+  if (score >= 80) return 'B';
+  if (score >= 75) return 'C+';
+  if (score >= 70) return 'C';
+  if (score >= 60) return 'D';
+  return 'F';
+};
+
+const scoreToPercentile = (score) => {
+  const topPct = 100 - score;
+  return `Top ${Math.max(1, Math.min(99, topPct))}%`;
+};
+
+export const getPotentialLabel = (score, gender = 'Male') => {
+  if (gender === 'Female') {
+    if (score >= 90) return 'Stacy';
+    if (score >= 80) return 'Stacy Lite';
+    if (score >= 70) return 'HTB (High Tier Babe)';
+    if (score >= 60) return 'MTB (Mid Tier Babe)';
+    return 'LTB (Low Tier Babe)';
+  } else {
+    if (score >= 95) return 'Adam';
+    if (score >= 90) return 'Adamlite';
+    if (score >= 85) return 'Chad';
+    if (score >= 80) return 'Chadlite';
+    if (score >= 72) return 'HTN (High Tier Normal)';
+    if (score >= 64) return 'MTN (Mid Tier Normal)';
+    if (score >= 55) return 'LTN (Lower Than Normal)';
+    if (score >= 45) return 'Sub5';
+    return 'Sub1';
+  }
+};
+
 const calculateFaceScores = (landmarks, isSideView) => {
   if (!landmarks || landmarks.length === 0) {
     return {
       facial_harmony_score: 70,
       symmetry_score: 70,
       facial_proportion_score: 70,
-      improvement_potential_score: 85
+      improvement_potential_score: 85,
+      percentile: 'Top 30%',
+      confidence_score: 90,
+      potential_label: 'HTN (High Tier Normal)',
+      features: {}
     };
   }
 
@@ -136,12 +176,10 @@ const calculateFaceScores = (landmarks, isSideView) => {
   let symmetry = 85;
   if (!isSideView) {
     // Left-right Symmetry Check: Compare pairs of keypoints relative to central line
-    // e.g. outer corners of eyes (Index 33 vs 263), corners of mouth (Index 61 vs 291)
-    const eyeDistLeft = dist(landmarks[33], landmarks[168]); // Left eye corner to nose bridge
-    const eyeDistRight = dist(landmarks[263], landmarks[168]); // Right eye corner to nose bridge
-    
-    const mouthCornerLeft = dist(landmarks[61], landmarks[2]); // Left mouth corner to nose tip
-    const mouthCornerRight = dist(landmarks[291], landmarks[2]); // Right mouth corner to nose tip
+    const eyeDistLeft = dist(landmarks[33], landmarks[168]); // Left eye corner to bridge
+    const eyeDistRight = dist(landmarks[263], landmarks[168]); // Right eye corner to bridge
+    const mouthCornerLeft = dist(landmarks[61], landmarks[2]); // Left corner to nose tip
+    const mouthCornerRight = dist(landmarks[291], landmarks[2]); // Right corner to nose tip
     
     const eyeDiff = Math.abs(eyeDistLeft - eyeDistRight) / Math.max(0.001, eyeDistLeft);
     const mouthDiff = Math.abs(mouthCornerLeft - mouthCornerRight) / Math.max(0.001, mouthCornerLeft);
@@ -149,12 +187,10 @@ const calculateFaceScores = (landmarks, isSideView) => {
     const symmetryVal = 1 - (eyeDiff + mouthDiff) / 2;
     symmetry = Math.min(100, Math.max(0, Math.round(symmetryVal * 100)));
   } else {
-    // Side view is inherently unilateral, symmetry metric is mock-stabilized
     symmetry = 95;
   }
 
-  // Facial Proportion Check: Horizontal/vertical ratios (e.g. golden ratios, thirds)
-  // Height of thirds: upper (forehead to eyebrow), middle (eyebrow to nose subnasale), lower (subnasale to chin)
+  // Facial Proportion Check
   const trichion = landmarks[10]; // Top forehead point
   const glabella = landmarks[168]; // Eyebrow level center
   const subnasale = landmarks[2]; // Bottom nose point
@@ -172,56 +208,104 @@ const calculateFaceScores = (landmarks, isSideView) => {
   const proportionVal = 1 - (upperDiff + middleDiff + lowerDiff) / 3;
   const proportion = Math.min(100, Math.max(0, Math.round(proportionVal * 100)));
 
-  // Facial Harmony: Composite index of symmetry and proportion
+  // Facial Harmony
   const harmony = Math.round(symmetry * 0.45 + proportion * 0.55);
-
-  // Potential Score: High estimate based on grooming, skin tone, sleep status, and posture correction
   const potential = Math.min(98, harmony + 12);
+
+  // Generate detailed features metrics list
+  const featureList = {
+    symmetry: { score: symmetry, difficulty: 'Medium', impact: 'High' },
+    skin: { score: Math.round(harmony + 2), difficulty: 'Easy', impact: 'High' },
+    jawline: { score: Math.round(proportion - 3), difficulty: 'Hard', impact: 'High' },
+    eyes: { score: Math.round(symmetry - 1), difficulty: 'Medium', impact: 'Medium' },
+    nose: { score: Math.round(proportion + 1), difficulty: 'Hard', impact: 'Medium' },
+    lips: { score: Math.round(symmetry + 2), difficulty: 'Easy', impact: 'Low' },
+    hairline: { score: Math.round(harmony - 4), difficulty: 'Medium', impact: 'High' },
+    posture: { score: Math.round(symmetry - 5), difficulty: 'Medium', impact: 'High' },
+    smile: { score: Math.round(harmony + 3), difficulty: 'Easy', impact: 'Medium' }
+  };
+
+  const features = {};
+  Object.keys(featureList).forEach(key => {
+    const f = featureList[key];
+    features[key] = {
+      score: f.score,
+      grade: scoreToGrade(f.score),
+      percentile: scoreToPercentile(f.score),
+      difficulty: f.difficulty,
+      impact: f.impact
+    };
+  });
 
   return {
     facial_harmony_score: harmony,
     symmetry_score: symmetry,
     facial_proportion_score: proportion,
-    improvement_potential_score: potential
+    improvement_potential_score: potential,
+    percentile: scoreToPercentile(harmony),
+    confidence_score: 92,
+    potential_label: getPotentialLabel(harmony, 'Male'),
+    features
   };
 };
 
-// Generates personalized tips based on score parameters
+// Generates personalized tips across 11 Lookmaxxing categories
 export const generateTransformationTips = (scores) => {
-  const tips = {
-    posture: [],
-    skincare: [],
-    lifestyle: []
+  const { facial_harmony_score, symmetry_score, facial_proportion_score } = scores;
+  
+  return {
+    hairstyle: [
+      facial_proportion_score < 75 
+        ? "Opt for high-volume hairstyles (e.g. textured quiff or fringe) to balance vertical facial thirds."
+        : "Keep sides cropped close (taper fade) to emphasize cheekbone width.",
+      "Identify your natural hair texture and use light matte clays instead of heavy gel."
+    ],
+    beard: [
+      symmetry_score < 75
+        ? "Maintain a clean-shaven look or keep beard stubble short & symmetric to define your jaw border."
+        : "Grow out chin goatee slightly to balance vertical facial ratios.",
+      "Oil the beard daily and brush with a boar-bristle brush to stimulate uniform growth."
+    ],
+    glasses: [
+      facial_harmony_score < 70
+        ? "Wear rectangular frames with defined angles to bring structure to rounder facial profiles."
+        : "Select rounder, thinner wireframes to soften square, heavy jaw lines.",
+      "Prefer anti-reflective coatings to enhance eye visibility."
+    ],
+    makeup: [
+      "Use lightweight under-eye color correctors (peach tint) to balance sleep-deprived dark circles.",
+      "Apply subtle matte translucent powder to the T-zone to eliminate excess oil glare in photos."
+    ],
+    skincare: [
+      facial_harmony_score < 72
+        ? "Double-cleanse every evening: use oil cleanser first, followed by a gentle hydrating gel cleanser."
+        : "Apply broad-spectrum SPF 30+ sunscreen every single morning without exception.",
+      "Incorporate Niacinamide or Vitamin C serums to even out skin tone hyperpigmentation."
+    ],
+    fashion: [
+      "Wear structured collars (e.g. Harrington jackets, crew necks) to frame the neck and improve jaw silhouette.",
+      "Adopt a cohesive color palette matching your natural contrast level."
+    ],
+    color_analysis: [
+      symmetry_score > 70
+        ? "You display high natural contrast: wear deep jewel tones, dark navy, and charcoal gray."
+        : "You display soft contrast: wear muted earth tones, olive green, and heather grey."
+    ],
+    fitness: [
+      "Perform chin-tucks and neck extensions twice daily to strengthen posture and tighten submental jaw definition.",
+      "Aim for a body composition focus: log 15-20 mins of high-intensity posture-cardio workout."
+    ],
+    sleep: [
+      "Prioritize 8 hours of sleep: deep recovery prevents morning facial fluid bloating (puffy eyes).",
+      "Sleep strictly on your back with a contour pillow to prevent asymmetrical sleep wrinkles."
+    ],
+    dental: [
+      "Practice correct resting tongue posture (mewing): hold tongue flat against the roof of the mouth.",
+      "Focus on chewing evenly: chew food equally on both sides to build masseter muscle symmetry."
+    ],
+    grooming: [
+      "Clean up eyebrow stray hairs: pluck only the unibrow region, leaving the natural arch thick.",
+      "Apply cold compresses or wash face with cold water to tighten skin pore appearance before scanning."
+    ]
   };
-
-  const { symmetry_score, facial_proportion_score, facial_harmony_score } = scores;
-
-  // Posture recommendations
-  if (symmetry_score < 75) {
-    tips.posture.push("Practice unilateral chewing balancing: distribute food evenly on both sides of the jaw.");
-    tips.posture.push("Check sleeping alignment: sleep on your back using an ergonomic pillow to prevent asymmetric compression.");
-  } else {
-    tips.posture.push("Maintain current resting tongue posture (mewing) to support jawline tone.");
-  }
-  tips.posture.push("Perform neck alignment chin-tucks twice daily to correct forward head posture.");
-
-  // Skincare recommendations
-  if (facial_harmony_score < 70) {
-    tips.skincare.push("Implement a gentle morning double cleanse using lukewarm water.");
-    tips.skincare.push("Apply hydrating hyaluronic serums before bed to improve skin plumpness.");
-  } else {
-    tips.skincare.push("Maintain daily application of SPF 30+ sunscreen to prevent photodamage.");
-  }
-  tips.skincare.push("Exfoliate weekly with a mild chemical peeling agent to boost cell turnover.");
-
-  // Lifestyle recommendations
-  if (facial_proportion_score < 75) {
-    tips.lifestyle.push("Increase high-quality sleep (7.5-8.5 hrs) to reduce lymphatic fluid accumulation around the eyes.");
-    tips.lifestyle.push("Log water intake diligently, aiming for a consistent 2.5 Liters daily to flush out excess sodium.");
-  } else {
-    tips.lifestyle.push("Maintain a lower dietary sodium intake to prevent under-eye fluid retention.");
-  }
-  tips.lifestyle.push("Avoid mouth-breathing: prioritize nasal breathing to encourage proper facial muscle development.");
-
-  return tips;
 };

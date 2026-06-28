@@ -19,6 +19,8 @@ import Payments from './pages/Payments';
 import Profile from './pages/Profile';
 import Roadmap from './pages/Roadmap';
 import WeeklyReview from './pages/WeeklyReview';
+import Community from './pages/Community';
+import PremiumTools from './pages/PremiumTools';
 
 // Route Guard for Protected Pages
 const ProtectedRoute = ({ children }) => {
@@ -144,6 +146,24 @@ function App() {
               element={
                 <OnboardedRoute>
                   <WeeklyReview />
+                </OnboardedRoute>
+              } 
+            />
+
+            <Route 
+              path="/community" 
+              element={
+                <OnboardedRoute>
+                  <Community />
+                </OnboardedRoute>
+              } 
+            />
+
+            <Route 
+              path="/premium-tools" 
+              element={
+                <OnboardedRoute>
+                  <PremiumTools />
                 </OnboardedRoute>
               } 
             />

@@ -207,6 +207,29 @@ const INITIAL_MOCK_DATA = {
         skincare: ["Wear broad-spectrum sunscreen daily.", "Apply moisturizer before sleep.", "Wash face with cold water to tighten skin appearance."]
       }
     }
+  ],
+  community_posts: [
+    {
+      id: "cp_1",
+      username: "Anonymous_Ascender_99",
+      date: "2026-06-25",
+      photo_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80",
+      notes: "Started double cleansing and back stretching. Noticeable jawline improvement in 3 weeks.",
+      votes: { symmetry: 14, posture: 8, skincare: 22 }
+    },
+    {
+      id: "cp_2",
+      username: "Grooming_Pioneer",
+      date: "2026-06-27",
+      photo_url: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&auto=format&fit=crop&q=80",
+      notes: "Switched to side-part undercut and mewing daily. Posting face balance difference.",
+      votes: { symmetry: 31, posture: 12, skincare: 9 }
+    }
+  ],
+  challenges: [
+    { id: "ch_mewing", title: "7-Day Mewing Sprint", desc: "Check resting tongue posture 3 times daily for 7 days straight.", xp: 150, completed: true },
+    { id: "ch_hydrate", title: "Water Hydration Challenge", desc: "Log 2.5L+ water intake for 5 days in a single week.", xp: 200, completed: false },
+    { id: "ch_posture", title: "Spinal Posture Correct", desc: "Log daily post-workout postural alignment stretches.", xp: 120, completed: false }
   ]
 };
 
@@ -501,4 +524,66 @@ export const submitCheckin = (notes = '') => {
     saveDB(db);
   }
   return { checkins: db.checkins, profile: db.user_profile };
+};
+
+export const getCommunityPosts = () => {
+  const db = getDB();
+  if (!db.community_posts) {
+    db.community_posts = [ ...INITIAL_MOCK_DATA.community_posts ];
+    saveDB(db);
+  }
+  return db.community_posts;
+};
+
+export const voteOnPost = (postId, parameter) => {
+  const db = getDB();
+  const index = db.community_posts.findIndex(p => p.id === postId);
+  if (index !== -1) {
+    if (!db.community_posts[index].votes) {
+      db.community_posts[index].votes = { symmetry: 0, posture: 0, skincare: 0 };
+    }
+    if (!db.community_posts[index].votes[parameter]) {
+      db.community_posts[index].votes[parameter] = 0;
+    }
+    db.community_posts[index].votes[parameter] += 1;
+    saveDB(db);
+  }
+  return db.community_posts;
+};
+
+export const addCommunityPost = (notes, photoUrl) => {
+  const db = getDB();
+  if (!db.community_posts) {
+    db.community_posts = [ ...INITIAL_MOCK_DATA.community_posts ];
+  }
+  const newPost = {
+    id: "cp_" + Date.now(),
+    username: "Anonymous_" + Math.floor(100 + Math.random() * 900),
+    date: new Date().toISOString().split('T')[0],
+    photo_url: photoUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80",
+    notes: notes || "Visual check-in.",
+    votes: { symmetry: 0, posture: 0, skincare: 0 }
+  };
+  db.community_posts.unshift(newPost);
+  saveDB(db);
+  return db.community_posts;
+};
+
+export const getChallenges = () => {
+  const db = getDB();
+  if (!db.challenges) {
+    db.challenges = [ ...INITIAL_MOCK_DATA.challenges ];
+    saveDB(db);
+  }
+  return db.challenges;
+};
+
+export const toggleChallenge = (challengeId) => {
+  const db = getDB();
+  const index = db.challenges.findIndex(c => c.id === challengeId);
+  if (index !== -1) {
+    db.challenges[index].completed = !db.challenges[index].completed;
+    saveDB(db);
+  }
+  return db.challenges;
 };
