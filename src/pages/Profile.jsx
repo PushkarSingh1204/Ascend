@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
 import { getProfile, updateProfile } from '../services/db';
+import { useTheme } from '../context/ThemeContext';
 import { 
   User, 
   Settings, 
@@ -20,6 +21,7 @@ import {
 } from 'lucide-react';
 
 export default function Profile() {
+  const { theme, setTheme } = useTheme();
   const { user, setUser } = useAuth();
   const { level, streak, longestStreak, daysToAscend } = useGame();
   const navigate = useNavigate();
@@ -199,6 +201,27 @@ export default function Profile() {
                   onChange={(e) => setNameInput(e.target.value)}
                   className="w-full bg-neutral-950/70 border border-neutral-800 rounded-xl py-3 px-4 text-xs text-white focus:outline-none focus:border-blue-500"
                 />
+              </div>
+
+              {/* Interface Theme preferences */}
+              <div className="space-y-2.5 pt-4 border-t border-neutral-900/60">
+                <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Interface Theme</label>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { id: 'dark', label: '🌙 Dark' },
+                    { id: 'light', label: '☀️ Light' },
+                    { id: 'system', label: '💻 System' }
+                  ].map(t => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setTheme(t.id)}
+                      className={`py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${theme === t.id ? 'bg-indigo-500/15 border-indigo-500 text-indigo-300' : 'bg-neutral-950/40 border-neutral-900 text-neutral-400 hover:text-white'}`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Notification preferences */}

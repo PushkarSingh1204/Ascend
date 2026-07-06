@@ -3,6 +3,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
+import { useTheme } from '../context/ThemeContext';
 import { 
   LayoutDashboard, 
   Sparkles, 
@@ -17,10 +18,13 @@ import {
   ClipboardCheck,
   User,
   Users,
-  Calendar
+  Calendar,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 export default function Sidebar() {
+  const { theme, setTheme } = useTheme();
   const { logout, user } = useAuth();
   const { xp, level, streak, getXpForLevel, getXpRequiredForNextLevel } = useGame();
   const navigate = useNavigate();
@@ -142,7 +146,15 @@ export default function Sidebar() {
           <span className="font-bold tracking-wider text-sm">ASCEND</span>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="w-7 h-7 rounded-lg bg-neutral-850 border border-neutral-805 flex items-center justify-center text-neutral-400 hover:text-white transition-colors cursor-pointer"
+            title="Toggle Theme"
+          >
+            {theme === 'dark' ? <Sun size={12} /> : <Moon size={12} />}
+          </button>
+
           <div className="flex items-center gap-1 text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full text-xs font-semibold">
             <Flame size={12} className="fill-orange-400" />
             <span>{streak}d</span>
