@@ -82,14 +82,14 @@ export default function Routine() {
   const waterPercent = Math.min(100, Math.round((water.current / water.target) * 100));
 
   return (
-    <div className="space-y-8 animate-fade-in text-neutral-100 pb-10">
+    <div className="space-y-8 animate-fade-in text-foreground pb-10">
       
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">
           Transformation Routines
         </h1>
-        <p className="text-sm text-neutral-400">
+        <p className="text-sm text-muted-foreground">
           Build consistency across critical self-improvement areas. Every completed activity boosts your level.
         </p>
       </div>
@@ -101,8 +101,8 @@ export default function Routine() {
         <div className="lg:col-span-2 space-y-6">
           
           {/* Morning / Night Routines Card */}
-          <div className="glassmorphism border border-neutral-800 p-6 rounded-2xl shadow-xl space-y-6">
-            <h3 className="text-base font-bold text-white border-b border-neutral-800/50 pb-2 flex items-center gap-2">
+          <div className="glassmorphism border border-border p-6 rounded-2xl shadow-xl space-y-6">
+            <h3 className="text-base font-bold text-foreground border-b border-border pb-2 flex items-center gap-2">
               <Sun size={18} className="text-yellow-400" />
               Daily Checklists
             </h3>
@@ -119,9 +119,9 @@ export default function Routine() {
                     <button
                       key={task.id}
                       onClick={() => handleToggleTask('morning', task.id, task.completed)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl border text-xs text-left transition-colors ${task.completed ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-neutral-950/40 border-neutral-800/85 hover:border-neutral-700 text-neutral-300'}`}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl border text-xs text-left transition-colors ${task.completed ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-background/40 border-border/85 hover:border-neutral-700 text-foreground'}`}
                     >
-                      {task.completed ? <CheckSquare size={14} className="text-emerald-500" /> : <Square size={14} className="text-neutral-500" />}
+                      {task.completed ? <CheckSquare size={14} className="text-emerald-500" /> : <Square size={14} className="text-muted-foreground" />}
                       <span className={task.completed ? 'line-through opacity-60' : ''}>{task.text}</span>
                     </button>
                   ))}
@@ -138,9 +138,9 @@ export default function Routine() {
                     <button
                       key={task.id}
                       onClick={() => handleToggleTask('night', task.id, task.completed)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl border text-xs text-left transition-colors ${task.completed ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-neutral-950/40 border-neutral-800/85 hover:border-neutral-700 text-neutral-300'}`}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl border text-xs text-left transition-colors ${task.completed ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-background/40 border-border/85 hover:border-neutral-700 text-foreground'}`}
                     >
-                      {task.completed ? <CheckSquare size={14} className="text-emerald-500" /> : <Square size={14} className="text-neutral-500" />}
+                      {task.completed ? <CheckSquare size={14} className="text-emerald-500" /> : <Square size={14} className="text-muted-foreground" />}
                       <span className={task.completed ? 'line-through opacity-60' : ''}>{task.text}</span>
                     </button>
                   ))}
@@ -151,8 +151,8 @@ export default function Routine() {
           </div>
 
           {/* Skincare / Workout Checklists */}
-          <div className="glassmorphism border border-neutral-800 p-6 rounded-2xl shadow-xl space-y-6">
-            <h3 className="text-base font-bold text-white border-b border-neutral-800/50 pb-2 flex items-center gap-2">
+          <div className="glassmorphism border border-border p-6 rounded-2xl shadow-xl space-y-6">
+            <h3 className="text-base font-bold text-foreground border-b border-border pb-2 flex items-center gap-2">
               <Dumbbell size={18} className="text-blue-400" />
               Focus Checklists
             </h3>
@@ -169,9 +169,9 @@ export default function Routine() {
                     <button
                       key={task.id}
                       onClick={() => handleToggleTask('skincare', task.id, task.completed)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl border text-xs text-left transition-colors ${task.completed ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-neutral-950/40 border-neutral-800/85 hover:border-neutral-700 text-neutral-300'}`}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl border text-xs text-left transition-colors ${task.completed ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-background/40 border-border/85 hover:border-neutral-700 text-foreground'}`}
                     >
-                      {task.completed ? <CheckSquare size={14} className="text-emerald-500" /> : <Square size={14} className="text-neutral-500" />}
+                      {task.completed ? <CheckSquare size={14} className="text-emerald-500" /> : <Square size={14} className="text-muted-foreground" />}
                       <span className={task.completed ? 'line-through opacity-60' : ''}>{task.text}</span>
                     </button>
                   ))}
@@ -188,9 +188,9 @@ export default function Routine() {
                     <button
                       key={task.id}
                       onClick={() => handleToggleTask('workout', task.id, task.completed)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl border text-xs text-left transition-colors ${task.completed ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-neutral-950/40 border-neutral-800/85 hover:border-neutral-700 text-neutral-300'}`}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl border text-xs text-left transition-colors ${task.completed ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-background/40 border-border/85 hover:border-neutral-700 text-foreground'}`}
                     >
-                      {task.completed ? <CheckSquare size={14} className="text-emerald-500" /> : <Square size={14} className="text-neutral-500" />}
+                      {task.completed ? <CheckSquare size={14} className="text-emerald-500" /> : <Square size={14} className="text-muted-foreground" />}
                       <span className={task.completed ? 'line-through opacity-60' : ''}>{task.text}</span>
                     </button>
                   ))}
@@ -206,13 +206,13 @@ export default function Routine() {
         <div className="space-y-6">
           
           {/* Water Tracker Card */}
-          <div className="glassmorphism border border-neutral-800 p-6 rounded-2xl shadow-xl flex flex-col justify-between min-h-[300px]">
+          <div className="glassmorphism border border-border p-6 rounded-2xl shadow-xl flex flex-col justify-between min-h-[300px]">
             <div>
-              <h3 className="text-base font-bold text-white mb-1.5 flex items-center gap-2">
+              <h3 className="text-base font-bold text-foreground mb-1.5 flex items-center gap-2">
                 <Droplet size={18} className="text-blue-400" />
                 Water Tracker
               </h3>
-              <p className="text-xs text-neutral-400">
+              <p className="text-xs text-muted-foreground">
                 Log fluids. Reaching 2.5L targets awards badges.
               </p>
             </div>
@@ -235,15 +235,15 @@ export default function Routine() {
                 />
               </svg>
               <div className="absolute flex flex-col items-center justify-center">
-                <span className="text-xl font-black text-white">{waterPercent}%</span>
-                <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-wider">Hydrated</span>
+                <span className="text-xl font-black text-foreground">{waterPercent}%</span>
+                <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">Hydrated</span>
               </div>
             </div>
 
             <div className="space-y-4">
               <div className="text-center">
-                <span className="text-xs text-neutral-400 block">Logged Status</span>
-                <span className="text-xl font-black text-white">{water.current} / {water.target} ml</span>
+                <span className="text-xs text-muted-foreground block">Logged Status</span>
+                <span className="text-xl font-black text-foreground">{water.current} / {water.target} ml</span>
               </div>
 
               {/* Action buttons */}
@@ -265,20 +265,20 @@ export default function Routine() {
           </div>
 
           {/* Sleep Tracker Card */}
-          <div className="glassmorphism border border-neutral-800 p-6 rounded-2xl shadow-xl flex flex-col justify-between min-h-[260px]">
+          <div className="glassmorphism border border-border p-6 rounded-2xl shadow-xl flex flex-col justify-between min-h-[260px]">
             <div>
-              <h3 className="text-base font-bold text-white mb-1.5 flex items-center gap-2">
+              <h3 className="text-base font-bold text-foreground mb-1.5 flex items-center gap-2">
                 <Moon size={18} className="text-indigo-400" />
                 Sleep Tracker
               </h3>
-              <p className="text-xs text-neutral-400">
+              <p className="text-xs text-muted-foreground">
                 Log hours of sleep from the previous night.
               </p>
             </div>
 
             <form onSubmit={handleSaveSleep} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <div className="flex justify-between text-xs text-neutral-400 font-semibold">
+                <div className="flex justify-between text-xs text-muted-foreground font-semibold">
                   <span>Duration: {sleepInput} hrs</span>
                   <span>Goal: {sleep.target} hrs</span>
                 </div>
@@ -294,14 +294,14 @@ export default function Routine() {
                 />
               </div>
 
-              <div className="bg-neutral-950/40 border border-neutral-900 px-4 py-3 rounded-xl flex justify-between items-center text-xs text-neutral-400">
+              <div className="bg-background/40 border border-border px-4 py-3 rounded-xl flex justify-between items-center text-xs text-muted-foreground">
                 <span>Last logged:</span>
-                <strong className="text-white">{sleep.current} Hours</strong>
+                <strong className="text-foreground">{sleep.current} Hours</strong>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-600/10"
+                className="w-full py-3 rounded-xl font-bold text-xs text-foreground bg-indigo-600 hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-600/10"
               >
                 Log Sleep (+20 XP)
               </button>

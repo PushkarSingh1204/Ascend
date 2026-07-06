@@ -58,15 +58,15 @@ export default function Layout({ children }) {
       <div className="flex-1 min-h-screen overflow-x-hidden pt-14 pb-16 md:pt-0 md:pb-0 md:pl-64 flex flex-col">
         
         {/* Top Header Bar (Desktop Only, since mobile header is inside Sidebar) */}
-        <header className="hidden md:flex items-center justify-between px-8 py-4 border-b border-neutral-900 bg-neutral-950/20 backdrop-blur-md">
+        <header className="hidden md:flex items-center justify-between px-8 py-4 border-b border-border bg-card/20 backdrop-blur-md">
           {/* Left search mock input trigger */}
           <button 
             onClick={() => setIsPaletteOpen(true)}
-            className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-lg bg-neutral-900 border border-neutral-850 text-[11px] font-bold text-neutral-400 hover:border-neutral-700 transition-colors w-64 text-left cursor-pointer"
+            className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-lg bg-card border border-border text-[11px] font-bold text-muted-foreground hover:border-neutral-500 transition-colors w-64 text-left cursor-pointer"
           >
-            <Search size={13} className="text-neutral-500" />
-            <span className="flex-1 text-neutral-500">Search...</span>
-            <span className="text-[9px] text-neutral-500 bg-neutral-950 px-1.5 py-0.5 rounded border border-neutral-800 font-black">
+            <Search size={13} className="text-muted-foreground" />
+            <span className="flex-1 text-muted-foreground">Search...</span>
+            <span className="text-[9px] text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border font-black">
               Ctrl+K
             </span>
           </button>
@@ -74,24 +74,24 @@ export default function Layout({ children }) {
           {/* Right quick controls: theme + notification bell */}
           <div className="flex items-center gap-4 relative">
             {/* Theme switcher */}
-            <div className="flex bg-neutral-900 rounded-lg p-0.5 border border-neutral-850">
+            <div className="flex bg-card rounded-lg p-0.5 border border-border">
               <button 
                 onClick={() => setTheme('dark')}
-                className={`p-1.5 rounded text-neutral-500 hover:text-white transition-colors cursor-pointer ${theme === 'dark' ? 'bg-neutral-800 text-indigo-400' : ''}`}
+                className={`p-1.5 rounded text-muted-foreground hover:text-foreground transition-colors cursor-pointer ${theme === 'dark' ? 'bg-secondary text-primary' : ''}`}
                 title="Dark Mode"
               >
                 <Moon size={13} />
               </button>
               <button 
                 onClick={() => setTheme('light')}
-                className={`p-1.5 rounded text-neutral-500 hover:text-white transition-colors cursor-pointer ${theme === 'light' ? 'bg-neutral-800 text-indigo-400' : ''}`}
+                className={`p-1.5 rounded text-muted-foreground hover:text-foreground transition-colors cursor-pointer ${theme === 'light' ? 'bg-secondary text-primary' : ''}`}
                 title="Light Mode"
               >
                 <Sun size={13} />
               </button>
               <button 
                 onClick={() => setTheme('system')}
-                className={`p-1.5 rounded text-neutral-500 hover:text-white transition-colors cursor-pointer ${theme === 'system' ? 'bg-neutral-800 text-indigo-400' : ''}`}
+                className={`p-1.5 rounded text-muted-foreground hover:text-foreground transition-colors cursor-pointer ${theme === 'system' ? 'bg-secondary text-primary' : ''}`}
                 title="System Theme"
               >
                 <Monitor size={13} />
@@ -102,11 +102,11 @@ export default function Layout({ children }) {
             <div className="relative">
               <button
                 onClick={() => setIsNotifOpen(prev => !prev)}
-                className="w-8 h-8 rounded-lg bg-neutral-900 border border-neutral-850 hover:border-neutral-750 flex items-center justify-center text-neutral-400 hover:text-white transition-all relative cursor-pointer"
+                className="w-8 h-8 rounded-lg bg-card border border-border hover:border-neutral-500 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all relative cursor-pointer"
               >
                 <Bell size={14} />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-indigo-600 border border-neutral-900 text-[8px] font-black text-white flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-[8px] font-black text-primary-foreground flex items-center justify-center">
                     {unreadCount}
                   </span>
                 )}
@@ -114,16 +114,16 @@ export default function Layout({ children }) {
 
               {/* Bell dropdown panel */}
               {isNotifOpen && (
-                <div className="absolute right-0 mt-2 w-80 glassmorphism rounded-xl border border-neutral-800 shadow-2xl z-30 p-4 space-y-3 bg-[#0c0c12]">
-                  <div className="flex justify-between items-center border-b border-neutral-900 pb-2">
-                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <Bell size={12} className="text-indigo-400" />
+                <div className="absolute right-0 mt-2 w-80 glassmorphism rounded-xl border border-border shadow-2xl z-30 p-4 space-y-3 bg-card text-foreground">
+                  <div className="flex justify-between items-center border-b border-border pb-2">
+                    <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                      <Bell size={12} className="text-primary" />
                       Notifications
                     </span>
                     {unreadCount > 0 && (
                       <button 
                         onClick={markAllAsRead}
-                        className="text-[10px] font-bold text-indigo-400 hover:underline cursor-pointer"
+                        className="text-[10px] font-bold text-primary hover:underline cursor-pointer"
                       >
                         Mark all read
                       </button>
@@ -136,27 +136,27 @@ export default function Layout({ children }) {
                       notifications.map(notif => (
                         <div 
                           key={notif.id} 
-                          className={`p-2.5 rounded-lg border text-[11px] leading-relaxed relative group transition-all ${notif.read ? 'bg-transparent border-neutral-900 text-neutral-450' : 'bg-indigo-500/5 border-indigo-500/10 text-neutral-200'}`}
+                          className={`p-2.5 rounded-lg border text-[11px] leading-relaxed relative group transition-all ${notif.read ? 'bg-transparent border-border text-muted-foreground' : 'bg-primary/5 border-primary/20 text-foreground'}`}
                         >
                           <div className="flex justify-between items-start">
-                            <span className={`font-bold block ${notif.read ? 'text-neutral-400' : 'text-white'}`}>
+                            <span className={`font-bold block ${notif.read ? 'text-muted-foreground' : 'text-foreground'}`}>
                               {notif.title}
                             </span>
                             <button
                               onClick={() => dismissNotification(notif.id)}
-                              className="text-[9px] text-neutral-600 hover:text-red-400 absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                              className="text-[9px] text-muted-foreground hover:text-red-400 absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                             >
                               <Trash2 size={10} />
                             </button>
                           </div>
-                          <p className="mt-1 text-neutral-400">{notif.message}</p>
-                          <span className="text-[9px] text-neutral-500 block mt-1.5">
+                          <p className="mt-1 text-muted-foreground">{notif.message}</p>
+                          <span className="text-[9px] text-muted-foreground block mt-1.5">
                             {new Date(notif.date).toLocaleDateString([], { month: 'short', day: 'numeric' })} at {new Date(notif.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                           {!notif.read && (
                             <button
                               onClick={() => markAsRead(notif.id)}
-                              className="mt-1.5 text-[9px] font-bold text-indigo-400 hover:underline block cursor-pointer"
+                              className="mt-1.5 text-[9px] font-bold text-primary hover:underline block cursor-pointer"
                             >
                               Mark read
                             </button>
@@ -164,14 +164,14 @@ export default function Layout({ children }) {
                         </div>
                       ))
                     ) : (
-                      <div className="py-8 text-center text-xs text-neutral-500 italic">
+                      <div className="py-8 text-center text-xs text-muted-foreground italic">
                         No notifications logged yet.
                       </div>
                     )}
                   </div>
 
                   {notifications.length > 0 && (
-                    <div className="flex justify-between pt-2 border-t border-neutral-900 text-[10px] font-bold">
+                    <div className="flex justify-between pt-2 border-t border-border text-[10px] font-bold">
                       <button 
                         onClick={clearAll}
                         className="text-red-400 hover:underline cursor-pointer"
@@ -180,7 +180,7 @@ export default function Layout({ children }) {
                       </button>
                       <button 
                         onClick={() => setIsNotifOpen(false)}
-                        className="text-neutral-500 hover:text-white cursor-pointer"
+                        className="text-muted-foreground hover:text-foreground cursor-pointer"
                       >
                         Close
                       </button>
@@ -216,7 +216,7 @@ export default function Layout({ children }) {
             <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-40 h-40 bg-purple-600/30 rounded-full blur-3xl pointer-events-none"></div>
 
             {/* Glowing Icon */}
-            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-600 flex items-center justify-center text-white mb-6 shadow-lg shadow-purple-500/20">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-650 flex items-center justify-center text-white mb-6 shadow-lg shadow-purple-500/20">
               <Award size={32} className="stroke-[1.5]" />
             </div>
 
@@ -225,18 +225,18 @@ export default function Layout({ children }) {
               LEVEL ASCENDED!
             </h2>
             
-            <p className="text-neutral-400 text-xs mb-6 max-w-xs leading-normal">
+            <p className="text-neutral-300 text-xs mb-6 max-w-xs leading-normal">
               Your dedication to daily self-improvement has pushed you to the next stage of your journey.
             </p>
 
             {/* Level Comparison */}
-            <div className="flex items-center gap-6 justify-center mb-6 bg-neutral-950/60 border border-neutral-900 px-6 py-4 rounded-xl">
+            <div className="flex items-center gap-6 justify-center mb-6 bg-neutral-900/60 border border-border px-6 py-4 rounded-xl">
               <div className="text-center">
-                <span className="text-[10px] text-neutral-500 font-bold block uppercase tracking-wider">Previous</span>
-                <span className="text-sm font-bold text-neutral-400">LVL {levelUpAlert.oldLevel}</span>
+                <span className="text-[10px] text-neutral-450 font-bold block uppercase tracking-wider">Previous</span>
+                <span className="text-sm font-bold text-neutral-300">LVL {levelUpAlert.oldLevel}</span>
               </div>
               
-              <div className="text-neutral-700 text-sm font-bold">➔</div>
+              <div className="text-neutral-500 text-sm font-bold">➔</div>
 
               <div className="text-center">
                 <span className="text-[10px] text-purple-400 font-bold block uppercase tracking-wider">Ascended</span>
@@ -286,7 +286,7 @@ export default function Layout({ children }) {
               "{badgeAlert.name}" Unlocked
             </p>
             
-            <p className="text-neutral-400 text-xs mb-6 max-w-xs leading-normal">
+            <p className="text-neutral-300 text-xs mb-6 max-w-xs leading-normal">
               {badgeAlert.description}
             </p>
 

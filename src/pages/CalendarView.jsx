@@ -103,58 +103,64 @@ export default function CalendarView() {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in text-neutral-100 pb-12 max-w-4xl mx-auto">
+    <div className="space-y-8 animate-fade-in text-foreground pb-12 max-w-4xl mx-auto">
       
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">
           Transformation Calendar
         </h1>
-        <p className="text-sm text-neutral-400">
-          A monthly visual overview of your completed routines, journal entries, and biometric scans.
+        <p className="text-sm text-muted-foreground">
+          View your monthly consistency tracking map. Click active dates to review logged biometric scans, journal drafts, and checklist activities.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Calendar Grid Section */}
-        <div className="lg:col-span-2 glassmorphism p-5 rounded-2xl border border-neutral-800/80 space-y-4">
+        {/* Calendar View Panel (Left 2 Columns) */}
+        <div className="lg:col-span-2 glassmorphism border border-border p-6 rounded-2xl shadow-xl bg-card">
           
-          {/* Calendar Header Toggles */}
-          <div className="flex justify-between items-center pb-2">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+          {/* Calendar Header controls */}
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+              <CalendarDays size={16} className="text-primary" />
               {monthNames[month]} {year}
             </h3>
-            <div className="flex gap-2">
+            
+            <div className="flex items-center gap-2">
               <button 
                 onClick={handlePrevMonth}
-                className="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-850 hover:border-neutral-700 flex items-center justify-center text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-lg border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
-                <ChevronLeft size={14} />
+                <ChevronLeft size={16} />
               </button>
               <button 
                 onClick={handleNextMonth}
-                className="w-7 h-7 rounded-lg bg-neutral-900 border border-neutral-850 hover:border-neutral-700 flex items-center justify-center text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-lg border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
-                <ChevronRight size={14} />
+                <ChevronRight size={16} />
               </button>
             </div>
           </div>
 
-          {/* Weekday Labels */}
-          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-neutral-500 uppercase tracking-widest pb-1 border-b border-neutral-900/60">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="py-1">{day}</div>
-            ))}
+          {/* Month Grid */}
+          <div className="grid grid-cols-7 gap-2.5 text-center text-[10px] font-bold text-muted-foreground uppercase mb-3">
+            <span>Sun</span>
+            <span>Mon</span>
+            <span>Tue</span>
+            <span>Wed</span>
+            <span>Thu</span>
+            <span>Fri</span>
+            <span>Sat</span>
           </div>
 
-          {/* Day Cells Grid */}
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-2">
+            
             {/* Prev month pad */}
-            {prevDays.map((day, i) => (
+            {prevDays.map((day, idx) => (
               <div 
-                key={`prev-${i}`} 
-                className="aspect-square p-1 text-[10px] text-neutral-600 bg-transparent rounded-lg flex items-start justify-end"
+                key={`prev-${idx}`} 
+                className="aspect-square rounded-xl border border-border bg-background/25 flex items-center justify-center text-[10px] text-muted-foreground/30 font-medium select-none"
               >
                 {day}
               </div>
@@ -165,102 +171,137 @@ export default function CalendarView() {
               const dayNum = idx + 1;
               const dayData = getDayData(dayNum);
               const isSelected = selectedDayDetails?.date === dayData.dateString;
-              const todayStr = new Date().toISOString().split('T')[0];
-              const isToday = dayData.dateString === todayStr;
-
+              
               return (
                 <button
-                  key={dayNum}
+                  key={`day-${dayNum}`}
                   onClick={() => handleDayClick(dayData)}
-                  className={`aspect-square p-1 bg-neutral-950/20 border text-xs font-bold rounded-lg flex flex-col justify-between items-end relative transition-all cursor-pointer ${isSelected ? 'border-indigo-500 bg-indigo-500/5 shadow-md shadow-indigo-500/5' : isToday ? 'border-blue-500/50 bg-blue-500/5' : 'border-neutral-900 hover:border-neutral-700'}`}
+                  className={`
+                    aspect-square rounded-xl border flex flex-col justify-between p-1.5 transition-all relative cursor-pointer
+                    ${dayData.hasActivity 
+                      ? 'border-indigo-500/20 bg-indigo-500/5 hover:border-indigo-500/40 text-foreground' 
+                      : 'border-border bg-background/50 text-muted-foreground hover:border-neutral-500'
+                    }
+                    ${isSelected ? 'ring-2 ring-primary border-primary' : ''}
+                  `}
                 >
-                  <span className={isToday ? 'text-blue-400' : 'text-neutral-350'}>{dayNum}</span>
+                  <span className="text-[10px] font-extrabold">{dayNum}</span>
                   
-                  {/* Completion indicator dots */}
-                  <div className="flex gap-0.5 justify-center w-full pb-1">
-                    {dayData.hasCheckin && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Routine Checked"></span>
-                    )}
-                    {dayData.journalsList.length > 0 && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500" title="Journal logged"></span>
-                    )}
-                    {dayData.analysesList.length > 0 && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500" title="Scan logged"></span>
-                    )}
-                  </div>
+                  {/* Indicators shelf */}
+                  {dayData.hasActivity && (
+                    <div className="flex gap-0.5 justify-center w-full mt-1 shrink-0">
+                      {dayData.hasCheckin && (
+                        <span className="w-1 h-1 rounded-full bg-emerald-400" title="Check-in"></span>
+                      )}
+                      {dayData.journalsList.length > 0 && (
+                        <span className="w-1 h-1 rounded-full bg-purple-400" title="Journal"></span>
+                      )}
+                      {dayData.analysesList.length > 0 && (
+                        <span className="w-1 h-1 rounded-full bg-blue-400" title="Analysis scan"></span>
+                      )}
+                    </div>
+                  )}
                 </button>
               );
             })}
 
             {/* Next month pad */}
-            {nextDays.map((day, i) => (
+            {nextDays.map((day, idx) => (
               <div 
-                key={`next-${i}`} 
-                className="aspect-square p-1 text-[10px] text-neutral-600 bg-transparent rounded-lg flex items-start justify-end"
+                key={`next-${idx}`} 
+                className="aspect-square rounded-xl border border-border bg-background/25 flex items-center justify-center text-[10px] text-muted-foreground/30 font-medium select-none"
               >
                 {day}
               </div>
             ))}
-          </div>
 
+          </div>
         </div>
 
-        {/* Selected Day Details Panel */}
-        <div className="lg:col-span-1 glassmorphism p-5 rounded-2xl border border-neutral-800/80 h-fit space-y-4">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2 border-b border-neutral-900 pb-2">
-            <Clock size={16} className="text-indigo-400" />
-            Activity Log
+        {/* Selected Day Details Panel (Right 1 Column) */}
+        <div className="lg:col-span-1 glassmorphism border border-border p-6 rounded-2xl shadow-xl h-fit bg-card">
+          <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-4 border-b border-border pb-3 flex items-center gap-2">
+            <Clock size={16} className="text-primary" />
+            Activity Review
           </h3>
 
           {selectedDayDetails ? (
             selectedDayDetails.empty ? (
-              <div className="py-12 text-center text-xs text-neutral-500 italic">
-                No transformation metrics logged on {selectedDayDetails.date}.
+              <div className="py-8 text-center text-xs text-muted-foreground italic">
+                No transformation logs saved for: <span className="font-bold text-foreground">{selectedDayDetails.date}</span>.
               </div>
             ) : (
-              <div className="space-y-4 text-xs">
-                <div className="bg-neutral-950/40 p-2.5 rounded-xl border border-neutral-900">
-                  <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-bold block">Logged Date</span>
-                  <span className="text-white font-bold block mt-0.5">{selectedDayDetails.date}</span>
-                </div>
+              <div className="space-y-5">
+                <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest bg-background border border-border px-3 py-1 rounded-full block w-fit">
+                  {selectedDayDetails.date}
+                </span>
 
-                <div className="space-y-2">
-                  {selectedDayDetails.hasCheckin && (
-                    <div className="flex items-start gap-2.5 p-2 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
-                      <CheckCircle size={14} className="text-emerald-400 mt-0.5 shrink-0" />
-                      <div>
-                        <span className="text-white font-bold block">Routine completed</span>
-                        <span className="text-[10px] text-neutral-450 block mt-0.5">Morning & night checklists successfully logged</span>
-                      </div>
+                {/* Habits checkin status */}
+                <div className="space-y-1">
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Habits Check-in</span>
+                  {selectedDayDetails.hasCheckin ? (
+                    <div className="flex items-center gap-2 text-xs text-emerald-450 bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-xl font-bold">
+                      <CheckCircle size={13} />
+                      Morning & Night Routines completed
+                    </div>
+                  ) : (
+                    <div className="text-xs text-muted-foreground italic pl-1">
+                      No checkins recorded.
                     </div>
                   )}
+                </div>
 
-                  {selectedDayDetails.journalsList.map((j, idx) => (
-                    <div key={idx} className="flex items-start gap-2.5 p-2 rounded-lg bg-purple-500/5 border border-purple-500/10">
-                      <BookOpen size={14} className="text-purple-400 mt-0.5 shrink-0" />
-                      <div>
-                        <span className="text-white font-bold block">Journal Note Logged</span>
-                        <span className="text-[10px] text-neutral-450 block mt-0.5">Mood: {j.mood}</span>
-                        <p className="text-[10px] text-neutral-400 leading-normal mt-1">"{j.notes}"</p>
+                {/* Journal entries */}
+                <div className="space-y-2">
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Journal Entries</span>
+                  {selectedDayDetails.journalsList.length > 0 ? (
+                    selectedDayDetails.journalsList.map((journal, idx) => (
+                      <div key={idx} className="p-3 bg-background border border-border rounded-xl space-y-2 text-xs">
+                        <div className="flex justify-between items-center text-[10px] text-muted-foreground font-bold">
+                          <span>Reflections Entry #{idx + 1}</span>
+                          <span className="text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
+                            Mood: {journal.mood}/5
+                          </span>
+                        </div>
+                        <p className="text-foreground leading-relaxed">{journal.notes}</p>
                       </div>
+                    ))
+                  ) : (
+                    <div className="text-xs text-muted-foreground italic pl-1">
+                      No journal entries logged.
                     </div>
-                  ))}
+                  )}
+                </div>
 
-                  {selectedDayDetails.analysesList.map((a, idx) => (
-                    <div key={idx} className="flex items-start gap-2.5 p-2 rounded-lg bg-blue-500/5 border border-blue-500/10">
-                      <Sparkles size={14} className="text-blue-400 mt-0.5 shrink-0" />
-                      <div>
-                        <span className="text-white font-bold block">Harmony Analysis Report</span>
-                        <span className="text-[10px] text-neutral-450 block mt-0.5">Score: {a.facial_harmony_score}% | Symmetry: {a.symmetry_score}%</span>
+                {/* Face analysis scans */}
+                <div className="space-y-2">
+                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Biometric Scan Harmony</span>
+                  {selectedDayDetails.analysesList.length > 0 ? (
+                    selectedDayDetails.analysesList.map((analysis, idx) => (
+                      <div key={idx} className="p-3 bg-background border border-border rounded-xl space-y-2 text-xs">
+                        <div className="flex justify-between items-center text-[10px] text-muted-foreground font-bold">
+                          <span>Scan #{idx + 1}</span>
+                          <span className="text-blue-400 bg-blue-500/10 border border-blue-500/25 px-2 py-0.5 rounded-lg">
+                            {analysis.potential_label || 'MTN'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs pt-1">
+                          <span className="text-muted-foreground">Harmony Score:</span>
+                          <strong className="text-foreground">{analysis.facial_harmony_score}%</strong>
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="text-xs text-muted-foreground italic pl-1">
+                      No biometric scans run.
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             )
           ) : (
-            <div className="py-16 text-center text-xs text-neutral-500 italic">
-              Select any highlighted day from the calendar to inspect completed activities.
+            <div className="py-12 text-center text-xs text-muted-foreground italic">
+              Select an active date cell from the calendar map to view matching transformation logs.
             </div>
           )}
         </div>

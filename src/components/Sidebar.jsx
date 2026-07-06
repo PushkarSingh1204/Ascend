@@ -59,26 +59,26 @@ export default function Sidebar() {
   return (
     <>
       {/* DESKTOP SIDEBAR */}
-      <aside className="hidden md:flex flex-col w-64 h-screen fixed left-0 top-0 glassmorphism border-r border-neutral-800/80 z-20 text-neutral-200">
+      <aside className="hidden md:flex flex-col w-64 h-screen fixed left-0 top-0 glassmorphism border-r border-border z-20 text-foreground bg-card">
         {/* Logo Section */}
-        <div className="p-6 border-b border-neutral-800/50 flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white shadow-md shadow-blue-500/20">
+        <div className="p-6 border-b border-border flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-500 to-indigo-650 flex items-center justify-center font-bold text-white shadow-md shadow-blue-500/20">
             A
           </div>
-          <span className="text-xl font-bold tracking-wider text-white bg-clip-text bg-gradient-to-r from-white to-neutral-400">
+          <span className="text-xl font-bold tracking-wider text-foreground">
             ASCEND
           </span>
         </div>
 
         {/* Gamified Profile Widget */}
-        <div className="p-5 border-b border-neutral-800/50 bg-neutral-900/40">
+        <div className="p-5 border-b border-border bg-background/50">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-neutral-400 tracking-wider">LEVEL {level}</span>
-            <span className="text-xs text-neutral-500">{xpInCurrentLevel} / {xpNeededForNext} XP</span>
+            <span className="text-xs font-semibold text-muted-foreground tracking-wider">LEVEL {level}</span>
+            <span className="text-xs text-muted-foreground">{xpInCurrentLevel} / {xpNeededForNext} XP</span>
           </div>
           
           {/* XP Progress Bar */}
-          <div className="w-full h-2 bg-neutral-850 rounded-full overflow-hidden mb-4 border border-neutral-800">
+          <div className="w-full h-2 bg-secondary rounded-full overflow-hidden mb-4 border border-border">
             <div 
               className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full shadow-lg transition-all duration-500" 
               style={{ width: `${progressPercent}%` }}
@@ -88,7 +88,7 @@ export default function Sidebar() {
           <div className="flex items-center justify-between">
             {/* Streak widget */}
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400">
-              <Flame size={14} className="fill-orange-400 animate-pulse" />
+              <Flame size={14} className="fill-orange-455 animate-pulse" />
               <span className="text-xs font-bold">{streak}d Streak</span>
             </div>
             
@@ -98,7 +98,7 @@ export default function Sidebar() {
                 Ascend Plus
               </span>
             ) : (
-              <span className="text-[9px] uppercase font-bold tracking-widest text-neutral-400 px-2 py-0.5 rounded bg-neutral-800 border border-neutral-700">
+              <span className="text-[9px] uppercase font-bold tracking-widest text-muted-foreground px-2 py-0.5 rounded bg-secondary border border-border">
                 Free Tier
               </span>
             )}
@@ -106,7 +106,7 @@ export default function Sidebar() {
         </div>
 
         {/* Nav Links */}
-        <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto scrollbar-none">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
@@ -114,8 +114,8 @@ export default function Sidebar() {
               className={({ isActive }) => `
                 flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200
                 ${isActive 
-                  ? 'bg-gradient-to-r from-blue-600/20 to-indigo-600/10 text-blue-400 border-l-2 border-blue-500 pl-3.5 shadow-md shadow-blue-500/5' 
-                  : 'text-neutral-400 hover:text-white hover:bg-neutral-900/60'
+                  ? 'bg-gradient-to-r from-blue-600/20 to-indigo-600/10 text-primary border-l-2 border-primary pl-3.5 shadow-md shadow-blue-500/5' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
                 }
               `}
             >
@@ -126,10 +126,10 @@ export default function Sidebar() {
         </nav>
 
         {/* Logout Section */}
-        <div className="p-4 border-t border-neutral-800/50">
+        <div className="p-4 border-t border-border">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-xs font-semibold text-neutral-400 hover:text-red-400 hover:bg-red-950/10 transition-all duration-200"
+            className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-xs font-semibold text-muted-foreground hover:text-red-400 hover:bg-red-950/10 transition-all duration-200 cursor-pointer"
           >
             <LogOut size={16} />
             Logout
@@ -138,18 +138,18 @@ export default function Sidebar() {
       </aside>
 
       {/* MOBILE HEADER & BOTTOM NAV */}
-      <header className="md:hidden fixed top-0 left-0 w-full h-14 glassmorphism border-b border-neutral-800/80 z-20 flex items-center justify-between px-4 text-white">
+      <header className="md:hidden fixed top-0 left-0 w-full h-14 glassmorphism border-b border-border z-20 flex items-center justify-between px-4 text-foreground bg-card">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-xs text-white">
+          <div className="w-6 h-6 rounded bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xs">
             A
           </div>
-          <span className="font-bold tracking-wider text-sm">ASCEND</span>
+          <span className="font-bold tracking-wider text-sm text-foreground">ASCEND</span>
         </div>
         
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="w-7 h-7 rounded-lg bg-neutral-850 border border-neutral-805 flex items-center justify-center text-neutral-400 hover:text-white transition-colors cursor-pointer"
+            className="w-7 h-7 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             title="Toggle Theme"
           >
             {theme === 'dark' ? <Sun size={12} /> : <Moon size={12} />}
@@ -159,21 +159,21 @@ export default function Sidebar() {
             <Flame size={12} className="fill-orange-400" />
             <span>{streak}d</span>
           </div>
-          <div className="text-xs font-bold bg-neutral-800 border border-neutral-700 px-2 py-0.5 rounded">
+          <div className="text-xs font-bold bg-secondary border border-border px-2 py-0.5 rounded">
             LVL {level}
           </div>
         </div>
       </header>
 
-      {/* Mobile Bottom Navigation (Scrollable horizontally or compact icons) */}
-      <nav className="md:hidden fixed bottom-0 left-0 w-full h-16 glassmorphism border-t border-neutral-800/80 z-20 flex items-center justify-around px-1 pb-safe">
+      {/* Mobile Bottom Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 w-full h-16 glassmorphism border-t border-border z-20 flex items-center justify-around px-1 pb-safe bg-card text-foreground">
         {navItems.slice(0, 5).map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) => `
               flex flex-col items-center justify-center w-10 h-10 rounded-lg transition-all duration-200
-              ${isActive ? 'text-blue-400 bg-blue-500/10' : 'text-neutral-500 hover:text-neutral-300'}
+              ${isActive ? 'text-primary bg-primary/10' : 'text-muted-foreground hover:text-foreground'}
             `}
           >
             <item.icon size={16} />
@@ -186,7 +186,7 @@ export default function Sidebar() {
           to="/profile"
           className={({ isActive }) => `
             flex flex-col items-center justify-center w-10 h-10 rounded-lg transition-all duration-200
-            ${isActive ? 'text-blue-400 bg-blue-500/10' : 'text-neutral-500'}
+            ${isActive ? 'text-primary bg-primary/10' : 'text-muted-foreground'}
           `}
         >
           <User size={16} />

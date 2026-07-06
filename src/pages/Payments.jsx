@@ -63,13 +63,13 @@ export default function Payments() {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in text-neutral-100 max-w-xl mx-auto pb-10">
+    <div className="space-y-8 animate-fade-in text-foreground max-w-xl mx-auto pb-10">
       
       {/* Back to Analysis link */}
       <div>
         <button
           onClick={() => navigate('/analysis')}
-          className="text-xs font-bold text-neutral-500 hover:text-neutral-300 flex items-center gap-1.5"
+          className="text-xs font-bold text-muted-foreground hover:text-foreground flex items-center gap-1.5"
         >
           <ChevronLeft size={14} />
           Back to Face Harmony Scan
@@ -77,7 +77,7 @@ export default function Payments() {
       </div>
 
       {/* Main card */}
-      <div className="glassmorphism border border-neutral-800 p-8 rounded-2xl shadow-xl space-y-6">
+      <div className="glassmorphism border border-border p-8 rounded-2xl shadow-xl space-y-6">
         
         {/* Success Splash */}
         {success ? (
@@ -85,8 +85,8 @@ export default function Payments() {
             <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center justify-center mx-auto glow-success">
               <CheckCircle2 size={32} />
             </div>
-            <h2 className="text-2xl font-black text-white">Payment Succeeded!</h2>
-            <p className="text-xs text-neutral-400 max-w-xs mx-auto">
+            <h2 className="text-2xl font-black text-foreground">Payment Succeeded!</h2>
+            <p className="text-xs text-muted-foreground max-w-xs mx-auto">
               Your premium self-transformation report is unlocked. Redirecting to reports panel...
             </p>
           </div>
@@ -94,22 +94,22 @@ export default function Payments() {
           // Checkout Form
           <>
             <div>
-              <h2 className="text-2xl font-black text-white flex items-center gap-2">
+              <h2 className="text-2xl font-black text-foreground flex items-center gap-2">
                 <CreditCard size={24} className="text-indigo-400" />
                 Premium Checkout
               </h2>
-              <p className="text-xs text-neutral-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Unlock structural metrics, custom routines, and transformation reports.
               </p>
             </div>
 
             {/* Price Detail */}
-            <div className="bg-neutral-950/60 border border-neutral-900/80 p-4 rounded-xl flex justify-between items-center text-xs text-neutral-400">
+            <div className="bg-background/60 border border-border/80 p-4 rounded-xl flex justify-between items-center text-xs text-muted-foreground">
               <div>
-                <strong className="text-white block">Premium Harmony Report</strong>
-                <span className="text-[10px] text-neutral-500 block mt-0.5">One-time payment</span>
+                <strong className="text-foreground block">Premium Harmony Report</strong>
+                <span className="text-[10px] text-muted-foreground block mt-0.5">One-time payment</span>
               </div>
-              <span className="text-lg font-black text-white">$4.99 USD</span>
+              <span className="text-lg font-black text-foreground">$4.99 USD</span>
             </div>
 
             {error && (
@@ -122,48 +122,48 @@ export default function Payments() {
               
               {/* Name */}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Cardholder Name</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Cardholder Name</label>
                 <input
                   type="text"
                   placeholder="Alex Carter"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-neutral-950/70 border border-neutral-800 rounded-xl py-3 px-4 text-xs text-white focus:outline-none focus:border-blue-500 placeholder-neutral-700"
+                  className="w-full bg-background/70 border border-border rounded-xl py-3 px-4 text-xs text-foreground focus:outline-none focus:border-blue-500 placeholder-neutral-700"
                 />
               </div>
 
               {/* Card number */}
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Card Number</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Card Number</label>
                 <input
                   type="text"
                   placeholder="4000 1234 5678 9010"
                   value={cardNumber}
                   onChange={(e) => setCardNumber(e.target.value)}
-                  className="w-full bg-neutral-950/70 border border-neutral-800 rounded-xl py-3 px-4 text-xs text-white focus:outline-none focus:border-blue-500 placeholder-neutral-700"
+                  className="w-full bg-background/70 border border-border rounded-xl py-3 px-4 text-xs text-foreground focus:outline-none focus:border-blue-500 placeholder-neutral-700"
                 />
               </div>
 
               {/* Expiry & CVV */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Expiry Date</label>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Expiry Date</label>
                   <input
                     type="text"
                     placeholder="MM/YY"
                     value={expiry}
                     onChange={(e) => setExpiry(e.target.value)}
-                    className="w-full bg-neutral-950/70 border border-neutral-800 rounded-xl py-3 px-4 text-xs text-white focus:outline-none focus:border-blue-500 placeholder-neutral-700"
+                    className="w-full bg-background/70 border border-border rounded-xl py-3 px-4 text-xs text-foreground focus:outline-none focus:border-blue-500 placeholder-neutral-700"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">CVV</label>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">CVV</label>
                   <input
                     type="text"
                     placeholder="123"
                     value={cvv}
                     onChange={(e) => setCvv(e.target.value)}
-                    className="w-full bg-neutral-950/70 border border-neutral-800 rounded-xl py-3 px-4 text-xs text-white focus:outline-none focus:border-blue-500 placeholder-neutral-700"
+                    className="w-full bg-background/70 border border-border rounded-xl py-3 px-4 text-xs text-foreground focus:outline-none focus:border-blue-500 placeholder-neutral-700"
                   />
                 </div>
               </div>
@@ -172,7 +172,7 @@ export default function Payments() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 mt-2 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-colors shadow-md shadow-blue-500/10 flex items-center justify-center gap-1.5"
+                className="w-full py-3.5 mt-2 rounded-xl font-bold text-xs text-foreground bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-colors shadow-md shadow-blue-500/10 flex items-center justify-center gap-1.5"
               >
                 {loading ? (
                   <span className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white animate-spin"></span>
@@ -186,7 +186,7 @@ export default function Payments() {
             </form>
 
             {/* Secure payment disclaimers */}
-            <div className="flex items-center justify-center gap-6 pt-4 border-t border-neutral-900/60 text-[10px] text-neutral-500">
+            <div className="flex items-center justify-center gap-6 pt-4 border-t border-border/60 text-[10px] text-muted-foreground">
               <div className="flex items-center gap-1">
                 <ShieldCheck size={12} className="text-emerald-500" />
                 <span>SSL Encrypted</span>

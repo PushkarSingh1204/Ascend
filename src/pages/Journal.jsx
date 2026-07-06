@@ -68,16 +68,16 @@ export default function Journal() {
 
   if (isDistractionFree) {
     return (
-      <div className="fixed inset-0 z-50 bg-[#07070b] text-neutral-100 flex flex-col p-6 md:p-12 animate-fade-in">
+      <div className="fixed inset-0 z-50 bg-background text-foreground flex flex-col p-6 md:p-12 animate-fade-in">
         <div className="max-w-2xl w-full mx-auto flex-1 flex flex-col justify-between py-6">
-          <div className="flex items-center justify-between border-b border-neutral-900 pb-4 mb-8">
-            <h2 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-              <BookOpen size={18} className="text-purple-400" />
+          <div className="flex items-center justify-between border-b border-border pb-4 mb-8">
+            <h2 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
+              <BookOpen size={18} className="text-primary" />
               Distraction-Free Reflection
             </h2>
             <button
               onClick={() => setIsDistractionFree(false)}
-              className="text-xs font-semibold text-neutral-400 hover:text-white px-3.5 py-2 rounded-xl bg-neutral-900 border border-neutral-850 transition-colors"
+              className="text-xs font-semibold text-muted-foreground hover:text-foreground px-3.5 py-2 rounded-xl bg-card border border-border transition-colors cursor-pointer"
             >
               Exit Editor
             </button>
@@ -86,14 +86,14 @@ export default function Journal() {
           <div className="flex-1 flex flex-col space-y-6">
             {/* Mood Indicator */}
             <div className="space-y-2.5">
-              <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest block">How is your focus/mood?</span>
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest block">How is your focus/mood?</span>
               <div className="flex justify-between gap-2 max-w-md">
                 {moodEmojis.map((emoji) => (
                   <button
                     key={emoji.value}
                     type="button"
                     onClick={() => setMood(emoji.value)}
-                    className={`flex-1 flex flex-col items-center py-2.5 rounded-xl border text-center transition-all duration-200 ${mood === emoji.value ? 'bg-purple-500/15 border-purple-500 text-purple-300 font-bold' : 'bg-neutral-950/40 border-neutral-900 text-neutral-400 hover:text-white'}`}
+                    className={`flex-1 flex flex-col items-center py-2.5 rounded-xl border text-center transition-all duration-200 cursor-pointer ${mood === emoji.value ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-card border-border text-muted-foreground hover:text-foreground'}`}
                   >
                     <span className="text-lg block">{emoji.label}</span>
                     <span className="text-[9px] mt-1 block tracking-tighter">{emoji.text}</span>
@@ -104,30 +104,30 @@ export default function Journal() {
 
             {/* Large Activity notes text area */}
             <div className="flex-1 flex flex-col space-y-2">
-              <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest block">Daily Activity Notes</span>
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest block">Daily Activity Notes</span>
               <textarea
                 placeholder="What did you focus on today? (e.g. Cleanser morning check, correct neck posture maintained, 2.5L water...)"
                 required
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="flex-1 w-full bg-neutral-950/40 border border-neutral-900 rounded-2xl p-6 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors resize-none placeholder-neutral-700 font-medium leading-relaxed"
+                className="flex-1 w-full bg-card border border-border rounded-2xl p-6 text-sm text-foreground focus:outline-none focus:border-primary transition-colors resize-none placeholder-muted-foreground font-medium leading-relaxed"
               />
             </div>
 
             {/* Reflections */}
             <div className="space-y-2">
-              <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest block">Progress Reflections (Optional)</span>
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest block">Progress Reflections (Optional)</span>
               <textarea
                 placeholder="What changes have you noticed? (e.g. Jawline feels more aligned, sleep quality has increased...)"
                 rows="3"
                 value={reflections}
                 onChange={(e) => setReflections(e.target.value)}
-                className="w-full bg-neutral-950/40 border border-neutral-900 rounded-2xl p-4 text-xs text-white focus:outline-none focus:border-purple-500 transition-colors resize-none placeholder-neutral-700 leading-relaxed"
+                className="w-full bg-card border border-border rounded-2xl p-4 text-xs text-foreground focus:outline-none focus:border-primary transition-colors resize-none placeholder-muted-foreground leading-relaxed"
               />
             </div>
           </div>
 
-          <div className="mt-8 pt-4 border-t border-neutral-900 flex justify-end gap-4">
+          <div className="mt-8 pt-4 border-t border-border flex justify-end gap-4">
             <button
               onClick={() => {
                 setNotes('');
@@ -136,7 +136,7 @@ export default function Journal() {
                 setIsDistractionFree(false);
               }}
               type="button"
-              className="px-5 py-3 rounded-xl text-xs font-semibold text-neutral-400 hover:text-white transition-colors"
+              className="px-5 py-3 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               Clear & Close
             </button>
@@ -146,7 +146,7 @@ export default function Journal() {
                 setIsDistractionFree(false);
               }}
               disabled={!notes}
-              className={`px-8 py-3 rounded-xl font-bold text-xs text-white transition-all duration-300 ${notes ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-lg shadow-purple-600/10' : 'bg-neutral-900 border border-neutral-800 text-neutral-500 cursor-not-allowed'}`}
+              className={`px-8 py-3 rounded-xl font-bold text-xs text-white transition-all duration-300 cursor-pointer ${notes ? 'bg-primary hover:opacity-90 shadow-lg' : 'bg-secondary border border-border text-muted-foreground cursor-not-allowed'}`}
             >
               Save Reflection Log (+100 XP)
             </button>
@@ -157,14 +157,14 @@ export default function Journal() {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in text-neutral-100 pb-10">
+    <div className="space-y-8 animate-fade-in text-foreground pb-10">
       
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">
           Transformation Journal
         </h1>
-        <p className="text-sm text-neutral-400">
+        <p className="text-sm text-muted-foreground">
           Reflect on daily adjustments, log mental mood indexes, and document physical posture or skin tone shifts.
         </p>
       </div>
@@ -173,23 +173,23 @@ export default function Journal() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Entry Form (Left Column) */}
-        <div className="glassmorphism border border-neutral-800 p-6 rounded-2xl shadow-xl h-fit">
-          <h3 className="text-base font-bold text-white mb-6 flex items-center justify-between border-b border-neutral-800/50 pb-2">
+        <div className="glassmorphism border border-border p-6 rounded-2xl shadow-xl h-fit bg-card">
+          <h3 className="text-base font-bold text-foreground mb-6 flex items-center justify-between border-b border-border pb-2">
             <span className="flex items-center gap-2">
-              <BookOpen size={18} className="text-purple-400" />
+              <BookOpen size={18} className="text-primary" />
               Write Today's Entry
             </span>
             <button
               type="button"
               onClick={() => setIsDistractionFree(true)}
-              className="text-[10px] text-purple-400 hover:text-purple-300 font-bold border border-purple-500/20 px-2 py-0.5 rounded bg-purple-500/5 transition-colors"
+              className="text-[10px] text-primary hover:underline font-bold border border-primary/20 px-2 py-0.5 rounded bg-primary/5 transition-colors cursor-pointer"
             >
               Full Screen
             </button>
           </h3>
 
           {isSuccess && (
-            <div className="mb-6 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+            <div className="mb-6 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 text-xs font-semibold">
               ✓ Log saved to history timeline! (+100 XP awarded)
             </div>
           )}
@@ -198,14 +198,14 @@ export default function Journal() {
             
             {/* Mood selector */}
             <div className="space-y-3">
-              <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider block">How is your focus/mood?</label>
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">How is your focus/mood?</label>
               <div className="flex justify-between gap-2">
                 {moodEmojis.map((emoji) => (
                   <button
                     key={emoji.value}
                     type="button"
                     onClick={() => setMood(emoji.value)}
-                    className={`flex-1 flex flex-col items-center p-2.5 rounded-xl border text-center transition-all duration-200 ${mood === emoji.value ? 'bg-purple-500/15 border-purple-500 text-purple-300 font-bold glow-accent' : 'bg-neutral-950/40 border-neutral-900 text-neutral-400 hover:text-white'}`}
+                    className={`flex-1 flex flex-col items-center p-2.5 rounded-xl border text-center transition-all duration-200 cursor-pointer ${mood === emoji.value ? 'bg-primary/10 border-primary text-primary font-bold glow-accent' : 'bg-background border-border text-muted-foreground hover:text-foreground'}`}
                   >
                     <span className="text-xl block">{emoji.label}</span>
                     <span className="text-[9px] mt-1 block tracking-tighter">{emoji.text}</span>
@@ -216,32 +216,32 @@ export default function Journal() {
 
             {/* Daily notes */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Daily Activity Notes</label>
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Daily Activity Notes</label>
               <textarea
                 placeholder="What did you focus on today? (e.g. Cleanser morning check, correct neck posture maintained, 2.5L water...)"
                 required
                 rows="3"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full bg-neutral-950/70 border border-neutral-800 rounded-xl py-3 px-4 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors resize-none placeholder-neutral-600"
+                className="w-full bg-background border border-border rounded-xl py-3 px-4 text-xs text-foreground focus:outline-none focus:border-primary transition-colors resize-none placeholder-muted-foreground"
               />
             </div>
 
             {/* Reflections */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Progress Reflections</label>
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Progress Reflections</label>
               <textarea
                 placeholder="What changes have you noticed? (e.g. Jawline feels more aligned, sleep quality has increased...)"
                 rows="3"
                 value={reflections}
                 onChange={(e) => setReflections(e.target.value)}
-                className="w-full bg-neutral-950/70 border border-neutral-800 rounded-xl py-3 px-4 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors resize-none placeholder-neutral-600"
+                className="w-full bg-background border border-border rounded-xl py-3 px-4 text-xs text-foreground focus:outline-none focus:border-primary transition-colors resize-none placeholder-muted-foreground"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-3.5 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 transition-all duration-300 shadow-md shadow-purple-600/10 flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-xl font-bold text-xs text-primary-foreground bg-primary hover:opacity-90 transition-all duration-300 shadow-md flex items-center justify-center gap-2 cursor-pointer"
             >
               <Sparkles size={12} />
               Save Journal Entry
@@ -253,36 +253,36 @@ export default function Journal() {
         {/* History timeline (Right 2 Columns) */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Calendar size={18} className="text-indigo-400" />
+            <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+              <Calendar size={18} className="text-primary" />
               Previous Reflections
             </h3>
-            <span className="text-[10px] font-bold text-neutral-500 bg-neutral-900 border border-neutral-850 px-2 py-0.5 rounded uppercase tracking-wider">
+            <span className="text-[10px] font-bold text-muted-foreground bg-card border border-border px-2 py-0.5 rounded uppercase tracking-wider">
               {filteredLogs.length} Entries found
             </span>
           </div>
 
           {/* Advanced Filter grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-neutral-900/40 p-4 rounded-xl border border-neutral-850">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-card p-4 rounded-xl border border-border">
             {/* Search Input */}
             <div className="space-y-1">
-              <label className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest block">Search Text</label>
+              <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Search Text</label>
               <input
                 type="text"
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 placeholder="Keyword..."
-                className="w-full text-xs bg-neutral-950 border border-neutral-850 focus:border-purple-500 rounded-lg px-3 py-1.5 outline-none text-white placeholder-neutral-700"
+                className="w-full text-xs bg-background border border-border focus:border-primary rounded-lg px-3 py-1.5 outline-none text-foreground placeholder-muted-foreground"
               />
             </div>
 
             {/* Mood selector */}
             <div className="space-y-1">
-              <label className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest block">Mood</label>
+              <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Mood</label>
               <select
                 value={filterMood}
                 onChange={(e) => setFilterMood(e.target.value)}
-                className="w-full text-xs bg-neutral-950 border border-neutral-850 focus:border-purple-500 rounded-lg px-2.5 py-1.5 outline-none text-white cursor-pointer"
+                className="w-full text-xs bg-background border border-border focus:border-primary rounded-lg px-2.5 py-1.5 outline-none text-foreground cursor-pointer"
               >
                 <option value="all">All Moods</option>
                 <option value="1">😫 Stressed</option>
@@ -295,12 +295,12 @@ export default function Journal() {
 
             {/* Date filter */}
             <div className="space-y-1">
-              <label className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest block">Date</label>
+              <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Date</label>
               <input
                 type="date"
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value)}
-                className="w-full text-xs bg-neutral-950 border border-neutral-850 focus:border-purple-500 rounded-lg px-2.5 py-1.5 outline-none text-white"
+                className="w-full text-xs bg-background border border-border focus:border-primary rounded-lg px-2.5 py-1.5 outline-none text-foreground"
               />
             </div>
           </div>
@@ -310,17 +310,17 @@ export default function Journal() {
               {filteredLogs.map((log) => {
                 const currentMoodObj = moodEmojis.find(m => m.value === log.mood);
                 return (
-                  <div key={log.id} className="glassmorphism border border-neutral-800/80 p-5 rounded-2xl shadow-md space-y-4">
+                  <div key={log.id} className="glassmorphism border border-border p-5 rounded-2xl shadow-md space-y-4 bg-card">
                     
                     {/* Header */}
-                    <div className="flex justify-between items-center border-b border-neutral-900 pb-3">
-                      <div className="flex items-center gap-2 text-xs text-neutral-400">
-                        <Calendar size={12} className="text-neutral-500" />
+                    <div className="flex justify-between items-center border-b border-border pb-3">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Calendar size={12} className="text-muted-foreground" />
                         <span>{log.date}</span>
                       </div>
                       
                       {currentMoodObj && (
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[10px] font-bold">
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold">
                           <span>{currentMoodObj.label}</span>
                           <span>{currentMoodObj.text}</span>
                         </div>
@@ -330,16 +330,16 @@ export default function Journal() {
                     {/* Content */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                       <div className="space-y-1">
-                        <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider block">Daily Notes</span>
-                        <p className="text-neutral-300 leading-relaxed bg-neutral-950/40 p-3 rounded-xl border border-neutral-900">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Daily Notes</span>
+                        <p className="text-foreground leading-relaxed bg-background p-3 rounded-xl border border-border">
                           {log.notes}
                         </p>
                       </div>
                       
                       {log.reflections && (
                         <div className="space-y-1">
-                          <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider block">Progress reflections</span>
-                          <p className="text-neutral-300 leading-relaxed bg-neutral-950/40 p-3 rounded-xl border border-neutral-900 italic">
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Progress reflections</span>
+                          <p className="text-foreground leading-relaxed bg-background p-3 rounded-xl border border-border italic">
                             "{log.reflections}"
                           </p>
                         </div>

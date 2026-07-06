@@ -84,7 +84,7 @@ export default function Onboarding() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#07070b] text-neutral-100 flex flex-col items-center justify-center p-4 relative">
+    <div className="min-h-screen bg-[#07070b] text-foreground flex flex-col items-center justify-center p-4 relative">
       {/* Background radial glows */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none"></div>
 
@@ -92,11 +92,11 @@ export default function Onboarding() {
       <div className="w-full max-w-lg mb-8">
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">Step {step} of 4</span>
-          <span className="text-sm font-semibold text-white">
+          <span className="text-sm font-semibold text-foreground">
             {isReonboard ? `Regenerating: ${steps[step-1].title}` : steps[step-1].title}
           </span>
         </div>
-        <div className="w-full h-1.5 bg-neutral-900 rounded-full overflow-hidden border border-neutral-900">
+        <div className="w-full h-1.5 bg-card rounded-full overflow-hidden border border-border">
           <div 
             className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-300"
             style={{ width: `${(step / 4) * 100}%` }}
@@ -105,18 +105,18 @@ export default function Onboarding() {
       </div>
 
       {/* Question Card */}
-      <div className="w-full max-w-lg glassmorphism p-8 rounded-2xl border border-neutral-800 flex flex-col shadow-xl min-h-[380px]">
+      <div className="w-full max-w-lg glassmorphism p-8 rounded-2xl border border-border flex flex-col shadow-xl min-h-[380px]">
         <div className="flex-1">
-          <h2 className="text-xl font-bold text-white mb-1">
+          <h2 className="text-xl font-bold text-foreground mb-1">
             {isReonboard ? `Update ${steps[step-1].title}` : steps[step-1].title}
           </h2>
-          <p className="text-xs text-neutral-400 mb-8">{steps[step-1].description}</p>
+          <p className="text-xs text-muted-foreground mb-8">{steps[step-1].description}</p>
 
           {/* STEP 1: Basic details */}
           {step === 1 && (
             <div className="space-y-6 animate-fade-in">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Your Age: {age}</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Your Age: {age}</label>
                 <input
                   type="range"
                   min="16"
@@ -125,7 +125,7 @@ export default function Onboarding() {
                   onChange={(e) => setAge(e.target.value)}
                   className="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-blue-500"
                 />
-                <div className="flex justify-between text-[10px] text-neutral-500 font-medium">
+                <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
                   <span>16 Years</span>
                   <span>35 Years</span>
                   <span>60 Years</span>
@@ -133,13 +133,13 @@ export default function Onboarding() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Biological Gender</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Biological Gender</label>
                 <div className="grid grid-cols-3 gap-3">
                   {['Male', 'Female', 'Other'].map((g) => (
                     <button
                       key={g}
                       onClick={() => setGender(g)}
-                      className={`py-3 rounded-xl border text-xs font-semibold transition-all duration-200 ${gender === g ? 'bg-blue-500/10 border-blue-500 text-blue-400 font-bold' : 'bg-neutral-950/40 border-neutral-800/80 text-neutral-400 hover:text-white'}`}
+                      className={`py-3 rounded-xl border text-xs font-semibold transition-all duration-200 ${gender === g ? 'bg-blue-500/10 border-blue-500 text-blue-400 font-bold' : 'bg-background/40 border-border text-muted-foreground hover:text-foreground'}`}
                     >
                       {g}
                     </button>
@@ -153,23 +153,23 @@ export default function Onboarding() {
           {step === 2 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-fade-in">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Height (cm)</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Height (cm)</label>
                 <input
                   type="number"
                   placeholder="e.g. 180"
                   value={height}
                   onChange={(e) => setHeight(e.target.value)}
-                  className="w-full bg-neutral-950/70 border border-neutral-800 rounded-xl py-3 px-4 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-background/70 border border-border rounded-xl py-3 px-4 text-xs text-foreground focus:outline-none focus:border-blue-500 transition-colors"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Weight (kg)</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Weight (kg)</label>
                 <input
                   type="number"
                   placeholder="e.g. 75"
                   value={weight}
                   onChange={(e) => setWeight(e.target.value)}
-                  className="w-full bg-neutral-950/70 border border-neutral-800 rounded-xl py-3 px-4 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-background/70 border border-border rounded-xl py-3 px-4 text-xs text-foreground focus:outline-none focus:border-blue-500 transition-colors"
                 />
               </div>
             </div>
@@ -179,24 +179,24 @@ export default function Onboarding() {
           {step === 3 && (
             <div className="space-y-5 animate-fade-in">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Describe your goals</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Describe your goals</label>
                 <textarea
                   placeholder="I want to improve..."
                   value={goal}
                   onChange={(e) => setGoal(e.target.value)}
                   rows="3"
-                  className="w-full bg-neutral-950/70 border border-neutral-800 rounded-xl py-3 px-4 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors resize-none placeholder-neutral-600"
+                  className="w-full bg-background/70 border border-border rounded-xl py-3 px-4 text-xs text-foreground focus:outline-none focus:border-blue-500 transition-colors resize-none placeholder-neutral-600"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Primary Focus Area</label>
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Primary Focus Area</label>
                 <div className="grid grid-cols-2 gap-3">
                   {['Face', 'Fitness', 'Grooming', 'Overall'].map((area) => (
                     <button
                       key={area}
                       onClick={() => setFocusArea(area)}
-                      className={`py-3 rounded-xl border text-xs font-semibold transition-all duration-200 ${focusArea === area ? 'bg-blue-500/10 border-blue-500 text-blue-400 font-bold' : 'bg-neutral-950/40 border-neutral-800/80 text-neutral-400 hover:text-white'}`}
+                      className={`py-3 rounded-xl border text-xs font-semibold transition-all duration-200 ${focusArea === area ? 'bg-blue-500/10 border-blue-500 text-blue-400 font-bold' : 'bg-background/40 border-border text-muted-foreground hover:text-foreground'}`}
                     >
                       {area}
                     </button>
@@ -209,7 +209,7 @@ export default function Onboarding() {
           {/* STEP 4: Experience Level */}
           {step === 4 && (
             <div className="space-y-4 animate-fade-in">
-              <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Your Experience Level</label>
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Your Experience Level</label>
               <div className="space-y-3">
                 {[
                   { id: 'Beginner', desc: 'New to grooming routines and structural physical posture alignment.' },
@@ -219,14 +219,14 @@ export default function Onboarding() {
                   <div
                     key={exp.id}
                     onClick={() => setExperience(exp.id)}
-                    className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 ${experience === exp.id ? 'bg-blue-500/5 border-blue-500' : 'bg-neutral-950/40 border-neutral-800/80 hover:border-neutral-700'}`}
+                    className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 flex items-start gap-3 ${experience === exp.id ? 'bg-blue-500/5 border-blue-500' : 'bg-background/40 border-border hover:border-neutral-700'}`}
                   >
-                    <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center ${experience === exp.id ? 'border-blue-500 bg-blue-500 text-white' : 'border-neutral-700'}`}>
+                    <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center ${experience === exp.id ? 'border-blue-500 bg-blue-500 text-foreground' : 'border-neutral-700'}`}>
                       {experience === exp.id && <Check size={10} />}
                     </div>
                     <div>
-                      <span className="text-sm font-bold text-white block">{exp.id}</span>
-                      <span className="text-[10px] text-neutral-400 mt-0.5 block">{exp.desc}</span>
+                      <span className="text-sm font-bold text-foreground block">{exp.id}</span>
+                      <span className="text-[10px] text-muted-foreground mt-0.5 block">{exp.desc}</span>
                     </div>
                   </div>
                 ))}
@@ -236,11 +236,11 @@ export default function Onboarding() {
         </div>
 
         {/* Buttons footer */}
-        <div className="flex items-center justify-between border-t border-neutral-900 pt-6 mt-8">
+        <div className="flex items-center justify-between border-t border-border pt-6 mt-8">
           <button
             onClick={prevStep}
             disabled={step === 1}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${step === 1 ? 'text-neutral-600 cursor-not-allowed' : 'text-neutral-400 hover:text-white bg-neutral-900/60 border border-neutral-800'}`}
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 ${step === 1 ? 'text-neutral-600 cursor-not-allowed' : 'text-muted-foreground hover:text-foreground bg-card/60 border border-border'}`}
           >
             <ArrowLeft size={14} />
             Back
@@ -249,7 +249,7 @@ export default function Onboarding() {
           {step < 4 ? (
             <button
               onClick={nextStep}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 transition-colors flex items-center gap-1.5"
+              className="px-5 py-2.5 rounded-xl text-xs font-bold text-foreground bg-blue-600 hover:bg-blue-500 transition-colors flex items-center gap-1.5"
             >
               Continue
               <ArrowRight size={14} />
@@ -257,7 +257,7 @@ export default function Onboarding() {
           ) : (
             <button
               onClick={handleFinish}
-              className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-colors shadow-lg shadow-blue-500/10 flex items-center gap-1.5"
+              className="px-6 py-2.5 rounded-xl text-xs font-bold text-foreground bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-colors shadow-lg shadow-blue-500/10 flex items-center gap-1.5"
             >
               <Sparkles size={14} />
               {isReonboard ? 'Regenerate Journey' : 'Ascend Now'}

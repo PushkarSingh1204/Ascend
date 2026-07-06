@@ -114,18 +114,18 @@ export default function PremiumTools() {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in text-neutral-100 max-w-4xl mx-auto pb-10">
+    <div className="space-y-8 animate-fade-in text-foreground max-w-4xl mx-auto pb-10">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2 flex items-center gap-2">
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2 flex items-center gap-2">
             Premium Transformation Tools
             <span className="text-xs font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 rounded-full">
               Plus
             </span>
           </h1>
-          <p className="text-sm text-neutral-400">
+          <p className="text-sm text-muted-foreground">
             Interactive simulators and structural guidance to refine your style, camera techniques, and longevity.
           </p>
         </div>
@@ -133,7 +133,7 @@ export default function PremiumTools() {
         {!isPremium && (
           <button
             onClick={unlockPremium}
-            className="w-full md:w-auto px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-indigo-500/10"
+            className="w-full md:w-auto px-5 py-2.5 rounded-xl text-xs font-bold text-foreground bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-indigo-500/10"
           >
             <Lock size={12} />
             Unlock All with Ascend Plus
@@ -142,7 +142,7 @@ export default function PremiumTools() {
       </div>
 
       {/* Main Tabs Navigation */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-neutral-900">
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-border">
         {[
           { id: 'photo_coach', label: '📸 Photo Coach', icon: Camera },
           { id: 'outfit_sim', label: '👕 Outfit Match', icon: Layers },
@@ -155,7 +155,7 @@ export default function PremiumTools() {
             <button
               key={tab.id}
               onClick={() => setActiveTool(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold shrink-0 transition-colors ${activeTool === tab.id ? 'bg-indigo-600 text-white' : 'bg-neutral-900 text-neutral-400 hover:bg-neutral-850 hover:text-white'}`}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold shrink-0 transition-colors ${activeTool === tab.id ? 'bg-indigo-600 text-foreground' : 'bg-card text-muted-foreground hover:bg-neutral-850 hover:text-foreground'}`}
             >
               <Icon size={14} />
               {tab.label}
@@ -170,8 +170,8 @@ export default function PremiumTools() {
           <div className="flex items-start gap-3">
             <Lock className="text-indigo-400 mt-0.5 shrink-0" size={18} />
             <div>
-              <h4 className="text-sm font-bold text-white">Ascend Plus Tool</h4>
-              <p className="text-xs text-neutral-400 mt-0.5 leading-relaxed">
+              <h4 className="text-sm font-bold text-foreground">Ascend Plus Tool</h4>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
                 This simulator uses advanced structural models. Subscribe to Ascend Plus to unlock unlimited tests.
               </p>
             </div>
@@ -191,36 +191,36 @@ export default function PremiumTools() {
         {/* 1. PHOTO COACH */}
         {activeTool === 'photo_coach' && (
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-            <div className="md:col-span-2 glassmorphism p-6 rounded-2xl border border-neutral-800/80 flex flex-col justify-between items-center text-center">
-              <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest text-left w-full mb-4">
+            <div className="md:col-span-2 glassmorphism p-6 rounded-2xl border border-border flex flex-col justify-between items-center text-center">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest text-left w-full mb-4">
                 Upload Target Photo
               </span>
-              <div className="w-full aspect-square rounded-xl bg-neutral-950/80 border border-neutral-900 flex flex-col items-center justify-center p-6 text-center border-dashed">
+              <div className="w-full aspect-square rounded-xl bg-background/80 border border-border flex flex-col items-center justify-center p-6 text-center border-dashed">
                 <Sun className="text-indigo-500/30 mb-3 animate-pulse" size={32} />
-                <span className="text-xs font-bold text-white">Front or 3/4 Profile</span>
-                <span className="text-[10px] text-neutral-500 mt-1">Natural diffused indoor light</span>
+                <span className="text-xs font-bold text-foreground">Front or 3/4 Profile</span>
+                <span className="text-[10px] text-muted-foreground mt-1">Natural diffused indoor light</span>
                 <button
                   onClick={triggerPhotoCoach}
                   disabled={isAnalyzingPhoto}
-                  className="mt-6 px-4 py-2 rounded-xl text-xs font-bold bg-neutral-900 border border-neutral-800 hover:border-neutral-750 text-white transition-colors"
+                  className="mt-6 px-4 py-2 rounded-xl text-xs font-bold bg-card border border-border hover:border-neutral-750 text-foreground transition-colors"
                 >
                   {isAnalyzingPhoto ? 'Analyzing...' : 'Simulate Analysis'}
                 </button>
               </div>
             </div>
 
-            <div className="md:col-span-3 glassmorphism p-6 rounded-2xl border border-neutral-800/80 flex flex-col justify-between">
+            <div className="md:col-span-3 glassmorphism p-6 rounded-2xl border border-border flex flex-col justify-between">
               <div>
-                <h3 className="text-sm font-bold text-white border-b border-neutral-850 pb-2 flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground border-b border-border pb-2 flex items-center gap-2">
                   <Camera size={16} className="text-blue-400" />
                   Photo Coach Feedback
                 </h3>
 
                 {photoFeedback ? (
                   <div className="space-y-4 mt-4">
-                    <div className="flex justify-between items-center bg-neutral-950/40 p-3.5 rounded-xl border border-neutral-900">
+                    <div className="flex justify-between items-center bg-background/40 p-3.5 rounded-xl border border-border">
                       <div>
-                        <span className="text-[9px] font-bold text-neutral-500 uppercase block">Composition Score</span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase block">Composition Score</span>
                         <span className="text-sm font-black text-emerald-400 block mt-0.5">{photoFeedback.score}/100</span>
                       </div>
                       <span className="text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
@@ -231,15 +231,15 @@ export default function PremiumTools() {
                     <div className="space-y-3 text-xs leading-relaxed">
                       <div>
                         <strong className="text-blue-400 block text-[10px] uppercase tracking-wider mb-0.5">Lighting Check</strong>
-                        <p className="text-neutral-300">{photoFeedback.lighting}</p>
+                        <p className="text-foreground">{photoFeedback.lighting}</p>
                       </div>
                       <div>
                         <strong className="text-indigo-400 block text-[10px] uppercase tracking-wider mb-0.5">Angle Alignment</strong>
-                        <p className="text-neutral-300">{photoFeedback.angle}</p>
+                        <p className="text-foreground">{photoFeedback.angle}</p>
                       </div>
                       <div>
                         <strong className="text-purple-400 block text-[10px] uppercase tracking-wider mb-1">Grooming Prep Tips</strong>
-                        <ul className="space-y-1.5 text-neutral-400">
+                        <ul className="space-y-1.5 text-muted-foreground">
                           {photoFeedback.tips.map((tip, i) => (
                             <li key={i} className="flex items-start gap-2">
                               <Check size={12} className="text-purple-500 mt-0.5 shrink-0" />
@@ -251,12 +251,12 @@ export default function PremiumTools() {
                     </div>
                   </div>
                 ) : (
-                  <div className="py-16 text-center text-xs text-neutral-500 italic">
+                  <div className="py-16 text-center text-xs text-muted-foreground italic">
                     {isAnalyzingPhoto ? 'Analyzing lighting parameters & landmarks alignment...' : 'Simulate a photo analysis to check alignment.'}
                   </div>
                 )}
               </div>
-              <p className="text-[9px] text-neutral-500 border-t border-neutral-900 pt-3 mt-4">
+              <p className="text-[9px] text-muted-foreground border-t border-border pt-3 mt-4">
                 * Correct alignment and lighting decreases biometric scan variations by up to 14%.
               </p>
             </div>
@@ -266,8 +266,8 @@ export default function PremiumTools() {
         {/* 2. OUTFIT SIMULATOR */}
         {activeTool === 'outfit_sim' && (
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-            <div className="md:col-span-2 glassmorphism p-6 rounded-2xl border border-neutral-800/80 space-y-4">
-              <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest block">
+            <div className="md:col-span-2 glassmorphism p-6 rounded-2xl border border-border space-y-4">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest block">
                 Select Fashion Vibe
               </span>
               <div className="grid grid-cols-2 gap-3">
@@ -280,7 +280,7 @@ export default function PremiumTools() {
                   <button
                     key={style.id}
                     onClick={() => triggerOutfitEvaluation(style.id)}
-                    className={`p-4 rounded-xl text-xs font-bold border text-center transition-all flex flex-col items-center justify-center gap-2 ${selectedOutfit === style.id ? 'bg-indigo-500/10 border-indigo-500 text-indigo-400' : 'bg-neutral-900 border-neutral-855 hover:border-neutral-750 text-neutral-400'}`}
+                    className={`p-4 rounded-xl text-xs font-bold border text-center transition-all flex flex-col items-center justify-center gap-2 ${selectedOutfit === style.id ? 'bg-indigo-500/10 border-indigo-500 text-indigo-400' : 'bg-card border-neutral-855 hover:border-neutral-750 text-muted-foreground'}`}
                   >
                     <span className="text-xl">{style.emoji}</span>
                     <span>{style.label}</span>
@@ -289,21 +289,21 @@ export default function PremiumTools() {
               </div>
             </div>
 
-            <div className="md:col-span-3 glassmorphism p-6 rounded-2xl border border-neutral-800/80 flex flex-col justify-between">
+            <div className="md:col-span-3 glassmorphism p-6 rounded-2xl border border-border flex flex-col justify-between">
               <div>
-                <h3 className="text-sm font-bold text-white border-b border-neutral-850 pb-2 flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground border-b border-border pb-2 flex items-center gap-2">
                   <Layers size={16} className="text-indigo-400" />
                   Color & Neckline Analysis
                 </h3>
 
                 {outfitFeedback ? (
                   <div className="space-y-4 mt-4">
-                    <div className="flex justify-between items-center bg-neutral-950/40 p-3.5 rounded-xl border border-neutral-900">
+                    <div className="flex justify-between items-center bg-background/40 p-3.5 rounded-xl border border-border">
                       <div>
-                        <span className="text-[9px] font-bold text-neutral-500 uppercase block">Facial Frame Match</span>
+                        <span className="text-[9px] font-bold text-muted-foreground uppercase block">Facial Frame Match</span>
                         <span className="text-sm font-black text-indigo-400 block mt-0.5">{outfitFeedback.score}/100</span>
                       </div>
-                      <span className="text-[9px] font-bold text-indigo-450 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-550/20">
+                      <span className="text-[9px] font-bold text-primary bg-indigo-500/10 px-2 py-0.5 rounded-full border border-primary/20">
                         {outfitFeedback.score >= 90 ? 'Ideal Frame' : 'Acceptable'}
                       </span>
                     </div>
@@ -311,7 +311,7 @@ export default function PremiumTools() {
                     <div className="space-y-3 text-xs leading-relaxed">
                       <div>
                         <strong className="text-indigo-405 block text-[10px] uppercase tracking-wider mb-0.5">Symmetry Harmony</strong>
-                        <p className="text-neutral-300">{outfitFeedback.harmony}</p>
+                        <p className="text-foreground">{outfitFeedback.harmony}</p>
                       </div>
                       <div>
                         <strong className="text-purple-400 block text-[10px] uppercase tracking-wider mb-1">Frame Hacks</strong>
@@ -332,7 +332,7 @@ export default function PremiumTools() {
                   </div>
                 )}
               </div>
-              <p className="text-[9px] text-neutral-500 border-t border-neutral-905 pt-3 mt-4">
+              <p className="text-[9px] text-muted-foreground border-t border-neutral-905 pt-3 mt-4">
                 * Wardrobe contrast tuning increases facial tone clarity and balances jaw geometry.
               </p>
             </div>
@@ -342,13 +342,13 @@ export default function PremiumTools() {
         {/* 3. HAIR COLOR SIMULATOR */}
         {activeTool === 'hair_sim' && (
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-            <div className="md:col-span-2 glassmorphism p-6 rounded-2xl border border-neutral-800/80 space-y-4">
-              <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest block">
+            <div className="md:col-span-2 glassmorphism p-6 rounded-2xl border border-border space-y-4">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest block">
                 Select Hair Tint
               </span>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { id: 'black', label: 'Deep Black', color: 'bg-neutral-950' },
+                  { id: 'black', label: 'Deep Black', color: 'bg-background' },
                   { id: 'brown', label: 'Warm Brown', color: 'bg-amber-900' },
                   { id: 'blonde', label: 'Golden Blonde', color: 'bg-amber-300' },
                   { id: 'platinum', label: 'Platinum Silver', color: 'bg-neutral-300' }
@@ -356,7 +356,7 @@ export default function PremiumTools() {
                   <button
                     key={hair.id}
                     onClick={() => setSelectedHairColor(hair.id)}
-                    className={`p-3 rounded-xl border text-xs font-bold flex items-center gap-3 transition-colors ${selectedHairColor === hair.id ? 'bg-indigo-500/10 border-indigo-500 text-indigo-400' : 'bg-neutral-900 border-neutral-850 hover:border-neutral-750 text-neutral-400'}`}
+                    className={`p-3 rounded-xl border text-xs font-bold flex items-center gap-3 transition-colors ${selectedHairColor === hair.id ? 'bg-indigo-500/10 border-indigo-500 text-indigo-400' : 'bg-card border-border hover:border-neutral-750 text-muted-foreground'}`}
                   >
                     <span className={`w-5 h-5 rounded-full border border-white/20 shrink-0 ${hair.color}`}></span>
                     <span>{hair.label}</span>
@@ -365,9 +365,9 @@ export default function PremiumTools() {
               </div>
             </div>
 
-            <div className="md:col-span-3 glassmorphism p-6 rounded-2xl border border-neutral-800/80 flex flex-col justify-between">
+            <div className="md:col-span-3 glassmorphism p-6 rounded-2xl border border-border flex flex-col justify-between">
               <div>
-                <h3 className="text-sm font-bold text-white border-b border-neutral-850 pb-2 flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground border-b border-border pb-2 flex items-center gap-2">
                   <Sliders size={16} className="text-blue-400" />
                   Color Undertone Suggestions
                 </h3>
@@ -375,7 +375,7 @@ export default function PremiumTools() {
                 <div className="space-y-4 mt-4 text-xs leading-relaxed">
                   {selectedHairColor === 'black' && (
                     <>
-                      <p className="text-neutral-300">
+                      <p className="text-foreground">
                         <strong>Deep Black:</strong> Emphasizes cool and olive undertones. Strong dark-contrast values define the brow border and hairline boundary sharply.
                       </p>
                       <span className="inline-block text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
@@ -385,7 +385,7 @@ export default function PremiumTools() {
                   )}
                   {selectedHairColor === 'brown' && (
                     <>
-                      <p className="text-neutral-300">
+                      <p className="text-foreground">
                         <strong>Warm Brown:</strong> Softens strong facial features. Creates a friendly, balanced vertical dimension. Perfect for neutralizing reddish skin blemishes.
                       </p>
                       <span className="inline-block text-[10px] text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 rounded-full">
@@ -395,7 +395,7 @@ export default function PremiumTools() {
                   )}
                   {selectedHairColor === 'blonde' && (
                     <>
-                      <p className="text-neutral-300">
+                      <p className="text-foreground">
                         <strong>Golden Blonde:</strong> Highlights warm tones. Drawbacks include washing out pale skin configurations. Perfect for medium-toned honey skin profiles.
                       </p>
                       <span className="inline-block text-[10px] text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 px-2.5 py-0.5 rounded-full">
@@ -405,7 +405,7 @@ export default function PremiumTools() {
                   )}
                   {selectedHairColor === 'platinum' && (
                     <>
-                      <p className="text-neutral-300">
+                      <p className="text-foreground">
                         <strong>Platinum Silver:</strong> High styling index. Strips warm glare, emphasizing cool skin paleness and bringing intense eyes into prominence.
                       </p>
                       <span className="inline-block text-[10px] text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 rounded-full">
@@ -415,7 +415,7 @@ export default function PremiumTools() {
                   )}
                 </div>
               </div>
-              <p className="text-[9px] text-neutral-500 border-t border-neutral-900 pt-3 mt-4">
+              <p className="text-[9px] text-muted-foreground border-t border-border pt-3 mt-4">
                 * Select style tones that maintain or elevate your natural eye-hair contrast level.
               </p>
             </div>
@@ -425,27 +425,27 @@ export default function PremiumTools() {
         {/* 4. CELEBRITY MATCH */}
         {activeTool === 'celeb_match' && (
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-            <div className="md:col-span-2 glassmorphism p-6 rounded-2xl border border-neutral-800/80 flex flex-col justify-between items-center text-center">
-              <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest text-left w-full mb-4">
+            <div className="md:col-span-2 glassmorphism p-6 rounded-2xl border border-border flex flex-col justify-between items-center text-center">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest text-left w-full mb-4">
                 Similarity Engine
               </span>
-              <div className="w-full aspect-square rounded-xl bg-neutral-950/85 border border-neutral-900 flex flex-col items-center justify-center p-6 text-center border-dashed">
+              <div className="w-full aspect-square rounded-xl bg-background/85 border border-border flex flex-col items-center justify-center p-6 text-center border-dashed">
                 <UserCheck className="text-purple-500/30 mb-3 animate-pulse" size={32} />
-                <span className="text-xs font-bold text-white">Compare Facial Thirds</span>
-                <span className="text-[10px] text-neutral-500 mt-1">Scans 478 points against database</span>
+                <span className="text-xs font-bold text-foreground">Compare Facial Thirds</span>
+                <span className="text-[10px] text-muted-foreground mt-1">Scans 478 points against database</span>
                 <button
                   onClick={triggerCelebScan}
                   disabled={isScanningCeleb}
-                  className="mt-6 px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors"
+                  className="mt-6 px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-foreground transition-colors"
                 >
                   {isScanningCeleb ? 'Comparing meshes...' : 'Scan Matches'}
                 </button>
               </div>
             </div>
 
-            <div className="md:col-span-3 glassmorphism p-6 rounded-2xl border border-neutral-800/80 flex flex-col justify-between">
+            <div className="md:col-span-3 glassmorphism p-6 rounded-2xl border border-border flex flex-col justify-between">
               <div>
-                <h3 className="text-sm font-bold text-white border-b border-neutral-850 pb-2 flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground border-b border-border pb-2 flex items-center gap-2">
                   <Sparkles size={16} className="text-purple-400" />
                   Top Celebrity Matches
                 </h3>
@@ -453,10 +453,10 @@ export default function PremiumTools() {
                 {celebMatches ? (
                   <div className="space-y-3 mt-4">
                     {celebMatches.map((match) => (
-                      <div key={match.name} className="bg-neutral-950/40 p-3 rounded-xl border border-neutral-900 flex justify-between items-center">
+                      <div key={match.name} className="bg-background/40 p-3 rounded-xl border border-border flex justify-between items-center">
                         <div className="space-y-1">
-                          <span className="text-xs font-bold text-white block">{match.name}</span>
-                          <span className="text-[10px] text-neutral-400 block leading-normal">{match.reason}</span>
+                          <span className="text-xs font-bold text-foreground block">{match.name}</span>
+                          <span className="text-[10px] text-muted-foreground block leading-normal">{match.reason}</span>
                         </div>
                         <span className="text-xs font-extrabold text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-lg shrink-0">
                           {match.match}% Match
@@ -465,12 +465,12 @@ export default function PremiumTools() {
                     ))}
                   </div>
                 ) : (
-                  <div className="py-16 text-center text-xs text-neutral-500 italic">
+                  <div className="py-16 text-center text-xs text-muted-foreground italic">
                     {isScanningCeleb ? 'Comparing landmarks with database models...' : 'Run Similarity check to discover matching structures.'}
                   </div>
                 )}
               </div>
-              <p className="text-[9px] text-neutral-500 border-t border-neutral-900 pt-3 mt-4">
+              <p className="text-[9px] text-muted-foreground border-t border-border pt-3 mt-4">
                 * Matching structures indicate similar hair parting styles and eyeglasses styles.
               </p>
             </div>
@@ -480,17 +480,17 @@ export default function PremiumTools() {
         {/* 5. AGING SLIDER */}
         {activeTool === 'aging_sim' && (
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-            <div className="md:col-span-2 glassmorphism p-6 rounded-2xl border border-neutral-800/80 flex flex-col justify-between items-center">
+            <div className="md:col-span-2 glassmorphism p-6 rounded-2xl border border-border flex flex-col justify-between items-center">
               <div className="w-full text-left">
-                <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest block mb-1">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest block mb-1">
                   Longevity Aging Slider
                 </span>
-                <span className="text-[10px] text-neutral-500 block">Simulate structural changes</span>
+                <span className="text-[10px] text-muted-foreground block">Simulate structural changes</span>
               </div>
 
               <div className="w-full py-8 space-y-6">
                 <div className="text-center">
-                  <span className="text-xs font-bold text-neutral-500">Target Age</span>
+                  <span className="text-xs font-bold text-muted-foreground">Target Age</span>
                   <div className="text-3xl font-black text-indigo-400 mt-1">{selectedAge} Years</div>
                 </div>
 
@@ -500,10 +500,10 @@ export default function PremiumTools() {
                   max="80"
                   value={selectedAge}
                   onChange={(e) => setSelectedAge(parseInt(e.target.value))}
-                  className="w-full h-1.5 rounded-full bg-neutral-900 border border-neutral-800/80 outline-none appearance-none cursor-pointer accent-indigo-500"
+                  className="w-full h-1.5 rounded-full bg-card border border-border outline-none appearance-none cursor-pointer accent-indigo-500"
                 />
 
-                <div className="flex justify-between text-[10px] text-neutral-500">
+                <div className="flex justify-between text-[10px] text-muted-foreground">
                   <span>20 years</span>
                   <span>50 years</span>
                   <span>80 years</span>
@@ -512,28 +512,28 @@ export default function PremiumTools() {
               <div></div>
             </div>
 
-            <div className="md:col-span-3 glassmorphism p-6 rounded-2xl border border-neutral-800/80 flex flex-col justify-between min-h-[260px]">
+            <div className="md:col-span-3 glassmorphism p-6 rounded-2xl border border-border flex flex-col justify-between min-h-[260px]">
               <div>
-                <h3 className="text-sm font-bold text-white border-b border-neutral-850 pb-2 flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground border-b border-border pb-2 flex items-center gap-2">
                   <Hourglass size={16} className="text-amber-400" />
                   Structural Facial Shift Analysis
                 </h3>
 
                 <div className="space-y-4 mt-4">
-                  <div className="bg-neutral-950/40 p-3.5 rounded-xl border border-neutral-900 text-xs">
-                    <span className="text-neutral-400 font-bold uppercase tracking-wider text-[9px] block">Expected Skin Laxity Status</span>
-                    <p className="text-neutral-300 mt-1.5 leading-relaxed">{getAgingDescription(selectedAge)}</p>
+                  <div className="bg-background/40 p-3.5 rounded-xl border border-border text-xs">
+                    <span className="text-muted-foreground font-bold uppercase tracking-wider text-[9px] block">Expected Skin Laxity Status</span>
+                    <p className="text-foreground mt-1.5 leading-relaxed">{getAgingDescription(selectedAge)}</p>
                   </div>
 
                   <div className="p-3.5 rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-2.5">
                     <AlertCircle className="text-amber-400 shrink-0 mt-0.5" size={13} />
-                    <p className="text-[10px] text-neutral-400 leading-normal">
+                    <p className="text-[10px] text-muted-foreground leading-normal">
                       <strong>Habit Shift Guard:</strong> Consistent routines (SPF 30+ daily, proper sleep, back sleeping, nasal breathing) decelerate these structural shifts by up to 25% over a 10-year span.
                     </p>
                   </div>
                 </div>
               </div>
-              <p className="text-[9px] text-neutral-500 border-t border-neutral-900 pt-3 mt-4">
+              <p className="text-[9px] text-muted-foreground border-t border-border pt-3 mt-4">
                 * Longevity simulator predictions are mathematical estimations based on tissue degradation coefficients.
               </p>
             </div>

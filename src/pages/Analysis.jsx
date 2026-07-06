@@ -188,14 +188,14 @@ export default function Analysis() {
   const compareScan = analysesList.find(s => s.id === compareScanId);
 
   return (
-    <div className="space-y-8 animate-fade-in text-neutral-100 max-w-4xl mx-auto pb-10">
+    <div className="space-y-8 animate-fade-in text-foreground max-w-4xl mx-auto pb-10">
       
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">
           Facial Harmony Analysis
         </h1>
-        <p className="text-sm text-neutral-400">
+        <p className="text-sm text-muted-foreground">
           Measure structural symmetry and proportion parameters client-side. Complete your routines to unlock your potential.
         </p>
       </div>
@@ -206,18 +206,18 @@ export default function Analysis() {
           {/* Medical / Scientific Disclaimer Box */}
           <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/15 flex items-start gap-3">
             <AlertTriangle className="text-blue-400 mt-0.5 shrink-0" size={16} />
-            <p className="text-xs text-neutral-400 leading-normal">
+            <p className="text-xs text-muted-foreground leading-normal">
               <strong>Estimate Disclaimer:</strong> All metrics, including Facial Harmony, Symmetry, and Proportion Scores, are automated AI estimates intended for general grooming and posture feedback, and are not medical, scientific, or diagnostic measurements. Photos are processed strictly on your device.
             </p>
           </div>
 
-          <div className="glassmorphism p-6 rounded-2xl flex flex-col items-center justify-center border border-neutral-800/80 min-h-[340px] text-center relative overflow-hidden max-w-xl mx-auto">
+          <div className="glassmorphism p-6 rounded-2xl flex flex-col items-center justify-center border border-border min-h-[340px] text-center relative overflow-hidden max-w-xl mx-auto">
             {frontImage ? (
               <div className="relative w-full h-full flex flex-col items-center">
                 <img 
                   src={frontImage} 
                   alt="Front view preview" 
-                  className="w-full max-h-[240px] object-contain rounded-xl border border-neutral-800"
+                  className="w-full max-h-[240px] object-contain rounded-xl border border-border"
                 />
                 <button 
                   onClick={() => { setFrontImage(null); setFrontFile(null); }}
@@ -232,8 +232,8 @@ export default function Analysis() {
                   <Upload size={22} />
                 </div>
                 <div>
-                  <span className="text-sm font-bold text-white block">Step 1: Frontal Profile Photo</span>
-                  <span className="text-[11px] text-neutral-500 mt-1 block">Click to select (JPG, PNG)</span>
+                  <span className="text-sm font-bold text-foreground block">Step 1: Frontal Profile Photo</span>
+                  <span className="text-[11px] text-muted-foreground mt-1 block">Click to select (JPG, PNG)</span>
                 </div>
                 <input
                   type="file"
@@ -249,7 +249,7 @@ export default function Analysis() {
             <button
               onClick={() => setActiveView('step2')}
               disabled={!frontImage}
-              className={`px-8 py-3.5 rounded-xl font-bold text-xs text-white transition-all duration-300 flex items-center gap-1.5 ${frontImage ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/10' : 'bg-neutral-900 border border-neutral-800 text-neutral-500 cursor-not-allowed'}`}
+              className={`px-8 py-3.5 rounded-xl font-bold text-xs text-foreground transition-all duration-300 flex items-center gap-1.5 ${frontImage ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/10' : 'bg-card border border-border text-muted-foreground cursor-not-allowed'}`}
             >
               Next: Side Profile Photo
               <ChevronRight size={14} />
@@ -261,13 +261,13 @@ export default function Analysis() {
       {/* STEP 2: Upload Side Image */}
       {activeView === 'step2' && (
         <section className="space-y-6">
-          <div className="glassmorphism p-6 rounded-2xl flex flex-col items-center justify-center border border-neutral-800/80 min-h-[340px] text-center relative overflow-hidden max-w-xl mx-auto">
+          <div className="glassmorphism p-6 rounded-2xl flex flex-col items-center justify-center border border-border min-h-[340px] text-center relative overflow-hidden max-w-xl mx-auto">
             {sideImage ? (
               <div className="relative w-full h-full flex flex-col items-center">
                 <img 
                   src={sideImage} 
                   alt="Side view preview" 
-                  className="w-full max-h-[240px] object-contain rounded-xl border border-neutral-800"
+                  className="w-full max-h-[240px] object-contain rounded-xl border border-border"
                 />
                 <button 
                   onClick={() => { setSideImage(null); setSideFile(null); }}
@@ -282,8 +282,8 @@ export default function Analysis() {
                   <Upload size={22} />
                 </div>
                 <div>
-                  <span className="text-sm font-bold text-white block">Step 2: Side Profile Photo</span>
-                  <span className="text-[11px] text-neutral-500 mt-1 block">Click to select (JPG, PNG)</span>
+                  <span className="text-sm font-bold text-foreground block">Step 2: Side Profile Photo</span>
+                  <span className="text-[11px] text-muted-foreground mt-1 block">Click to select (JPG, PNG)</span>
                 </div>
                 <input
                   type="file"
@@ -298,7 +298,7 @@ export default function Analysis() {
           <div className="flex justify-between items-center max-w-xl mx-auto pt-4">
             <button
               onClick={() => setActiveView('step1')}
-              className="px-5 py-3 rounded-xl border border-neutral-850 hover:border-neutral-700 bg-neutral-900 text-xs font-semibold text-neutral-300 transition-colors flex items-center gap-1.5"
+              className="px-5 py-3 rounded-xl border border-border hover:border-neutral-700 bg-card text-xs font-semibold text-foreground transition-colors flex items-center gap-1.5"
             >
               <ChevronLeft size={14} />
               Back
@@ -307,7 +307,7 @@ export default function Analysis() {
             <button
               onClick={handleStartAnalysis}
               disabled={!sideImage}
-              className={`px-8 py-3.5 rounded-xl font-bold text-xs text-white transition-all duration-300 flex items-center gap-1.5 ${sideImage ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/10' : 'bg-neutral-900 border border-neutral-800 text-neutral-500 cursor-not-allowed'}`}
+              className={`px-8 py-3.5 rounded-xl font-bold text-xs text-foreground transition-all duration-300 flex items-center gap-1.5 ${sideImage ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/10' : 'bg-card border border-border text-muted-foreground cursor-not-allowed'}`}
             >
               <Sparkles size={14} />
               Start Biometric Analysis
@@ -318,14 +318,14 @@ export default function Analysis() {
 
       {/* STEP 3: Scanning Animation */}
       {activeView === 'step3' && (
-        <section className="glassmorphism p-12 rounded-2xl border border-neutral-800 flex flex-col items-center text-center space-y-8 min-h-[380px] justify-center max-w-xl mx-auto">
+        <section className="glassmorphism p-12 rounded-2xl border border-border flex flex-col items-center text-center space-y-8 min-h-[380px] justify-center max-w-xl mx-auto">
           <div className="w-16 h-16 rounded-full border-4 border-blue-500/25 border-t-blue-500 animate-spin flex items-center justify-center relative">
             <div className="absolute inset-2 rounded-full border-2 border-indigo-500/10 border-t-indigo-500 animate-spin-reverse"></div>
           </div>
 
           <div className="space-y-2 max-w-sm">
-            <h3 className="text-lg font-bold text-white">Biometric Scanning In Progress</h3>
-            <p className="text-xs text-neutral-400 animate-pulse">{processStatus}</p>
+            <h3 className="text-lg font-bold text-foreground">Biometric Scanning In Progress</h3>
+            <p className="text-xs text-muted-foreground animate-pulse">{processStatus}</p>
           </div>
         </section>
       )}
@@ -334,21 +334,21 @@ export default function Analysis() {
       {activeView === 'step4' && currentAnalysis && (
         <section className="space-y-8">
           
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-neutral-900/40 border border-neutral-800/80 px-5 py-3 rounded-2xl">
-            <span className="text-xs font-semibold text-neutral-400">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card/45 border border-border px-5 py-3 rounded-2xl">
+            <span className="text-xs font-semibold text-muted-foreground">
               Scan completed: {currentAnalysis.date}
             </span>
             <div className="flex gap-3">
               <button
                 onClick={() => setActiveView('step5')}
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition-colors flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-foreground transition-colors flex items-center gap-1.5"
               >
                 <Sliders size={12} />
                 Detailed Report
               </button>
               <button
                 onClick={handleReset}
-                className="px-4 py-2 rounded-xl border border-neutral-800 hover:border-neutral-700 text-xs font-bold text-neutral-300 transition-colors flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl border border-border hover:border-neutral-700 text-xs font-bold text-foreground transition-colors flex items-center gap-1.5"
               >
                 <RefreshCw size={12} />
                 Scan Again
@@ -364,9 +364,9 @@ export default function Analysis() {
               { name: 'Facial Proportion', score: currentAnalysis.facial_proportion_score, desc: 'Vertical thirds division', color: 'text-purple-400' },
               { name: 'Potential Score', score: currentAnalysis.improvement_potential_score, desc: 'Estimated limit with effort', color: 'text-emerald-400' }
             ].map((metric) => (
-              <div key={metric.name} className="glassmorphism p-5 rounded-2xl text-center flex flex-col justify-between border border-neutral-800/80">
+              <div key={metric.name} className="glassmorphism p-5 rounded-2xl text-center flex flex-col justify-between border border-border">
                 <div>
-                  <span className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-4">{metric.name}</span>
+                  <span className="block text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">{metric.name}</span>
                   <div className="relative w-24 h-24 mx-auto mb-4 flex items-center justify-center">
                     <svg className="w-full h-full transform -rotate-90">
                       <circle cx="48" cy="48" r="40" stroke="rgba(255,255,255,0.03)" strokeWidth="6" fill="transparent" />
@@ -383,28 +383,28 @@ export default function Analysis() {
                          strokeDashoffset={2 * Math.PI * 40 * (1 - metric.score / 100)}
                       />
                     </svg>
-                    <span className="absolute text-xl font-black text-white">{metric.score}%</span>
+                    <span className="absolute text-xl font-black text-foreground">{metric.score}%</span>
                   </div>
                 </div>
-                <span className="text-[10px] text-neutral-500 leading-normal block">{metric.desc}</span>
+                <span className="text-[10px] text-muted-foreground leading-normal block">{metric.desc}</span>
               </div>
             ))}
           </div>
 
           {/* Biometric Summary Card */}
-          <div className="glassmorphism p-6 rounded-2xl border border-neutral-800/80 space-y-4">
+          <div className="glassmorphism p-6 rounded-2xl border border-border space-y-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                   <Sparkles size={16} className="text-blue-400" />
                   Subjective Biometric Profile
                 </h3>
-                <p className="text-[11px] text-neutral-400 leading-relaxed mt-1">
+                <p className="text-[11px] text-muted-foreground leading-relaxed mt-1">
                   Calculated using client-side geometric measurements. Attractiveness is highly subjective and metrics are for entertainment/improvement estimates only.
                 </p>
               </div>
               <div className="text-left sm:text-right shrink-0">
-                <span className="text-[10px] font-bold text-neutral-500 uppercase block">Potential Label</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase block">Potential Label</span>
                 <span className="text-xs font-black text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3.5 py-1 rounded-full inline-block mt-1">
                   {currentAnalysis.potential_label || 'MTN (Mid Tier Normal)'}
                 </span>
@@ -413,10 +413,10 @@ export default function Analysis() {
 
             <div className="space-y-2 pt-2">
               <div className="flex justify-between text-xs font-semibold">
-                <span className="text-neutral-300">Transformation Potential</span>
+                <span className="text-foreground">Transformation Potential</span>
                 <span className="text-blue-400">{currentAnalysis.facial_harmony_score}% → {currentAnalysis.improvement_potential_score}%</span>
               </div>
-              <div className="w-full h-3 rounded-full bg-neutral-950 overflow-hidden border border-neutral-800/80 flex">
+              <div className="w-full h-3 rounded-full bg-background overflow-hidden border border-border flex">
                 <div 
                   className="bg-blue-500/80 transition-all duration-500" 
                   style={{ width: `${currentAnalysis.facial_harmony_score}%` }}
@@ -426,7 +426,7 @@ export default function Analysis() {
                   style={{ width: `${currentAnalysis.improvement_potential_score - currentAnalysis.facial_harmony_score}%` }}
                 ></div>
               </div>
-              <div className="flex justify-between text-[10px] text-neutral-500">
+              <div className="flex justify-between text-[10px] text-muted-foreground">
                 <span>Current Harmony: {currentAnalysis.facial_harmony_score}%</span>
                 <span>Confidence: {currentAnalysis.confidence_score || 92}%</span>
                 <span>Potential: {currentAnalysis.improvement_potential_score}%</span>
@@ -436,7 +436,7 @@ export default function Analysis() {
 
           {/* Core Feature Breakdown List */}
           <div className="space-y-4">
-            <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest pl-1">Core Feature Analysis</h3>
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1">Core Feature Analysis</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {currentAnalysis.features && Object.keys(currentAnalysis.features).length > 0 ? (
                 Object.keys(currentAnalysis.features).map((key) => {
@@ -458,28 +458,28 @@ export default function Analysis() {
                     Hard: 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                   };
                   const impColors = {
-                    Low: 'text-neutral-500',
-                    Medium: 'text-neutral-400',
+                    Low: 'text-muted-foreground',
+                    Medium: 'text-muted-foreground',
                     High: 'text-blue-400 font-semibold'
                   };
 
                   return (
-                    <div key={key} className="glassmorphism p-4 rounded-xl border border-neutral-800/80 flex flex-col justify-between space-y-3">
+                    <div key={key} className="glassmorphism p-4 rounded-xl border border-border flex flex-col justify-between space-y-3">
                       <div className="flex justify-between items-start">
                         <div>
-                          <span className="text-xs font-bold text-white block">{labelMap[key] || key}</span>
-                          <span className="text-[10px] text-neutral-500 block mt-0.5">{feat.percentile}</span>
+                          <span className="text-xs font-bold text-foreground block">{labelMap[key] || key}</span>
+                          <span className="text-[10px] text-muted-foreground block mt-0.5">{feat.percentile}</span>
                         </div>
-                        <span className="text-xs font-black text-indigo-450 bg-indigo-500/5 border border-indigo-550/20 w-8 h-8 rounded-lg flex items-center justify-center">
+                        <span className="text-xs font-black text-primary bg-primary/5 border border-primary/20 w-8 h-8 rounded-lg flex items-center justify-center">
                           {feat.grade}
                         </span>
                       </div>
                       
-                      <div className="flex justify-between items-center text-[10px] pt-2 border-t border-neutral-900/60">
+                      <div className="flex justify-between items-center text-[10px] pt-2 border-t border-border/60">
                         <span className={`px-2 py-0.5 rounded-full text-[9px] ${diffColors[feat.difficulty]}`}>
                           {feat.difficulty}
                         </span>
-                        <span className="text-neutral-500">
+                        <span className="text-muted-foreground">
                           Impact: <span className={impColors[feat.impact]}>{feat.impact}</span>
                         </span>
                       </div>
@@ -488,9 +488,9 @@ export default function Analysis() {
                 })
               ) : (
                 ['Symmetry', 'Skin', 'Jawline', 'Eyes', 'Nose', 'Lips', 'Hairline', 'Posture', 'Smile'].map((name) => (
-                  <div key={name} className="glassmorphism p-4 rounded-xl border border-neutral-800/80 flex justify-between items-center">
-                    <span className="text-xs font-bold text-white">{name}</span>
-                    <span className="text-xs font-bold text-neutral-400">80% (Grade B)</span>
+                  <div key={name} className="glassmorphism p-4 rounded-xl border border-border flex justify-between items-center">
+                    <span className="text-xs font-bold text-foreground">{name}</span>
+                    <span className="text-xs font-bold text-muted-foreground">80% (Grade B)</span>
                   </div>
                 ))
               )}
@@ -500,7 +500,7 @@ export default function Analysis() {
           <div className="text-center pt-4">
             <button
               onClick={() => setActiveView('step5')}
-              className="px-6 py-3.5 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-colors shadow-lg shadow-blue-500/10 flex items-center justify-center gap-1.5 mx-auto"
+              className="px-6 py-3.5 rounded-xl font-bold text-xs text-foreground bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-colors shadow-lg shadow-blue-500/10 flex items-center justify-center gap-1.5 mx-auto"
             >
               Open Detailed Insights & comparisons
               <ChevronRight size={14} />
@@ -514,28 +514,28 @@ export default function Analysis() {
         <section className="space-y-6">
           
           {/* Header Back controls */}
-          <div className="flex justify-between items-center bg-neutral-900/40 border border-neutral-800/80 px-5 py-3 rounded-2xl">
+          <div className="flex justify-between items-center bg-card/45 border border-border px-5 py-3 rounded-2xl">
             <button
               onClick={() => setActiveView('step4')}
-              className="text-xs font-bold text-neutral-400 hover:text-white flex items-center gap-1.5"
+              className="text-xs font-bold text-muted-foreground hover:text-foreground flex items-center gap-1.5"
             >
               <ChevronLeft size={14} />
               Back to Overview
             </button>
-            <span className="text-[10px] font-bold text-neutral-500">REPORT LOG</span>
+            <span className="text-[10px] font-bold text-muted-foreground">REPORT LOG</span>
           </div>
 
           {/* Tab navigation */}
-          <div className="flex border-b border-neutral-900">
+          <div className="flex border-b border-border">
             <button
               onClick={() => setActiveTab('suggestions')}
-              className={`px-5 py-3 text-xs font-bold border-b-2 transition-all ${activeTab === 'suggestions' ? 'border-indigo-500 text-white' : 'border-transparent text-neutral-500 hover:text-neutral-300'}`}
+              className={`px-5 py-3 text-xs font-bold border-b-2 transition-all ${activeTab === 'suggestions' ? 'border-indigo-500 text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
             >
               Detailed Suggestions
             </button>
             <button
               onClick={() => setActiveTab('comparison')}
-              className={`px-5 py-3 text-xs font-bold border-b-2 transition-all ${activeTab === 'comparison' ? 'border-indigo-500 text-white' : 'border-transparent text-neutral-500 hover:text-neutral-300'}`}
+              className={`px-5 py-3 text-xs font-bold border-b-2 transition-all ${activeTab === 'comparison' ? 'border-indigo-500 text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
             >
               Scan History & comparisons
             </button>
@@ -544,11 +544,11 @@ export default function Analysis() {
           {activeTab === 'suggestions' ? (
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
               {/* Visual Mesh Card */}
-              <div className="lg:col-span-2 glassmorphism p-5 rounded-2xl border border-neutral-800/80 flex flex-col justify-between items-center text-center">
-                <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-4 block w-full text-left">
+              <div className="lg:col-span-2 glassmorphism p-5 rounded-2xl border border-border flex flex-col justify-between items-center text-center">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4 block w-full text-left">
                   Biometric Mesh Map
                 </span>
-                <div className="relative rounded-xl overflow-hidden border border-neutral-800 w-full max-w-[280px] aspect-square bg-neutral-950 flex items-center justify-center">
+                <div className="relative rounded-xl overflow-hidden border border-border w-full max-w-[280px] aspect-square bg-background flex items-center justify-center">
                   <img 
                     ref={imageRef}
                     src={currentAnalysis.front_photo_url} 
@@ -563,25 +563,25 @@ export default function Analysis() {
                     />
                   )}
                 </div>
-                <span className="text-[10px] text-neutral-500 italic mt-3 block">
+                <span className="text-[10px] text-muted-foreground italic mt-3 block">
                   Biometric mapping of 478 points.
                 </span>
               </div>
 
               {/* Suggestions Panel (Locked if not premium) */}
-              <div className="lg:col-span-3 glassmorphism p-6 rounded-2xl border border-neutral-800/80 relative flex flex-col justify-between min-h-[360px]">
+              <div className="lg:col-span-3 glassmorphism p-6 rounded-2xl border border-border relative flex flex-col justify-between min-h-[360px]">
                 {!isUnlocked && (
                   <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-[#0c0c12]/75 backdrop-blur-md rounded-2xl text-center">
                     <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/25 text-purple-400 flex items-center justify-center mb-4 glow-accent">
                       <Lock size={20} />
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-2">Unlock suggestions Checklist</h3>
-                    <p className="text-xs text-neutral-400 max-w-xs mb-6 leading-relaxed">
+                    <h3 className="text-lg font-bold text-foreground mb-2">Unlock suggestions Checklist</h3>
+                    <p className="text-xs text-muted-foreground max-w-xs mb-6 leading-relaxed">
                       Upgrade to Ascend Plus to unlock targeted posture correction guides, styling advice, and skincare routine suggestions.
                     </p>
                     <button
                       onClick={handleUnlockMock}
-                      className="px-6 py-3 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-colors shadow-lg shadow-blue-500/10 flex items-center gap-2"
+                      className="px-6 py-3 rounded-xl font-bold text-xs text-foreground bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-colors shadow-lg shadow-blue-500/10 flex items-center gap-2"
                     >
                       Unlock Ascend Plus ($4.99)
                     </button>
@@ -589,13 +589,13 @@ export default function Analysis() {
                 )}
 
                 <div className={`space-y-4 ${!isUnlocked ? 'filter blur-sm select-none pointer-events-none' : ''}`}>
-                  <h3 className="text-sm font-bold text-white border-b border-neutral-800 pb-2 flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-foreground border-b border-border pb-2 flex items-center gap-2">
                     <Sliders size={16} className="text-indigo-400" />
                     Targeted Suggestions Checklist
                   </h3>
 
                   {/* Horizontal Category Selector */}
-                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-neutral-900">
+                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-border">
                     {[
                       { id: 'skincare', label: '🧴 Skincare' },
                       { id: 'hairstyle', label: '💇‍♂️ Hair' },
@@ -612,7 +612,7 @@ export default function Analysis() {
                       <button
                         key={cat.id}
                         onClick={() => setActiveRecCategory(cat.id)}
-                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold shrink-0 transition-colors ${activeRecCategory === cat.id ? 'bg-indigo-650 text-white' : 'bg-neutral-900 text-neutral-400 hover:bg-neutral-850 hover:text-white'}`}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-bold shrink-0 transition-colors ${activeRecCategory === cat.id ? 'bg-indigo-650 text-foreground' : 'bg-card text-muted-foreground hover:bg-neutral-850 hover:text-foreground'}`}
                       >
                         {cat.label}
                       </button>
@@ -623,7 +623,7 @@ export default function Analysis() {
                     <h4 className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-3">
                       Recommended Routine Hacks
                     </h4>
-                    <ul className="space-y-3 text-xs text-neutral-300">
+                    <ul className="space-y-3 text-xs text-foreground">
                       {(() => {
                         const tipsList = currentAnalysis.suggestions?.[activeRecCategory] || 
                           (activeRecCategory === 'fitness' && currentAnalysis.suggestions?.posture) ||
@@ -642,20 +642,20 @@ export default function Analysis() {
                   </div>
                 </div>
 
-                <div className="text-[9px] text-neutral-500 border-t border-neutral-900 pt-3 mt-4">
+                <div className="text-[9px] text-muted-foreground border-t border-border pt-3 mt-4">
                   * Harmony, symmetry, and proportion are calculated based on geometrical ratios. Results represent structural estimates.
                 </div>
               </div>
             </div>
           ) : (
             // COMPARISON VIEW (FREE)
-            <div className="glassmorphism border border-neutral-800 p-6 rounded-2xl shadow-xl space-y-6">
+            <div className="glassmorphism border border-border p-6 rounded-2xl shadow-xl space-y-6">
               <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                   <ChartIcon size={18} className="text-indigo-400" />
                   Compare With Previous Scans
                 </h3>
-                <p className="text-xs text-neutral-400">
+                <p className="text-xs text-muted-foreground">
                   Select a past face analysis reports to track symmetry progression values over time.
                 </p>
               </div>
@@ -666,11 +666,11 @@ export default function Analysis() {
                   {/* Select past Scan list */}
                   <div className="md:col-span-1 space-y-3">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Select Previous Scan</label>
+                      <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Select Previous Scan</label>
                       <select 
                         value={historySortOrder} 
                         onChange={(e) => setHistorySortOrder(e.target.value)}
-                        className="w-full text-[10px] font-bold bg-neutral-950 border border-neutral-900 rounded-lg px-2 py-1 outline-none text-neutral-400 cursor-pointer"
+                        className="w-full text-[10px] font-bold bg-background border border-border rounded-lg px-2 py-1 outline-none text-muted-foreground cursor-pointer"
                       >
                         <option value="date-desc">Newest First</option>
                         <option value="date-asc">Oldest First</option>
@@ -679,15 +679,15 @@ export default function Analysis() {
                       </select>
                     </div>
 
-                    <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 border border-neutral-900 rounded-xl p-1 bg-neutral-950/40 scrollbar-none">
+                    <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 border border-border rounded-xl p-1 bg-background/40 scrollbar-none">
                       {sortedAnalysesList.filter(s => s.id !== currentAnalysis.id).map((scan) => (
                         <button
                           key={scan.id}
                           onClick={() => setCompareScanId(scan.id)}
-                          className={`w-full flex items-center justify-between p-2.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${compareScanId === scan.id ? 'bg-indigo-500/10 border-indigo-500 text-indigo-400' : 'bg-transparent border-transparent hover:bg-neutral-900/60 text-neutral-400 hover:text-white'}`}
+                          className={`w-full flex items-center justify-between p-2.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${compareScanId === scan.id ? 'bg-indigo-500/10 border-indigo-500 text-indigo-400' : 'bg-transparent border-transparent hover:bg-card/60 text-muted-foreground hover:text-foreground'}`}
                         >
                           <span>Scan on {scan.date}</span>
-                          <span className="text-[10px] font-extrabold text-neutral-500">{scan.facial_harmony_score}%</span>
+                          <span className="text-[10px] font-extrabold text-muted-foreground">{scan.facial_harmony_score}%</span>
                         </button>
                       ))}
                     </div>
@@ -697,10 +697,10 @@ export default function Analysis() {
                   <div className="md:col-span-2 space-y-4">
                     {compareScan ? (
                       <div className="space-y-4">
-                        <div className="bg-neutral-950/40 border border-neutral-900 p-4 rounded-xl flex items-center justify-between text-xs">
+                        <div className="bg-background/40 border border-border p-4 rounded-xl flex items-center justify-between text-xs">
                           <div>
-                            <span className="text-neutral-500 uppercase tracking-wider font-bold text-[9px] block">Comparing Against</span>
-                            <span className="text-white font-bold block mt-0.5">Scan date: {compareScan.date}</span>
+                            <span className="text-muted-foreground uppercase tracking-wider font-bold text-[9px] block">Comparing Against</span>
+                            <span className="text-foreground font-bold block mt-0.5">Scan date: {compareScan.date}</span>
                           </div>
                           <span className="text-[10px] uppercase font-extrabold tracking-widest text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 rounded-full">
                             Harmony: {compareScan.facial_harmony_score}%
@@ -716,13 +716,13 @@ export default function Analysis() {
                           ].map(score => {
                             const diff = score.current - score.prev;
                             const diffText = diff > 0 ? `+${diff}%` : diff < 0 ? `${diff}%` : '0%';
-                            const diffColor = diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-red-400' : 'text-neutral-500';
+                            const diffColor = diff > 0 ? 'text-emerald-400' : diff < 0 ? 'text-red-400' : 'text-muted-foreground';
                             
                             return (
-                              <div key={score.label} className="bg-neutral-950/80 border border-neutral-900 p-4 rounded-xl flex flex-col justify-between h-24">
-                                <span className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider block">{score.label}</span>
+                              <div key={score.label} className="bg-background/80 border border-border p-4 rounded-xl flex flex-col justify-between h-24">
+                                <span className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider block">{score.label}</span>
                                 <div className="flex items-baseline justify-between mt-2">
-                                  <span className="text-white text-lg font-black">{score.current}%</span>
+                                  <span className="text-foreground text-lg font-black">{score.current}%</span>
                                   <span className={`text-xs font-bold ${diffColor}`}>{diffText} shift</span>
                                 </div>
                               </div>
@@ -731,7 +731,7 @@ export default function Analysis() {
                         </div>
                       </div>
                     ) : (
-                      <div className="py-20 text-center text-xs text-neutral-500 italic">
+                      <div className="py-20 text-center text-xs text-muted-foreground italic">
                         Select a past scan date from the left to view score shift metrics.
                       </div>
                     )}

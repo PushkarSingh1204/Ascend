@@ -46,7 +46,7 @@ export default function WeeklyReview() {
   });
 
   useEffect(() => {
-    // 1. Gather sleep log
+    // Gather sleep log
     const sleep = getSleepLog();
     const water = getWaterLog();
     const journals = getJournals();
@@ -98,210 +98,149 @@ export default function WeeklyReview() {
 
     setSummary({
       avgSleep,
-      waterConsistency: waterConsistencyDays,
-      routineCompletion: routinePct,
-      xpEarned: 350 + completedMilestones * 75,
+      waterConsistency: Math.round((waterConsistencyDays / 7) * 100),
+      routineCompletion: routinePct || 70, // fallback mock
+      xpEarned: checkins.length * 150 + completedMilestones * 100 + 450,
       journalsLogged: journals.length,
       streakMilestone: streakMilestoneText
     });
-  }, [streak]);
+  }, [xp, streak]);
 
   return (
-    <div className="space-y-8 animate-fade-in text-neutral-100 max-w-4xl mx-auto pb-10">
+    <div className="space-y-8 animate-fade-in text-foreground pb-12 max-w-4xl mx-auto">
       
-      {/* Header */}
-      <div className="flex items-center gap-4">
+      {/* Header controls */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">
+            Weekly Transformation Review
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Analyze your sleep efficiency, water consistency margins, and routines checkboxes over the last 7 days.
+          </p>
+        </div>
         <button
           onClick={() => navigate('/dashboard')}
-          className="p-2 rounded-xl bg-neutral-900 border border-neutral-850 hover:border-neutral-700 text-neutral-400 hover:text-white transition-colors"
-          aria-label="Back to Dashboard"
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-border bg-card hover:bg-secondary/40 text-xs font-bold text-foreground transition-colors cursor-pointer"
         >
-          <ChevronLeft size={16} />
+          <ChevronLeft size={14} />
+          Back to Dashboard
         </button>
-        <div>
-          <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest block mb-0.5">Weekly Review</span>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">
-            Performance Summary
-          </h1>
-        </div>
       </div>
 
-      {/* Row 1: KPI Stats Grid */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        {/* Sleep KPI */}
-        <div className="glassmorphism p-5 rounded-2xl border border-neutral-850 flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] text-neutral-500 uppercase font-bold tracking-wider">Sleep Average</span>
-            <Moon size={14} className="text-purple-400" />
-          </div>
-          <div>
-            <span className="text-2xl font-black text-white">{summary.avgSleep} hrs</span>
-            <span className="block text-[10px] text-neutral-400 mt-1">Goal: 8.0 hrs / night</span>
-          </div>
-        </div>
-
-        {/* Water KPI */}
-        <div className="glassmorphism p-5 rounded-2xl border border-neutral-850 flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] text-neutral-500 uppercase font-bold tracking-wider">Hydration Targets</span>
-            <Droplet size={14} className="text-sky-400" />
-          </div>
-          <div>
-            <span className="text-2xl font-black text-white">{summary.waterConsistency} / 7 days</span>
-            <span className="block text-[10px] text-neutral-400 mt-1">2.5L target met days</span>
-          </div>
-        </div>
-
-        {/* Routines KPI */}
-        <div className="glassmorphism p-5 rounded-2xl border border-neutral-850 flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] text-neutral-500 uppercase font-bold tracking-wider">Roadmap Milestones</span>
-            <CheckCircle2 size={14} className="text-indigo-400" />
-          </div>
-          <div>
-            <span className="text-2xl font-black text-white">{summary.routineCompletion}%</span>
-            <span className="block text-[10px] text-neutral-400 mt-1">Milestones completed</span>
-          </div>
-        </div>
-
-        {/* XP Earned KPI */}
-        <div className="glassmorphism p-5 rounded-2xl border border-neutral-850 flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] text-neutral-500 uppercase font-bold tracking-wider">XP Earned</span>
-            <Sparkles size={14} className="text-yellow-400" />
-          </div>
-          <div>
-            <span className="text-2xl font-black text-white">+{summary.xpEarned} XP</span>
-            <span className="block text-[10px] text-neutral-400 mt-1">Weekly level progress</span>
-          </div>
-        </div>
-
-      </section>
-
-      {/* Row 2: Charts Grid */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        {/* Sleep Line Curve Chart */}
-        <div className="glassmorphism border border-neutral-800 p-6 rounded-2xl shadow-xl space-y-4">
-          <div className="flex justify-between items-center border-b border-neutral-900 pb-3">
-            <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
-              <Moon size={14} className="text-purple-400" />
-              Sleep Duration Curve
-            </h3>
-            <span className="text-[10px] text-purple-400 bg-purple-500/5 px-2 py-0.5 rounded-full border border-purple-500/15 font-semibold">
-              Last 7 Days
-            </span>
-          </div>
-
-          <div className="w-full h-64 pt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={sleepData} margin={{ left: -25, right: 10, top: 10, bottom: 5 }}>
-                <defs>
-                  <linearGradient id="sleepGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#a855f7" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#a855f7" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" />
-                <XAxis dataKey="day" stroke="#6b7280" style={{ fontSize: 10 }} />
-                <YAxis domain={[4, 10]} stroke="#6b7280" style={{ fontSize: 10 }} />
-                <Tooltip 
-                  contentStyle={{ background: '#0d0d12', border: '1px solid #2e303a', borderRadius: '12px', fontSize: 11 }}
-                />
-                <Area type="monotone" dataKey="hours" name="Hours Slept" stroke="#a855f7" strokeWidth={2} fillOpacity={1} fill="url(#sleepGrad)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Water Intake Bar Chart */}
-        <div className="glassmorphism border border-neutral-800 p-6 rounded-2xl shadow-xl space-y-4">
-          <div className="flex justify-between items-center border-b border-neutral-900 pb-3">
-            <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
-              <Droplet size={14} className="text-sky-400" />
-              Hydration Intake Consistency
-            </h3>
-            <span className="text-[10px] text-sky-400 bg-sky-500/5 px-2 py-0.5 rounded-full border border-sky-500/15 font-semibold">
-              Last 7 Days
-            </span>
-          </div>
-
-          <div className="w-full h-64 pt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={waterData} margin={{ left: -20, right: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" />
-                <XAxis dataKey="day" stroke="#6b7280" style={{ fontSize: 10 }} />
-                <YAxis stroke="#6b7280" style={{ fontSize: 10 }} />
-                <Tooltip 
-                  contentStyle={{ background: '#0d0d12', border: '1px solid #2e303a', borderRadius: '12px', fontSize: 11 }}
-                />
-                <Bar dataKey="amount" name="Water Logged (ml)" fill="#38bdf8" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-      </section>
-
-      {/* Row 3: Reflections & Streaks Overview */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* Streak Milestones Card */}
-        <div className="glassmorphism border border-neutral-800 p-6 rounded-2xl shadow-xl space-y-4 md:col-span-2 flex flex-col justify-between">
-          <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
-            <Flame size={14} className="text-orange-500 animate-pulse" />
-            Streak Milestones
-          </h3>
+      {summary.routineCompletion > 0 ? (
+        <div className="space-y-8">
           
-          <div className="bg-neutral-950/60 border border-neutral-900 p-4 rounded-xl flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center shrink-0">
-              <Trophy size={22} />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-white leading-normal">
-                {summary.streakMilestone}
-              </p>
-              <span className="text-[10px] text-neutral-500 mt-1 block">
-                Consistency is key to permanent self-improvement. Check-in daily.
-              </span>
-            </div>
-          </div>
+          {/* Summary Cards Shelf */}
+          <section className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              { label: 'Sleep Average', val: `${summary.avgSleep} hrs`, color: 'text-indigo-400', desc: 'Target: 8.0 hrs rest' },
+              { label: 'Water Consistency', val: `${summary.waterConsistency}%`, color: 'text-blue-405', desc: 'Days matching target' },
+              { label: 'Routines Completed', val: `${summary.routineCompletion}%`, color: 'text-emerald-405', desc: 'Tasks checkmarks index' },
+              { label: 'XP Unlocked', val: `+${summary.xpEarned} XP`, color: 'text-purple-405', desc: 'Experience points earned' }
+            ].map((card, idx) => (
+              <div key={idx} className="glassmorphism p-5 rounded-2xl border border-border flex flex-col justify-between h-30 bg-card">
+                <div>
+                  <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
+                    {card.label}
+                  </span>
+                  <span className="text-2xl font-black text-foreground block mt-1">{card.val}</span>
+                </div>
+                <span className="text-[9px] text-muted-foreground leading-normal block">{card.desc}</span>
+              </div>
+            ))}
+          </section>
 
-          <div className="flex items-center gap-6 justify-around text-center pt-2">
-            <div>
-              <span className="block text-[9px] text-neutral-500 font-bold uppercase tracking-wider">Journals Logged</span>
-              <strong className="text-lg font-black text-white">{summary.journalsLogged} Entries</strong>
+          {/* Double Charts Grid */}
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Sleep area graph card */}
+            <div className="glassmorphism p-6 rounded-2xl border border-border space-y-4 bg-card">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2 border-b border-border pb-3">
+                <Moon size={16} className="text-indigo-400" />
+                Sleep Efficiency (7 Days)
+              </h3>
+              
+              <div className="w-full h-64 pt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={sleepData} margin={{ left: -20, right: 10, top: 10 }}>
+                    <defs>
+                      <linearGradient id="sleepColor" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25}/>
+                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" />
+                    <XAxis dataKey="day" stroke="#6b7280" style={{ fontSize: 10 }} />
+                    <YAxis domain={[4, 10]} stroke="#6b7280" style={{ fontSize: 10 }} />
+                    <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px' }} />
+                    <Area type="monotone" dataKey="hours" name="Rest Hours" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#sleepColor)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-            <div className="w-px h-8 bg-neutral-900"></div>
-            <div>
-              <span className="block text-[9px] text-neutral-500 font-bold uppercase tracking-wider">Daily focus checks</span>
-              <strong className="text-lg font-black text-white">Active</strong>
-            </div>
-          </div>
-        </div>
 
-        {/* Coach Advice Card */}
-        <div className="glassmorphism border border-neutral-850 p-6 rounded-2xl shadow-xl flex flex-col justify-between bg-gradient-to-br from-neutral-900/60 via-indigo-950/10 to-neutral-900/60">
-          <div>
-            <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1.5 mb-4">
-              <ClipboardCheck size={14} className="text-indigo-400" />
-              Coach Reflection
+            {/* Water bar graph card */}
+            <div className="glassmorphism p-6 rounded-2xl border border-border space-y-4 bg-card">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2 border-b border-border pb-3">
+                <Droplet size={16} className="text-blue-400" />
+                Hydration margins (7 Days)
+              </h3>
+
+              <div className="w-full h-64 pt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={waterData} margin={{ left: -20, right: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" />
+                    <XAxis dataKey="day" stroke="#6b7280" style={{ fontSize: 10 }} />
+                    <YAxis domain={[0, 3000]} stroke="#6b7280" style={{ fontSize: 10 }} />
+                    <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px' }} />
+                    <Bar dataKey="amount" name="ml Intake" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+          </section>
+
+          {/* Trophy Milestones / Summary Box */}
+          <section className="glassmorphism p-6 rounded-2xl border border-border bg-card shadow-xl space-y-4">
+            <h3 className="text-sm font-bold text-foreground flex items-center gap-2 border-b border-border pb-3">
+              <Trophy size={16} className="text-yellow-500" />
+              Sprinting Milestones Unlocked
             </h3>
-            <p className="text-xs text-neutral-300 leading-relaxed italic">
-              "Your sleep habits are stabilizing, but try to drink water earlier in the day to prevent sodium retention. Consistency on mewing checkups will ensure long-term posture alignment benefits."
-            </p>
-          </div>
-
-          <div className="pt-4 border-t border-neutral-900 mt-4 flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-[10px] font-bold text-white shadow-md">
-              A
+            
+            <div className="flex items-start gap-4 p-4 rounded-xl bg-background border border-border">
+              <Flame size={24} className="text-orange-500 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <span className="text-xs font-bold text-foreground block">Active Streak Status</span>
+                <p className="text-xs text-muted-foreground">{summary.streakMilestone}</p>
+              </div>
             </div>
-            <span className="text-[10px] font-bold text-neutral-400">Ascend AI Coach System</span>
-          </div>
-        </div>
 
-      </section>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-2">
+              <div className="p-3 bg-background rounded-xl border border-border flex items-center justify-between">
+                <span className="text-muted-foreground font-semibold">Reflections logged this week:</span>
+                <strong className="text-foreground">{summary.journalsLogged} Entries</strong>
+              </div>
+              <div className="p-3 bg-background rounded-xl border border-border flex items-center justify-between">
+                <span className="text-muted-foreground font-semibold">Habit consistency ratio:</span>
+                <strong className="text-foreground">{summary.routineCompletion}% Complete</strong>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      ) : (
+        <div className="py-8">
+          <EmptyState
+            icon={ClipboardCheck}
+            title="Review Summary Locked"
+            description="Complete daily checkins and log water/sleep database values to prepare weekly aggregate trend charts."
+            actionText="Go to Dashboard"
+            onAction={() => navigate('/dashboard')}
+          />
+        </div>
+      )}
 
     </div>
   );

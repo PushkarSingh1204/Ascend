@@ -205,35 +205,35 @@ export default function Insights() {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in text-neutral-100 pb-12 max-w-4xl mx-auto">
+    <div className="space-y-8 animate-fade-in text-foreground pb-12 max-w-4xl mx-auto">
       
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">
           Insights & Reports
         </h1>
-        <p className="text-sm text-neutral-400">
+        <p className="text-sm text-muted-foreground">
           Track structural harmony statistics, export local habits database logs, and generate PDF summaries.
         </p>
       </div>
 
       {/* Selector Tabs */}
-      <div className="flex border-b border-neutral-900">
+      <div className="flex border-b border-border">
         <button
           onClick={() => setActiveSubTab('charts')}
-          className={`px-5 py-3 text-xs font-bold border-b-2 transition-all ${activeSubTab === 'charts' ? 'border-indigo-500 text-white' : 'border-transparent text-neutral-500 hover:text-neutral-350'}`}
+          className={`px-5 py-3 text-xs font-bold border-b-2 transition-all ${activeSubTab === 'charts' ? 'border-indigo-500 text-foreground' : 'border-transparent text-muted-foreground hover:text-neutral-350'}`}
         >
           Trend Analytics
         </button>
         <button
           onClick={() => setActiveSubTab('stats')}
-          className={`px-5 py-3 text-xs font-bold border-b-2 transition-all ${activeSubTab === 'stats' ? 'border-indigo-500 text-white' : 'border-transparent text-neutral-500 hover:text-neutral-300'}`}
+          className={`px-5 py-3 text-xs font-bold border-b-2 transition-all ${activeSubTab === 'stats' ? 'border-indigo-500 text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
           Lifetime Statistics
         </button>
         <button
           onClick={() => setActiveSubTab('export')}
-          className={`px-5 py-3 text-xs font-bold border-b-2 transition-all ${activeSubTab === 'export' ? 'border-indigo-500 text-white' : 'border-transparent text-neutral-500 hover:text-neutral-300'}`}
+          className={`px-5 py-3 text-xs font-bold border-b-2 transition-all ${activeSubTab === 'export' ? 'border-indigo-500 text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
           Export Center
         </button>
@@ -243,8 +243,8 @@ export default function Insights() {
       {activeSubTab === 'charts' && (
         <div className="space-y-6">
           {/* Biometric Scores trendlines */}
-          <div className="glassmorphism border border-neutral-800 p-6 rounded-2xl shadow-xl space-y-4">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+          <div className="glassmorphism border border-border p-6 rounded-2xl shadow-xl space-y-4">
+            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
               <TrendingUp size={16} className="text-blue-400" />
               Symmetry & Harmony Trends
             </h3>
@@ -257,8 +257,8 @@ export default function Insights() {
                     <XAxis dataKey="name" stroke="#6b7280" style={{ fontSize: 10 }} />
                     <YAxis domain={[40, 100]} stroke="#6b7280" style={{ fontSize: 10 }} />
                     <Tooltip 
-                      contentStyle={{ background: '#0d0d12', border: '1px solid #2e303a', borderRadius: '12px' }}
-                      labelStyle={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}
+                      contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px' }}
+                      labelStyle={{ color: 'hsl(var(--foreground))', fontSize: 11, fontWeight: 'bold' }}
                     />
                     <Line type="monotone" dataKey="harmony" name="Harmony" stroke="#3b82f6" strokeWidth={2.5} activeDot={{ r: 6 }} />
                     <Line type="monotone" dataKey="symmetry" name="Symmetry" stroke="#6366f1" strokeWidth={2} />
@@ -281,8 +281,8 @@ export default function Insights() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Sleep Bar Chart */}
-            <div className="glassmorphism border border-neutral-800 p-6 rounded-2xl shadow-xl space-y-4">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <div className="glassmorphism border border-border p-6 rounded-2xl shadow-xl space-y-4">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <Moon size={16} className="text-indigo-400" />
                 Sleep Log (Last 7 Days)
               </h3>
@@ -292,7 +292,7 @@ export default function Insights() {
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
                     <XAxis dataKey="name" stroke="#6b7280" style={{ fontSize: 10 }} />
                     <YAxis domain={[0, 10]} stroke="#6b7280" style={{ fontSize: 10 }} />
-                    <Tooltip contentStyle={{ background: '#0d0d12', border: '1px solid #2e303a', borderRadius: '12px' }} />
+                    <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px' }} />
                     <Bar dataKey="sleep" name="Sleep Hours" fill="#6366f1" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -300,8 +300,8 @@ export default function Insights() {
             </div>
 
             {/* Water Bar Chart */}
-            <div className="glassmorphism border border-neutral-800 p-6 rounded-2xl shadow-xl space-y-4">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <div className="glassmorphism border border-border p-6 rounded-2xl shadow-xl space-y-4">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <Droplet size={16} className="text-blue-400" />
                 Hydration Log (Last 7 Days)
               </h3>
@@ -311,7 +311,7 @@ export default function Insights() {
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
                     <XAxis dataKey="name" stroke="#6b7280" style={{ fontSize: 10 }} />
                     <YAxis domain={[0, 3000]} stroke="#6b7280" style={{ fontSize: 10 }} />
-                    <Tooltip contentStyle={{ background: '#0d0d12', border: '1px solid #2e303a', borderRadius: '12px' }} />
+                    <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px' }} />
                     <Bar dataKey="water" name="Water (ml)" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -336,14 +336,14 @@ export default function Insights() {
           ].map((stat, idx) => {
             const Icon = stat.icon;
             return (
-              <div key={idx} className="glassmorphism p-5 rounded-2xl border border-neutral-800/80 flex flex-col justify-between h-28">
+              <div key={idx} className="glassmorphism p-5 rounded-2xl border border-border flex flex-col justify-between h-28">
                 <div className="flex justify-between items-start">
-                  <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
                     {stat.label}
                   </span>
                   <Icon size={14} className={stat.color} />
                 </div>
-                <div className="text-xl font-black text-white mt-4">{stat.val}</div>
+                <div className="text-xl font-black text-foreground mt-4">{stat.val}</div>
               </div>
             );
           })}
@@ -355,13 +355,13 @@ export default function Insights() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           {/* PDF Reports Card */}
-          <div className="glassmorphism p-6 rounded-2xl border border-neutral-800/80 space-y-4 flex flex-col justify-between">
+          <div className="glassmorphism p-6 rounded-2xl border border-border space-y-4 flex flex-col justify-between">
             <div className="space-y-2">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <FileText size={16} className="text-indigo-400" />
                 Transformation PDF Summaries
               </h3>
-              <p className="text-xs text-neutral-400 leading-relaxed">
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 Generate beautifully structured print-ready PDF reports summarizing your consistency ratios, streak history, and scanning stats.
               </p>
             </div>
@@ -369,36 +369,36 @@ export default function Insights() {
             <div className="space-y-2.5 pt-4">
               <button 
                 onClick={() => triggerPDFPrint('Weekly Transformation Review')}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-neutral-850 bg-neutral-900/60 hover:bg-neutral-850 transition-colors text-xs font-bold text-neutral-200 cursor-pointer"
+                className="w-full flex items-center justify-between p-3 rounded-xl border border-border bg-card/60 hover:bg-neutral-850 transition-colors text-xs font-bold text-foreground cursor-pointer"
               >
                 <span>Weekly Summary Report (PDF)</span>
-                <Download size={12} className="text-indigo-450" />
+                <Download size={12} className="text-primary" />
               </button>
               <button 
                 onClick={() => triggerPDFPrint('Monthly Transformation Progress')}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-neutral-850 bg-neutral-900/60 hover:bg-neutral-850 transition-colors text-xs font-bold text-neutral-200 cursor-pointer"
+                className="w-full flex items-center justify-between p-3 rounded-xl border border-border bg-card/60 hover:bg-neutral-850 transition-colors text-xs font-bold text-foreground cursor-pointer"
               >
                 <span>Monthly Progress Report (PDF)</span>
-                <Download size={12} className="text-indigo-450" />
+                <Download size={12} className="text-primary" />
               </button>
               <button 
                 onClick={() => triggerPDFPrint('Overall Transformation Summary')}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-neutral-850 bg-neutral-900/60 hover:bg-neutral-850 transition-colors text-xs font-bold text-neutral-200 cursor-pointer"
+                className="w-full flex items-center justify-between p-3 rounded-xl border border-border bg-card/60 hover:bg-neutral-850 transition-colors text-xs font-bold text-foreground cursor-pointer"
               >
                 <span>Lifetime Transformation Summary (PDF)</span>
-                <Download size={12} className="text-indigo-450" />
+                <Download size={12} className="text-primary" />
               </button>
             </div>
           </div>
 
           {/* CSV Database Logs Card */}
-          <div className="glassmorphism p-6 rounded-2xl border border-neutral-800/80 space-y-4 flex flex-col justify-between">
+          <div className="glassmorphism p-6 rounded-2xl border border-border space-y-4 flex flex-col justify-between">
             <div className="space-y-2">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <Calendar size={16} className="text-blue-400" />
                 Raw Database Logs (CSV)
               </h3>
-              <p className="text-xs text-neutral-400 leading-relaxed">
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 Download comma-separated database records of your daily consistency metrics to import into Excel or Google Sheets.
               </p>
             </div>
@@ -406,21 +406,21 @@ export default function Insights() {
             <div className="space-y-2.5 pt-4">
               <button 
                 onClick={() => handleExportCSV('habits')}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-neutral-850 bg-neutral-900/60 hover:bg-neutral-850 transition-colors text-xs font-bold text-neutral-200 cursor-pointer"
+                className="w-full flex items-center justify-between p-3 rounded-xl border border-border bg-card/60 hover:bg-neutral-850 transition-colors text-xs font-bold text-foreground cursor-pointer"
               >
                 <span>Habits & Checkins Log (CSV)</span>
                 <Download size={12} className="text-blue-450" />
               </button>
               <button 
                 onClick={() => handleExportCSV('sleep')}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-neutral-850 bg-neutral-900/60 hover:bg-neutral-850 transition-colors text-xs font-bold text-neutral-200 cursor-pointer"
+                className="w-full flex items-center justify-between p-3 rounded-xl border border-border bg-card/60 hover:bg-neutral-850 transition-colors text-xs font-bold text-foreground cursor-pointer"
               >
                 <span>Sleep Consistency Log (CSV)</span>
                 <Download size={12} className="text-blue-450" />
               </button>
               <button 
                 onClick={() => handleExportCSV('water')}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-neutral-850 bg-neutral-900/60 hover:bg-neutral-850 transition-colors text-xs font-bold text-neutral-200 cursor-pointer"
+                className="w-full flex items-center justify-between p-3 rounded-xl border border-border bg-card/60 hover:bg-neutral-850 transition-colors text-xs font-bold text-foreground cursor-pointer"
               >
                 <span>Water Hydration Log (CSV)</span>
                 <Download size={12} className="text-blue-450" />
