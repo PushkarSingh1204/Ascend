@@ -43,6 +43,7 @@ export default function Analysis() {
   const [compareScanId, setCompareScanId] = useState('');
   const [activeTab, setActiveTab] = useState('suggestions'); // suggestions, comparison
   const [activeRecCategory, setActiveRecCategory] = useState('skincare');
+  const [historySortOrder, setHistorySortOrder] = useState('date-desc');
 
   // Ref elements to measure image sizes for canvas overlay alignment
   const imageRef = useRef(null);
@@ -175,7 +176,15 @@ export default function Analysis() {
   const isPremiumUser = user?.profile?.is_premium;
   const isUnlocked = isPremiumUser || currentAnalysis?.is_premium_unlocked;
 
-  // Selected compare scan
+  // Sorted and filtered analyses list (excluding current scan) for comparison options
+  const sortedAnalysesList = [...analysesList].sort((a, b) => {
+    if (historySortOrder === 'date-desc') return new Date(b.date) - new Date(a.date);
+    if (historySortOrder === 'date-asc') return new Date(a.date) - new Date(b.date);
+    if (historySortOrder === 'score-desc') return b.facial_harmony_score - a.facial_harmony_score;
+    if (historySortOrder === 'score-asc') return a.facial_harmony_score - b.facial_harmony_score;
+    return 0;
+  });
+
   const compareScan = analysesList.find(s => s.id === compareScanId);
 
   return (
@@ -655,17 +664,30 @@ export default function Analysis() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   
                   {/* Select past Scan list */}
-                  <div className="md:col-span-1 space-y-2">
-                    <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Select Previous Scan</span>
-                    <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1 border border-neutral-900 rounded-xl p-1 bg-neutral-950/40">
-                      {analysesList.slice(1).map((scan) => (
+                  <div className="md:col-span-1 space-y-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest block">Select Previous Scan</label>
+                      <select 
+                        value={historySortOrder} 
+                        onChange={(e) => setHistorySortOrder(e.target.value)}
+                        className="w-full text-[10px] font-bold bg-neutral-950 border border-neutral-900 rounded-lg px-2 py-1 outline-none text-neutral-400 cursor-pointer"
+                      >
+                        <option value="date-desc">Newest First</option>
+                        <option value="date-asc">Oldest First</option>
+                        <option value="score-desc">Highest Score First</option>
+                        <option value="score-asc">Lowest Score First</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 border border-neutral-900 rounded-xl p-1 bg-neutral-950/40 scrollbar-none">
+                      {sortedAnalysesList.filter(s => s.id !== currentAnalysis.id).map((scan) => (
                         <button
                           key={scan.id}
                           onClick={() => setCompareScanId(scan.id)}
-                          className={`w-full flex items-center justify-between p-2.5 rounded-lg text-xs font-medium border transition-colors ${compareScanId === scan.id ? 'bg-indigo-500/10 border-indigo-500 text-indigo-400' : 'bg-transparent border-transparent hover:bg-neutral-900/60 text-neutral-400 hover:text-white'}`}
+                          className={`w-full flex items-center justify-between p-2.5 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${compareScanId === scan.id ? 'bg-indigo-500/10 border-indigo-500 text-indigo-400' : 'bg-transparent border-transparent hover:bg-neutral-900/60 text-neutral-400 hover:text-white'}`}
                         >
                           <span>Scan on {scan.date}</span>
-                          <span className="text-[10px] font-bold text-neutral-500">{scan.facial_harmony_score}%</span>
+                          <span className="text-[10px] font-extrabold text-neutral-500">{scan.facial_harmony_score}%</span>
                         </button>
                       ))}
                     </div>

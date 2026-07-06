@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
-import { BADGES, getAnalyses, getWaterLog, getSleepLog, getJournals } from '../services/db';
+import { getAnalyses, getWaterLog, getSleepLog, getJournals, getCheckins } from '../services/db';
 import { 
   Flame, 
   Calendar, 
@@ -12,14 +12,15 @@ import {
   ChevronRight, 
   CheckCircle2, 
   Circle,
-  PlusCircle,
-  User,
-  Compass,
   Moon,
   Droplet,
   BookOpen,
   Camera,
-  Layers
+  Compass,
+  Clock,
+  TrendingUp,
+  Activity,
+  Heart
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -42,10 +43,15 @@ export default function Dashboard() {
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [latestAnalysis, setLatestAnalysis] = useState(null);
   
-  // Snapshot averages
+  // Averages
   const [sleepAvg, setSleepAvg] = useState(7.2);
   const [waterAvg, setWaterAvg] = useState(1800);
   const [weeklyConsistency, setWeeklyConsistency] = useState(75);
+  const [journalCompletionRate, setJournalCompletionRate] = useState(60);
+  const [routineCompletionRate, setRoutineCompletionRate] = useState(80);
+
+  // Activity Timeline State
+  const [timelineItems, setTimelineItems] = useState([]);
 
   useEffect(() => {
     // Check checkin status
@@ -53,14 +59,14 @@ export default function Dashboard() {
     setIsCheckedIn(dailyMissions.checkin);
     
     // Fetch latest scan
-    const analyses = getAnalyses();
-    if (analyses && analyses.length > 0) {
+    const analyses = getAnalyses() || [];
+    if (analyses.length > 0) {
       setLatestAnalysis(analyses[0]);
     }
 
     // Calculate dynamic averages based on mock DB logs
-    const waterLog = getWaterLog();
-    const sleepLog = getSleepLog();
+    const waterLog = getWaterLog() || { current: 0, target: 2000 };
+    const sleepLog = getSleepLog() || { current: 0, target: 8.0 };
     setWaterAvg(waterLog.current > 0 ? Math.round((waterLog.current + 1850 * 6) / 7) : 1800);
     setSleepAvg(sleepLog.current > 0 ? Math.round(((sleepLog.current + 7.4 * 6) / 7) * 10) / 10 : 7.2);
 
@@ -69,7 +75,71 @@ export default function Dashboard() {
     const routinePercent = completedMilestones > 0 ? Math.min(95, 60 + completedMilestones * 5) : 75;
     setWeeklyConsistency(routinePercent);
 
-  }, [xp, dailyMissions, roadmapMilestones]);
+    // Dynamic journal and routines rates
+    const journals = getJournals() || [];
+    setJournalCompletionRate(Math.min(95, 40 + journals.length * 10));
+    setRoutineCompletionRate(Math.min(98, 50 + getCheckins().length * 12));
+
+    // Construct Unified Chronological Activity Timeline
+    const items = [];
+    
+    // 1. Face Scans
+    analyses.forEach(scan => {
+      items.push({
+        id: `t_scan_${scan.id}`,
+        type: 'scan',
+        title: 'Biometric Face Harmony Scan',
+        desc: `Completed scan with ${scan.facial_harmony_score}% Harmony (${scan.potential_label || 'MTN'})`,
+        date: scan.date,
+        icon: Sparkles,
+        color: 'text-blue-400 bg-blue-500/10 border-blue-500/20'
+      });
+    });
+
+    // 2. Journal Entries
+    journals.forEach((entry, idx) => {
+      items.push({
+        id: `t_journal_${idx}`,
+        type: 'journal',
+        title: 'Reflective Journal Entry',
+        desc: `Logged mood: "${entry.mood}" - ${entry.notes?.substring(0, 50)}...`,
+        date: entry.date,
+        icon: BookOpen,
+        color: 'text-purple-400 bg-purple-500/10 border-purple-500/20'
+      });
+    });
+
+    // 3. Badges unlocked
+    unlockedBadges.forEach(badgeId => {
+      items.push({
+        id: `t_badge_${badgeId}`,
+        type: 'badge',
+        title: 'Milestone Badge Unlocked',
+        desc: `Earned "${badgeId.replace(/_/g, ' ').toUpperCase()}" achievement!`,
+        date: todayStr, // simplified
+        icon: Award,
+        color: 'text-orange-400 bg-orange-500/10 border-orange-500/20'
+      });
+    });
+
+    // 4. Checkins
+    getCheckins().forEach(date => {
+      items.push({
+        id: `t_check_${date}`,
+        type: 'checkin',
+        title: 'Daily Habits Check-in',
+        desc: 'Morning and night routines marked active & verified.',
+        date: date,
+        icon: CheckCircle2,
+        color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+      });
+    });
+
+    // Sort descending by date
+    items.sort((a, b) => new Date(b.date) - new Date(a.date));
+    setTimelineItems(items.slice(0, 5));
+
+  }, [xp, dailyMissions, roadmapMilestones, unlockedBadges]);
 
   const prevLevelXp = getXpForLevel(level);
   const nextLevelXp = getXpRequiredForNextLevel(level);
@@ -84,6 +154,11 @@ export default function Dashboard() {
   const nextMilestone = roadmapMilestones.find(m => !m.completed);
   const currentWeek = nextMilestone ? nextMilestone.week : 4;
 
+  // Daily Transformation Score: computed dynamically
+  const dailyTransformationScore = Math.min(100, Math.round(
+    (completedMissionsCount / 4) * 35 + (weeklyConsistency) * 0.65
+  ));
+
   const handleCheckin = () => {
     if (isCheckedIn) return;
     performDailyCheckin("Quick check-in completed from dashboard.");
@@ -92,7 +167,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-8 animate-fade-in text-neutral-100 pb-12">
       
-      {/* 1. HERO SECTION */}
+      {/* 1. HERO SECTION & WELCOME */}
       <section className="flex flex-col lg:flex-row gap-6 justify-between items-stretch">
         
         {/* Welcome & Level progress bar */}
@@ -131,229 +206,186 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Quick Streaks Card */}
-        <div className="glassmorphism border border-neutral-800 px-6 py-5 rounded-2xl flex items-center justify-around gap-6 lg:w-80 shadow-xl">
-          <div className="text-center">
-            <div className="w-10 h-10 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center mx-auto mb-2">
-              <Flame size={20} className="fill-orange-400 animate-pulse" />
-            </div>
-            <span className="block text-[9px] text-neutral-500 uppercase font-bold tracking-wider">Active Streak</span>
-            <span className="text-lg font-black text-white mt-0.5 block">{streak} Days</span>
-          </div>
-
-          <div className="w-px h-12 bg-neutral-800/80"></div>
-
-          <div className="text-center">
-            <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center mx-auto mb-2">
-              <Calendar size={20} />
-            </div>
-            <span className="block text-[9px] text-neutral-500 uppercase font-bold tracking-wider">Days Active</span>
-            <span className="text-lg font-black text-white mt-0.5 block">{daysToAscend} Days</span>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. TRANSFORMATION JOURNEY WIDGET */}
-      <section className="glassmorphism border border-neutral-800 p-6 rounded-2xl shadow-xl space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <Compass size={16} className="text-indigo-400" />
-            Transformation Journey Roadmap
-          </h3>
-          <span className="text-xs font-extrabold text-indigo-400">{roadmapPercent}% Complete</span>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-6 bg-neutral-950/40 border border-neutral-900 p-4 rounded-xl">
-          <div className="space-y-1 flex-1">
-            <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider block">Next Milestone</span>
-            <span className="text-xs font-semibold text-white block">
-              {nextMilestone ? nextMilestone.title : 'All Milestones Cleared! Redefine Focus.'}
+        {/* Quick Check-in Button */}
+        <div className="glassmorphism border border-neutral-800 p-6 rounded-2xl flex flex-col justify-between items-stretch lg:w-80 shadow-xl">
+          <div>
+            <span className="block text-[10px] text-neutral-500 uppercase font-bold tracking-wider">Status Check</span>
+            <span className="text-sm font-bold text-white block mt-1">
+              {isCheckedIn ? '🎯 Routines logged for today' : '⚡ Pending daily logs'}
             </span>
-            <p className="text-[11px] text-neutral-400 leading-normal">
-              {nextMilestone ? nextMilestone.text : 'Complete monthly re-onboarding in profile settings to start a new 30-day template.'}
-            </p>
           </div>
 
           <button
-            onClick={() => navigate('/roadmap')}
-            className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-colors shrink-0 flex items-center justify-center gap-1.5"
+            onClick={handleCheckin}
+            disabled={isCheckedIn}
+            className={`w-full py-3 rounded-xl font-bold text-xs transition-all duration-300 mt-4 cursor-pointer ${isCheckedIn ? 'bg-emerald-500/10 text-emerald-450 border border-emerald-500/25' : 'bg-white text-black hover:bg-neutral-200'}`}
           >
-            Open Roadmap
-            <ChevronRight size={14} />
+            {isCheckedIn ? 'Check-in Completed' : 'Trigger Daily Check-in'}
           </button>
         </div>
-
-        <div className="w-full h-1.5 bg-neutral-950 rounded-full overflow-hidden border border-neutral-900">
-          <div 
-            className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
-            style={{ width: `${roadmapPercent}%` }}
-          ></div>
-        </div>
       </section>
 
-      {/* 3. TRANSFORMATION SNAPSHOT */}
-      <section className="space-y-3">
-        <h3 className="text-sm font-bold text-white uppercase tracking-wider">Transformation Snapshot</h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          
-          <div className="glassmorphism p-4 rounded-xl border border-neutral-800/80 text-center">
-            <span className="block text-[9px] text-neutral-500 uppercase font-bold tracking-wider">Consistency</span>
-            <span className="text-xl font-black text-blue-400 mt-1 block">{weeklyConsistency}%</span>
-            <span className="text-[9px] text-neutral-500 mt-1 block">Weekly Score</span>
-          </div>
-
-          <div className="glassmorphism p-4 rounded-xl border border-neutral-800/80 text-center">
-            <span className="block text-[9px] text-neutral-500 uppercase font-bold tracking-wider">Missions Daily</span>
-            <span className="text-xl font-black text-indigo-400 mt-1 block">{completedMissionsCount} / 5</span>
-            <span className="text-[9px] text-neutral-500 mt-1 block">Completed Today</span>
-          </div>
-
-          <div className="glassmorphism p-4 rounded-xl border border-neutral-800/80 text-center">
-            <span className="block text-[9px] text-neutral-500 uppercase font-bold tracking-wider">Sleep Average</span>
-            <span className="text-xl font-black text-purple-400 mt-1 block">{sleepAvg} hrs</span>
-            <span className="text-[9px] text-neutral-500 mt-1 block">Last 7 Days</span>
-          </div>
-
-          <div className="glassmorphism p-4 rounded-xl border border-neutral-800/80 text-center">
-            <span className="block text-[9px] text-neutral-500 uppercase font-bold tracking-wider">Water Average</span>
-            <span className="text-xl font-black text-sky-400 mt-1 block">{Math.round(waterAvg/100)/10}L</span>
-            <span className="text-[9px] text-neutral-500 mt-1 block">Daily Hydration</span>
-          </div>
-
-          <div className="glassmorphism p-4 rounded-xl border border-neutral-800/80 text-center col-span-2 md:col-span-1">
-            <span className="block text-[9px] text-neutral-500 uppercase font-bold tracking-wider">Last Face Scan</span>
-            <span className="text-xs font-extrabold text-emerald-400 mt-2 block truncate px-1">
-              {latestAnalysis ? latestAnalysis.date : 'No scans yet'}
-            </span>
-            <span className="text-[9px] text-neutral-500 mt-1 block">Harmony Report</span>
-          </div>
-
-        </div>
+      {/* 2. ANALYTICAL KPI METRICS HUB */}
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {[
+          { label: 'Transformation Score', val: `${dailyTransformationScore}/100`, desc: 'Based on checkins & rules', icon: Activity, color: 'text-blue-400' },
+          { label: 'Weekly Consistency', val: `${weeklyConsistency}%`, desc: 'Roadmap weekly completion index', icon: TrendingUp, color: 'text-indigo-400' },
+          { label: 'Active Streak', val: `${streak} Days`, desc: 'Streaks completed logs', icon: Flame, color: 'text-orange-400' },
+          { label: 'Days to Ascend', val: `${daysToAscend} Days`, desc: 'Transformation days tracker', icon: Award, color: 'text-purple-400' }
+        ].map((kpi, idx) => {
+          const Icon = kpi.icon;
+          return (
+            <div key={idx} className="glassmorphism p-5 rounded-2xl border border-neutral-800/80 flex flex-col justify-between h-32">
+              <div className="flex justify-between items-start">
+                <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">
+                  {kpi.label}
+                </span>
+                <Icon size={14} className={kpi.color} />
+              </div>
+              <div>
+                <span className="text-2xl font-black text-white block">{kpi.val}</span>
+                <span className="text-[9px] text-neutral-500 block mt-1 leading-normal">{kpi.desc}</span>
+              </div>
+            </div>
+          );
+        })}
       </section>
 
-      {/* 4. DAILY MISSIONS (TODAY'S TASKS) */}
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* 3. DOUBLE GRID (TODAY'S MISSION & LATEST ANALYSIS) */}
+      <section className="grid grid-cols-1 md:grid-cols-5 gap-6">
         
-        {/* Missions Checklist (Left 2 Columns) */}
-        <div className="lg:col-span-2 glassmorphism border border-neutral-800 p-6 rounded-2xl shadow-xl space-y-4">
-          <div className="flex items-center justify-between border-b border-neutral-900 pb-3">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Sparkles size={16} className="text-blue-400" />
-              Daily Active Missions
+        {/* Left: Daily Missions Checklist */}
+        <div className="md:col-span-3 glassmorphism p-6 rounded-2xl border border-neutral-800/80 space-y-4">
+          <div className="flex justify-between items-center border-b border-neutral-900 pb-3">
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <Compass size={16} className="text-indigo-400" />
+              Daily Focus Missions
             </h3>
-            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest bg-neutral-950 px-2 py-0.5 rounded border border-neutral-900">
-              Completed: {completedMissionsCount} / 5
+            <span className="text-[10px] font-bold text-neutral-500">
+              {completedMissionsCount}/4 COMPLETED
             </span>
           </div>
 
           <div className="space-y-3">
             {[
-              { key: 'checkin', name: 'Log Daily Attendance', xp: 50, action: handleCheckin, path: null, icon: CheckCircle2, status: isCheckedIn },
-              { key: 'sleep', name: 'Log Sleep Duration', xp: 30, action: () => navigate('/routine'), path: '/routine', icon: Moon, status: dailyMissions.sleep },
-              { key: 'water', name: 'Reach Water Hydration Target', xp: 30, action: () => navigate('/routine'), path: '/routine', icon: Droplet, status: dailyMissions.water },
-              { key: 'skincare', name: 'Complete Skincare Checklists', xp: 40, action: () => navigate('/routine'), path: '/routine', icon: Sparkles, status: dailyMissions.skincare },
-              { key: 'journal', name: 'Write Reflection Journal Log', xp: 50, action: () => navigate('/journal'), path: '/journal', icon: BookOpen, status: dailyMissions.journal }
-            ].map((mission) => (
-              <div 
-                key={mission.key}
-                className={`flex items-center justify-between p-3.5 rounded-xl border text-xs transition-colors ${mission.status ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-neutral-950/40 border-neutral-900 text-neutral-300'}`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${mission.status ? 'bg-emerald-500/10 text-emerald-400' : 'bg-neutral-900 border border-neutral-800 text-neutral-500'}`}>
-                    <mission.icon size={16} />
+              { id: 'checkin', name: 'Log Daily Check-in', desc: 'Secure streak consistency bonus', xp: 50 },
+              { id: 'water', name: 'Hydration Target (2L+)', desc: 'Hydrate skin & balance fluid retention', xp: 50 },
+              { id: 'sleep', name: 'Log Sleep Hours', desc: 'Ensure recovery cellular regeneration', xp: 50 },
+              { id: 'journal', name: 'Write Reflection Journal', desc: 'Maintain mental clarity logging', xp: 100 }
+            ].map((mission) => {
+              const done = dailyMissions[mission.id];
+              return (
+                <div 
+                  key={mission.id} 
+                  className={`p-3 rounded-xl border transition-all flex items-center justify-between ${done ? 'bg-neutral-900/40 border-neutral-900 text-neutral-450' : 'bg-transparent border-neutral-850 hover:border-neutral-750 text-neutral-200'}`}
+                >
+                  <div className="flex items-center gap-3">
+                    {done ? (
+                      <CheckCircle2 size={16} className="text-indigo-500 shrink-0" />
+                    ) : (
+                      <Circle size={16} className="text-neutral-600 shrink-0" />
+                    )}
+                    <div>
+                      <span className={`text-xs font-bold block ${done ? 'line-through text-neutral-500' : 'text-white'}`}>
+                        {mission.name}
+                      </span>
+                      <span className="text-[10px] text-neutral-500 block mt-0.5">{mission.desc}</span>
+                    </div>
                   </div>
+                  <span className="text-[9px] font-extrabold text-indigo-400 bg-indigo-500/5 px-2 py-0.5 rounded border border-indigo-500/10 shrink-0">
+                    +{mission.xp} XP
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Right: Last Face Analysis Summary */}
+        <div className="md:col-span-2 glassmorphism p-6 rounded-2xl border border-neutral-800/80 flex flex-col justify-between space-y-4">
+          <div>
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2 border-b border-neutral-900 pb-3">
+              <Sparkles size={16} className="text-blue-400" />
+              Latest Scan Snapshot
+            </h3>
+            
+            {latestAnalysis ? (
+              <div className="space-y-4 pt-3">
+                <div className="flex justify-between items-center bg-neutral-950/40 p-3 rounded-xl border border-neutral-900">
                   <div>
-                    <span className={`block font-bold text-white ${mission.status ? 'line-through opacity-50' : ''}`}>
-                      {mission.name}
-                    </span>
-                    <span className="text-[9px] text-neutral-500 mt-0.5 block font-medium">+{mission.xp} XP reward</span>
+                    <span className="text-[9px] font-bold text-neutral-500 uppercase block">Harmony Score</span>
+                    <span className="text-base font-black text-white block mt-0.5">{latestAnalysis.facial_harmony_score}%</span>
                   </div>
+                  <span className="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20 shrink-0">
+                    {latestAnalysis.potential_label || 'MTN'}
+                  </span>
                 </div>
 
-                {mission.status ? (
-                  <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1.5">
-                    <CheckCircle2 size={12} /> Complete
-                  </span>
-                ) : (
-                  <button
-                    onClick={mission.action}
-                    className="px-3 py-1.5 rounded-lg border border-neutral-800 hover:border-neutral-700 bg-neutral-900/60 text-[10px] font-bold hover:text-white transition-colors"
-                  >
-                    {mission.key === 'checkin' ? 'Check-in' : 'Complete'}
-                  </button>
-                )}
+                <div className="grid grid-cols-2 gap-3 text-[10px] text-neutral-400 leading-normal">
+                  <div>
+                    <strong className="text-neutral-500 block uppercase tracking-wider text-[8px] mb-0.5">Symmetry</strong>
+                    <p>{latestAnalysis.symmetry_score}% balanced</p>
+                  </div>
+                  <div>
+                    <strong className="text-neutral-500 block uppercase tracking-wider text-[8px] mb-0.5">Thirds Ratio</strong>
+                    <p>{latestAnalysis.facial_proportion_score}% golden split</p>
+                  </div>
+                </div>
               </div>
-            ))}
+            ) : (
+              <div className="py-12 text-center text-xs text-neutral-500 italic">
+                No biometric analyses logged yet.
+              </div>
+            )}
           </div>
+
+          <button
+            onClick={() => navigate('/analysis')}
+            className="w-full py-3 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-colors shadow-lg shadow-blue-500/10 flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            {latestAnalysis ? 'Start New Scan' : 'Run First Scan'}
+            <ChevronRight size={14} />
+          </button>
         </div>
 
-        {/* Quick Action Grid (Right Column) */}
-        <div className="glassmorphism border border-neutral-800 p-6 rounded-2xl shadow-xl space-y-4 flex flex-col justify-between">
-          <h3 className="text-sm font-bold text-white">Coach Actions</h3>
-          
-          <div className="grid grid-cols-2 gap-3 flex-1">
-            <button 
-              onClick={() => navigate('/analysis')}
-              className="glassmorphism-interactive p-4 rounded-xl text-center flex flex-col items-center justify-center gap-2 group"
-            >
-              <Sparkles size={18} className="text-blue-400 group-hover:scale-110 transition-transform" />
-              <span className="text-[10px] font-bold text-white block mt-1">Start Scan</span>
-            </button>
-
-            <button 
-              onClick={() => navigate('/routine')}
-              className="glassmorphism-interactive p-4 rounded-xl text-center flex flex-col items-center justify-center gap-2 group"
-            >
-              <Calendar size={18} className="text-indigo-400 group-hover:scale-110 transition-transform" />
-              <span className="text-[10px] font-bold text-white block mt-1">Check Routines</span>
-            </button>
-
-            <button 
-              onClick={() => navigate('/journal')}
-              className="glassmorphism-interactive p-4 rounded-xl text-center flex flex-col items-center justify-center gap-2 group"
-            >
-              <BookOpen size={18} className="text-purple-400 group-hover:scale-110 transition-transform" />
-              <span className="text-[10px] font-bold text-white block mt-1">Write Journal</span>
-            </button>
-
-            <button 
-              onClick={() => navigate('/progress')}
-              className="glassmorphism-interactive p-4 rounded-xl text-center flex flex-col items-center justify-center gap-2 group"
-            >
-              <Camera size={18} className="text-sky-400 group-hover:scale-110 transition-transform" />
-              <span className="text-[10px] font-bold text-white block mt-1">Log Photo</span>
-            </button>
-          </div>
-        </div>
       </section>
 
-      {/* 5. ACHIEVEMENTS CABINET */}
-      <section className="glassmorphism border border-neutral-800 p-6 rounded-2xl shadow-xl space-y-6">
-        <div>
-          <h3 className="text-sm font-bold text-white mb-1 flex items-center gap-2">
-            <Award size={16} className="text-yellow-400" />
-            Earned Milestones
-          </h3>
-          <p className="text-xs text-neutral-400">
-            Unlock achievements through daily transformational focus logs.
-          </p>
-        </div>
+      {/* 4. CHRONOLOGICAL ACTIVITY TIMELINE */}
+      <section className="glassmorphism p-6 rounded-2xl border border-neutral-800/80 space-y-4">
+        <h3 className="text-sm font-bold text-white uppercase tracking-wider border-b border-neutral-900 pb-3 flex items-center gap-2">
+          <Activity size={16} className="text-indigo-400" />
+          Unified Activity Timeline
+        </h3>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-9 gap-3">
-          {BADGES.map((badge) => {
-            const isUnlocked = unlockedBadges.includes(badge.id);
-            return (
-              <div 
-                key={badge.id}
-                title={`${badge.name}: ${badge.description}`}
-                className={`p-3.5 rounded-xl border text-center flex flex-col items-center justify-center relative transition-all duration-300 ${isUnlocked ? 'bg-neutral-900/30 border-yellow-500/20' : 'bg-neutral-950/20 border-neutral-900/50 opacity-20 select-none'}`}
-              >
-                <span className="text-2xl block mb-1">{badge.icon}</span>
-                <span className="block text-[9px] font-extrabold text-white truncate max-w-full">{badge.name}</span>
-                <span className="block text-[8px] text-neutral-500 font-medium mt-0.5 tracking-tight">{badge.category}</span>
-              </div>
-            );
-          })}
+        <div className="relative border-l border-neutral-900/80 ml-3.5 pl-6 space-y-6 pt-2">
+          {timelineItems.length > 0 ? (
+            timelineItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.id} className="relative group">
+                  {/* Timeline bullet dot */}
+                  <span className={`absolute -left-10 top-0.5 w-7 h-7 rounded-full flex items-center justify-center border shrink-0 z-10 ${item.color}`}>
+                    <Icon size={12} />
+                  </span>
+
+                  {/* Timeline card contents */}
+                  <div className="glassmorphism-interactive p-4 rounded-xl border border-neutral-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                      <span className="text-xs font-bold text-white block">{item.title}</span>
+                      <span className="text-[10px] text-neutral-450 block mt-1">{item.desc}</span>
+                    </div>
+                    <span className="text-[9px] font-bold text-neutral-500 shrink-0 uppercase tracking-widest bg-neutral-955 px-2 py-0.5 rounded border border-neutral-900">
+                      {item.date}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="py-8 text-center text-xs text-neutral-500 italic">
+              No transformation activities logged in timeline yet. Complete a checklist to begin.
+            </div>
+          )}
         </div>
       </section>
 

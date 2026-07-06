@@ -15,6 +15,22 @@ export default function Progress() {
   const [afterPhotoIdx, setAfterPhotoIdx] = useState(0);
   const [timelineItems, setTimelineItems] = useState([]);
 
+  // Filters State
+  const [filterType, setFilterType] = useState('all');
+  const [filterDate, setFilterDate] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredTimelineItems = timelineItems.filter(item => {
+    const matchType = filterType === 'all' || item.type === filterType;
+    const matchDate = !filterDate || item.date.includes(filterDate);
+    const matchSearch = !searchQuery || 
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.notes && item.notes.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.reflections && item.reflections.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    return matchType && matchDate && matchSearch;
+  });
+
   // Upload modal states
   const [isUploading, setIsUploading] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
@@ -235,9 +251,50 @@ export default function Progress() {
           </p>
         </div>
 
-        {timelineItems.length > 0 ? (
+        {/* Filters Panel */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-neutral-900/40 p-4 rounded-xl border border-neutral-850">
+          {/* Keyword Search */}
+          <div className="space-y-1">
+            <label className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest block">Search Text</label>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Keyword..."
+              className="w-full text-xs bg-neutral-950 border border-neutral-850 focus:border-blue-500 rounded-lg px-3 py-1.5 outline-none text-white placeholder-neutral-700"
+            />
+          </div>
+
+          {/* Type Selector */}
+          <div className="space-y-1">
+            <label className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest block">Type</label>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="w-full text-xs bg-neutral-950 border border-neutral-850 focus:border-blue-500 rounded-lg px-2.5 py-1.5 outline-none text-white cursor-pointer"
+            >
+              <option value="all">All Types</option>
+              <option value="photo">Photos Only</option>
+              <option value="journal">Journals Only</option>
+              <option value="badge">Achievements Only</option>
+            </select>
+          </div>
+
+          {/* Date Selector */}
+          <div className="space-y-1">
+            <label className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest block">Date</label>
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="w-full text-xs bg-neutral-950 border border-neutral-850 focus:border-blue-500 rounded-lg px-2.5 py-1.5 outline-none text-white"
+            />
+          </div>
+        </div>
+
+        {filteredTimelineItems.length > 0 ? (
           <div className="relative border-l border-neutral-800 ml-4 pl-6 space-y-8 py-2">
-            {timelineItems.map((item) => {
+            {filteredTimelineItems.map((item) => {
               return (
                 <div key={item.id} className="relative group">
                   {/* Timeline point indicator icon */}

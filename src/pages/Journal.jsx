@@ -15,6 +15,11 @@ export default function Journal() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [isDistractionFree, setIsDistractionFree] = useState(false);
 
+  // Filters State
+  const [filterMood, setFilterMood] = useState('all');
+  const [filterDate, setFilterDate] = useState('');
+  const [searchKeyword, setSearchKeyword] = useState('');
+
   useEffect(() => {
     setLogs(getJournals() || []);
   }, []);
@@ -26,6 +31,16 @@ export default function Journal() {
     { value: 4, label: '🙂', text: 'Good' },
     { value: 5, label: '⚡', text: 'Focused' }
   ];
+
+  const filteredLogs = logs.filter(log => {
+    const matchMood = filterMood === 'all' || log.mood === parseInt(filterMood);
+    const matchDate = !filterDate || log.date.includes(filterDate);
+    const matchKeyword = !searchKeyword || 
+      log.notes.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+      (log.reflections && log.reflections.toLowerCase().includes(searchKeyword.toLowerCase()));
+    
+    return matchMood && matchDate && matchKeyword;
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -237,14 +252,62 @@ export default function Journal() {
 
         {/* History timeline (Right 2 Columns) */}
         <div className="lg:col-span-2 space-y-4">
-          <h3 className="text-base font-bold text-white flex items-center gap-2">
-            <Calendar size={18} className="text-indigo-400" />
-            Previous Reflections
-          </h3>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <Calendar size={18} className="text-indigo-400" />
+              Previous Reflections
+            </h3>
+            <span className="text-[10px] font-bold text-neutral-500 bg-neutral-900 border border-neutral-850 px-2 py-0.5 rounded uppercase tracking-wider">
+              {filteredLogs.length} Entries found
+            </span>
+          </div>
 
-          {logs.length > 0 ? (
-            <div className="space-y-4 max-h-[640px] overflow-y-auto pr-2">
-              {logs.map((log) => {
+          {/* Advanced Filter grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-neutral-900/40 p-4 rounded-xl border border-neutral-850">
+            {/* Search Input */}
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest block">Search Text</label>
+              <input
+                type="text"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                placeholder="Keyword..."
+                className="w-full text-xs bg-neutral-950 border border-neutral-850 focus:border-purple-500 rounded-lg px-3 py-1.5 outline-none text-white placeholder-neutral-700"
+              />
+            </div>
+
+            {/* Mood selector */}
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest block">Mood</label>
+              <select
+                value={filterMood}
+                onChange={(e) => setFilterMood(e.target.value)}
+                className="w-full text-xs bg-neutral-950 border border-neutral-850 focus:border-purple-500 rounded-lg px-2.5 py-1.5 outline-none text-white cursor-pointer"
+              >
+                <option value="all">All Moods</option>
+                <option value="1">😫 Stressed</option>
+                <option value="2">😒 Low</option>
+                <option value="3">😐 Neutral</option>
+                <option value="4">🙂 Good</option>
+                <option value="5">⚡ Focused</option>
+              </select>
+            </div>
+
+            {/* Date filter */}
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest block">Date</label>
+              <input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className="w-full text-xs bg-neutral-950 border border-neutral-850 focus:border-purple-500 rounded-lg px-2.5 py-1.5 outline-none text-white"
+              />
+            </div>
+          </div>
+
+          {filteredLogs.length > 0 ? (
+            <div className="space-y-4 max-h-[640px] overflow-y-auto pr-2 scrollbar-none">
+              {filteredLogs.map((log) => {
                 const currentMoodObj = moodEmojis.find(m => m.value === log.mood);
                 return (
                   <div key={log.id} className="glassmorphism border border-neutral-800/80 p-5 rounded-2xl shadow-md space-y-4">

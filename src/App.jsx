@@ -1,40 +1,47 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\App.jsx
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { GameProvider } from './context/GameContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { NotificationProvider } from './context/NotificationContext';
 import Layout from './components/Layout';
 
-// Page Imports
-import Landing from './pages/Landing';
-import Login from './pages/Login';
-import Onboarding from './pages/Onboarding';
-import Dashboard from './pages/Dashboard';
-import Analysis from './pages/Analysis';
-import Progress from './pages/Progress';
-import Routine from './pages/Routine';
-import Journal from './pages/Journal';
-import Analytics from './pages/Analytics';
-import Payments from './pages/Payments';
-import Profile from './pages/Profile';
-import Roadmap from './pages/Roadmap';
-import WeeklyReview from './pages/WeeklyReview';
-import Community from './pages/Community';
-import PremiumTools from './pages/PremiumTools';
+// Lazy Loaded Pages
+const Landing = lazy(() => import('./pages/Landing'));
+const Login = lazy(() => import('./pages/Login'));
+const Onboarding = lazy(() => import('./pages/Onboarding'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Analysis = lazy(() => import('./pages/Analysis'));
+const Progress = lazy(() => import('./pages/Progress'));
+const Routine = lazy(() => import('./pages/Routine'));
+const Journal = lazy(() => import('./pages/Journal'));
+const Insights = lazy(() => import('./pages/Insights'));
+const Payments = lazy(() => import('./pages/Payments'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Roadmap = lazy(() => import('./pages/Roadmap'));
+const WeeklyReview = lazy(() => import('./pages/WeeklyReview'));
+const PremiumTools = lazy(() => import('./pages/PremiumTools'));
+const CalendarView = lazy(() => import('./pages/CalendarView'));
+
+// Skeleton Loading Fallback
+const PageLoader = () => (
+  <div className="min-h-screen bg-background flex items-center justify-center text-neutral-400">
+    <div className="flex flex-col items-center gap-3">
+      <span className="w-8 h-8 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin"></span>
+      <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Loading Ascend...</span>
+    </div>
+  </div>
+);
 
 // Route Guard for Protected Pages
 const ProtectedRoute = ({ children }) => {
-  const { user, loading, isOnboarded } = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#07070b] flex items-center justify-center text-neutral-400">
-        <span className="w-8 h-8 rounded-full border-4 border-blue-500/20 border-t-blue-500 animate-spin"></span>
-      </div>
-    );
+    return <PageLoader />;
   }
 
-  // Redirect to login if unauthenticated
   if (!user) {
     return <Navigate to="/login" replace />;
   }
@@ -47,18 +54,13 @@ const OnboardedRoute = ({ children }) => {
   const { user, loading, isOnboarded } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#07070b] flex items-center justify-center text-neutral-400">
-        <span className="w-8 h-8 rounded-full border-4 border-blue-500/20 border-t-blue-500 animate-spin"></span>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // Redirect to onboarding if not done
   if (!isOnboarded) {
     return <Navigate to="/onboarding" replace />;
   }
@@ -68,139 +70,145 @@ const OnboardedRoute = ({ children }) => {
 
 function App() {
   return (
-    <AuthProvider>
-      <GameProvider>
-        <Router>
-          <Routes>
-            {/* Public Pages */}
-            <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
+    <ThemeProvider>
+      <AuthProvider>
+        <NotificationProvider>
+          <GameProvider>
+            <Router>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  {/* Public Pages */}
+                  <Route path="/" element={<Landing />} />
+                  <Route path="/login" element={<Login />} />
 
-            {/* Onboarding Wizard (Auth required, but onboarding not completed yet) */}
-            <Route 
-              path="/onboarding" 
-              element={
-                <ProtectedRoute>
-                  <Onboarding />
-                </ProtectedRoute>
-              } 
-            />
+                  {/* Onboarding Wizard */}
+                  <Route 
+                    path="/onboarding" 
+                    element={
+                      <ProtectedRoute>
+                        <Onboarding />
+                      </ProtectedRoute>
+                    } 
+                  />
 
-            {/* Protected Pages (Auth required + Onboarded required) */}
-            <Route 
-              path="/dashboard" 
-              element={
-                <OnboardedRoute>
-                  <Dashboard />
-                </OnboardedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/roadmap" 
-              element={
-                <OnboardedRoute>
-                  <Roadmap />
-                </OnboardedRoute>
-              } 
-            />
+                  {/* Protected Pages */}
+                  <Route 
+                    path="/dashboard" 
+                    element={
+                      <OnboardedRoute>
+                        <Dashboard />
+                      </OnboardedRoute>
+                    } 
+                  />
+                  
+                  <Route 
+                    path="/roadmap" 
+                    element={
+                      <OnboardedRoute>
+                        <Roadmap />
+                      </OnboardedRoute>
+                    } 
+                  />
 
-            <Route 
-              path="/analysis" 
-              element={
-                <OnboardedRoute>
-                  <Analysis />
-                </OnboardedRoute>
-              } 
-            />
+                  <Route 
+                    path="/analysis" 
+                    element={
+                      <OnboardedRoute>
+                        <Analysis />
+                      </OnboardedRoute>
+                    } 
+                  />
 
-            <Route 
-              path="/progress" 
-              element={
-                <OnboardedRoute>
-                  <Progress />
-                </OnboardedRoute>
-              } 
-            />
+                  <Route 
+                    path="/progress" 
+                    element={
+                      <OnboardedRoute>
+                        <Progress />
+                      </OnboardedRoute>
+                    } 
+                  />
 
-            <Route 
-              path="/routine" 
-              element={
-                <OnboardedRoute>
-                  <Routine />
-                </OnboardedRoute>
-              } 
-            />
+                  <Route 
+                    path="/routine" 
+                    element={
+                      <OnboardedRoute>
+                        <Routine />
+                      </OnboardedRoute>
+                    } 
+                  />
 
-            <Route 
-              path="/journal" 
-              element={
-                <OnboardedRoute>
-                  <Journal />
-                </OnboardedRoute>
-              } 
-            />
+                  <Route 
+                    path="/journal" 
+                    element={
+                      <OnboardedRoute>
+                        <Journal />
+                      </OnboardedRoute>
+                    } 
+                  />
 
-            <Route 
-              path="/weekly-review" 
-              element={
-                <OnboardedRoute>
-                  <WeeklyReview />
-                </OnboardedRoute>
-              } 
-            />
+                  <Route 
+                    path="/weekly-review" 
+                    element={
+                      <OnboardedRoute>
+                        <WeeklyReview />
+                      </OnboardedRoute>
+                    } 
+                  />
 
-            <Route 
-              path="/community" 
-              element={
-                <OnboardedRoute>
-                  <Community />
-                </OnboardedRoute>
-              } 
-            />
+                  <Route 
+                    path="/premium-tools" 
+                    element={
+                      <OnboardedRoute>
+                        <PremiumTools />
+                      </OnboardedRoute>
+                    } 
+                  />
 
-            <Route 
-              path="/premium-tools" 
-              element={
-                <OnboardedRoute>
-                  <PremiumTools />
-                </OnboardedRoute>
-              } 
-            />
+                  <Route 
+                    path="/insights" 
+                    element={
+                      <OnboardedRoute>
+                        <Insights />
+                      </OnboardedRoute>
+                    } 
+                  />
 
-            <Route 
-              path="/analytics" 
-              element={
-                <OnboardedRoute>
-                  <Analytics />
-                </OnboardedRoute>
-              } 
-            />
+                  <Route 
+                    path="/calendar" 
+                    element={
+                      <OnboardedRoute>
+                        <CalendarView />
+                      </OnboardedRoute>
+                    } 
+                  />
 
-            <Route 
-              path="/profile" 
-              element={
-                <OnboardedRoute>
-                  <Profile />
-                </OnboardedRoute>
-              } 
-            />
+                  <Route 
+                    path="/profile" 
+                    element={
+                      <OnboardedRoute>
+                        <Profile />
+                      </OnboardedRoute>
+                    } 
+                  />
 
-            <Route 
-              path="/payments" 
-              element={
-                <OnboardedRoute>
-                  <Payments />
-                </OnboardedRoute>
-              } 
-            />
+                  <Route 
+                    path="/payments" 
+                    element={
+                      <OnboardedRoute>
+                        <Payments />
+                      </OnboardedRoute>
+                    } 
+                  />
 
-            {/* Fallback redirection */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Router>
-      </GameProvider>
-    </AuthProvider>
+                  {/* Fallback redirection */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Suspense>
+            </Router>
+          </GameProvider>
+        </NotificationProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
