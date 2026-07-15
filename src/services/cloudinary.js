@@ -15,9 +15,10 @@ const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
  * @throws {Error} if credentials are missing
  */
 export const checkCloudinaryConfig = () => {
-  if (!CLOUD_NAME || !UPLOAD_PRESET) {
+  const isInvalid = (val) => !val || val === 'undefined' || val === 'null' || val.includes('placeholder') || val.trim() === '';
+  if (isInvalid(CLOUD_NAME) || isInvalid(UPLOAD_PRESET)) {
     throw new Error(
-      "Cloudinary credentials are not configured. Please define VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET in your env parameters."
+      `Cloudinary configuration missing or invalid. (Current Cloud Name: "${CLOUD_NAME}", Preset: "${UPLOAD_PRESET}"). Please configure VITE_CLOUDINARY_CLOUD_NAME and VITE_CLOUDINARY_UPLOAD_PRESET in Vercel, then trigger a new deployment/rebuild.`
     );
   }
 };
