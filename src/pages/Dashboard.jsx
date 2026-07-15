@@ -64,7 +64,8 @@ export default function Dashboard() {
       setSleepAvg(sleepLog.current > 0 ? Math.round(((sleepLog.current + 7.4 * 6) / 7) * 10) / 10 : 7.2);
 
       // Calculate weekly consistency % based on completed tasks
-      const completedMilestones = roadmapMilestones.filter(m => m.completed).length;
+      const safeMilestones = Array.isArray(roadmapMilestones) ? roadmapMilestones : [];
+      const completedMilestones = safeMilestones.filter(m => m.completed).length;
       const routinePercent = completedMilestones > 0 ? Math.min(95, 60 + completedMilestones * 5) : 75;
       setWeeklyConsistency(routinePercent);
 
@@ -74,64 +75,60 @@ export default function Dashboard() {
       const checkinDates = await getCheckins();
       
       // 1. Face Scans
-      if (analyses) {
-        analyses.forEach(scan => {
-          items.push({
-            id: `t_scan_${scan.id}`,
-            type: 'scan',
-            title: 'Biometric Face Harmony Scan',
-            desc: `Completed scan with ${scan.facial_harmony_score}% Harmony (${scan.potential_label || 'MTN'})`,
-            date: scan.date,
-            icon: Sparkles,
-            color: 'text-blue-400 bg-blue-500/10 border-blue-500/20'
-          });
+      const safeAnalyses = Array.isArray(analyses) ? analyses : [];
+      safeAnalyses.forEach(scan => {
+        items.push({
+          id: `t_scan_${scan.id}`,
+          type: 'scan',
+          title: 'Biometric Face Harmony Scan',
+          desc: `Completed scan with ${scan.facial_harmony_score}% Harmony (${scan.potential_label || 'MTN'})`,
+          date: scan.date,
+          icon: Sparkles,
+          color: 'text-blue-400 bg-blue-500/10 border-blue-500/20'
         });
-      }
+      });
 
       // 2. Journal Entries
-      if (journals) {
-        journals.forEach((entry) => {
-          items.push({
-            id: `t_journal_${entry.id}`,
-            type: 'journal',
-            title: 'Reflective Journal Entry',
-            desc: `Logged mood: "${entry.mood}" - ${entry.notes?.substring(0, 50)}...`,
-            date: entry.date,
-            icon: BookOpen,
-            color: 'text-purple-400 bg-purple-500/10 border-purple-500/20'
-          });
+      const safeJournals = Array.isArray(journals) ? journals : [];
+      safeJournals.forEach((entry) => {
+        items.push({
+          id: `t_journal_${entry.id}`,
+          type: 'journal',
+          title: 'Reflective Journal Entry',
+          desc: `Logged mood: "${entry.mood}" - ${entry.notes?.substring(0, 50)}...`,
+          date: entry.date,
+          icon: BookOpen,
+          color: 'text-purple-400 bg-purple-500/10 border-purple-500/20'
         });
-      }
+      });
 
       // 3. Badges unlocked
-      if (unlockedBadges) {
-        unlockedBadges.forEach(badgeId => {
-          items.push({
-            id: `t_badge_${badgeId}`,
-            type: 'badge',
-            title: 'Milestone Badge Unlocked',
-            desc: `Earned "${badgeId.replace(/_/g, ' ').toUpperCase()}" achievement!`,
-            date: todayStr,
-            icon: Award,
-            color: 'text-orange-400 bg-orange-500/10 border-orange-500/20'
-          });
+      const safeBadges = Array.isArray(unlockedBadges) ? unlockedBadges : [];
+      safeBadges.forEach(badgeId => {
+        items.push({
+          id: `t_badge_${badgeId}`,
+          type: 'badge',
+          title: 'Milestone Badge Unlocked',
+          desc: `Earned "${badgeId.replace(/_/g, ' ').toUpperCase()}" achievement!`,
+          date: todayStr,
+          icon: Award,
+          color: 'text-orange-400 bg-orange-500/10 border-orange-500/20'
         });
-      }
+      });
 
       // 4. Checkins
-      if (checkinDates) {
-        checkinDates.forEach(date => {
-          items.push({
-            id: `t_check_${date}`,
-            type: 'checkin',
-            title: 'Daily Habits Check-in',
-            desc: 'Morning and night routines marked active & verified.',
-            date: date,
-            icon: CheckCircle2,
-            color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-          });
+      const safeCheckins = Array.isArray(checkinDates) ? checkinDates : [];
+      safeCheckins.forEach(date => {
+        items.push({
+          id: `t_check_${date}`,
+          type: 'checkin',
+          title: 'Daily Habits Check-in',
+          desc: 'Morning and night routines marked active & verified.',
+          date: date,
+          icon: CheckCircle2,
+          color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
         });
-      }
+      });
 
       // Sort descending by date
       items.sort((a, b) => new Date(b.date) - new Date(a.date));

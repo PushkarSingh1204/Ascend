@@ -32,8 +32,13 @@ const INITIAL_MOCK_NOTIFICATIONS = [
 
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState(() => {
-    const saved = localStorage.getItem('ascend_notifications');
-    return saved ? JSON.parse(saved) : INITIAL_MOCK_NOTIFICATIONS;
+    try {
+      const saved = localStorage.getItem('ascend_notifications');
+      const parsed = saved ? JSON.parse(saved) : null;
+      return Array.isArray(parsed) ? parsed : INITIAL_MOCK_NOTIFICATIONS;
+    } catch {
+      return INITIAL_MOCK_NOTIFICATIONS;
+    }
   });
 
   useEffect(() => {

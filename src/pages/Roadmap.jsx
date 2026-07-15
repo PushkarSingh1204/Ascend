@@ -33,17 +33,18 @@ export default function Roadmap() {
 
   const focusArea = user?.profile?.focus_area || 'Face';
 
-  // Group milestones by week
+  // Group milestones by week — guard against non-array (e.g. still loading)
+  const safeMilestones = Array.isArray(roadmapMilestones) ? roadmapMilestones : [];
   const weeks = [1, 2, 3, 4].map(w => ({
     weekNum: w,
-    milestones: roadmapMilestones.filter(m => m.week === w)
+    milestones: safeMilestones.filter(m => m.week === w)
   }));
 
   // Determine current active week based on progress
   const getWeekStatus = (weekNum) => {
     if (weekNum === 1) return 'active';
     // Week N is unlocked if previous week has at least one completion
-    const prevWeekMilestones = roadmapMilestones.filter(m => m.week === weekNum - 1);
+    const prevWeekMilestones = safeMilestones.filter(m => m.week === weekNum - 1);
     const completedPrev = prevWeekMilestones.filter(m => m.completed).length;
     if (completedPrev >= 1) return 'active';
     return 'locked';

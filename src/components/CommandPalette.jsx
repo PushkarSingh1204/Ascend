@@ -31,6 +31,16 @@ export default function CommandPalette({ isOpen, onClose }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
 
+  // Async data loaded safely into state
+  const [journals, setJournals] = useState([]);
+  const [analyses, setAnalyses] = useState([]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    getJournals().then(data => setJournals(Array.isArray(data) ? data : [])).catch(() => setJournals([]));
+    getAnalyses().then(data => setAnalyses(Array.isArray(data) ? data : [])).catch(() => setAnalyses([]));
+  }, [isOpen]);
+
   // Focus input when palette opens
   useEffect(() => {
     if (isOpen) {
@@ -40,11 +50,6 @@ export default function CommandPalette({ isOpen, onClose }) {
     }
   }, [isOpen]);
 
-  // Load searchable database items
-  const journals = getJournals() || [];
-  const analyses = getAnalyses() || [];
-
-  // Build items list
   const pages = [
     { name: 'Go to Dashboard', category: 'Pages', action: () => navigate('/dashboard'), icon: Compass },
     { name: 'Go to Roadmap', category: 'Pages', action: () => navigate('/roadmap'), icon: Compass },
