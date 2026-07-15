@@ -3,9 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { useAuth } from '../context/AuthContext';
 import { getProgressPhotos, addProgressPhoto, deleteProgressPhoto, getJournals, getProfile, BADGES } from '../services/db';
-import { uploadProgressPhoto, getOptimizedUrl } from '../services/cloudinary';
+import { uploadProgressPhoto, getOptimizedUrl, validateImageFile } from '../services/cloudinary';
 import ImageSlider from '../components/ImageSlider';
-import { Camera, Calendar, PlusCircle, Trash, Sliders, RefreshCw } from 'lucide-react';
+import { Camera, Calendar, PlusCircle, Trash, Sliders, RefreshCw, CheckCircle2 } from 'lucide-react';
 import EmptyState from '../components/EmptyState';
 
 export default function Progress() {
@@ -37,10 +37,13 @@ export default function Progress() {
   // Upload modal states
   const [isUploading, setIsUploading] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
   const [uploadingState, setUploadingState] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [cancelUpload, setCancelUpload] = useState(null);
+  const [successAnimation, setSuccessAnimation] = useState(false);
 
   const loadProgressData = async () => {
     try {
@@ -114,25 +117,31 @@ export default function Progress() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Check size limit: 8MB
-    if (file.size > 8 * 1024 * 1024) {
-      setError('File size exceeds the maximum limit of 8MB.');
-      return;
-    }
+    try {
+      validateImageFile(file);
+      setError('');
+      
+      // Clean up previous preview URL to prevent memory leaks
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
 
-    // Check type limit: JPG, PNG, WEBP
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      setError('Invalid format. Only JPG, PNG, and WEBP formats are accepted.');
-      return;
-    }
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
 
-    setError('');
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setSelectedPhoto(event.target.result);
-    };
-    reader.readAsDataURL(file);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setSelectedPhoto(event.target.result);
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      setError(err.message || 'File validation failed.');
+      setSelectedPhoto(null);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
+      }
+    }
   };
 
   const handleUploadSubmit = async (e) => {
@@ -146,13 +155,18 @@ export default function Progress() {
       setUploadingState(true);
       setError('');
       setUploadProgress(0);
+      setSuccessAnimation(false);
 
       // 1. Upload to Cloudinary using unsigned preset and track progress
-      const uploadedMetadata = await uploadProgressPhoto(
+      const { promise, cancel } = uploadProgressPhoto(
         selectedPhoto,
         user.uid,
         (percent) => setUploadProgress(percent)
       );
+
+      setCancelUpload(() => cancel);
+
+      const uploadedMetadata = await promise;
 
       // 2. Save metadata to Firestore
       const updated = await addProgressPhoto(uploadedMetadata, notes);
@@ -160,16 +174,48 @@ export default function Progress() {
       // 3. Award XP
       await addXP(100, "Log Progress Photo Baseline");
 
+      // Revoke preview URL to free up memory
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
+      }
+
       setPhotos(updated);
-      setIsUploading(false);
-      setSelectedPhoto(null);
-      setNotes('');
-      await loadProgressData();
+      setSuccessAnimation(true);
+
+      // Keep modal open for success animation, then close
+      setTimeout(() => {
+        setIsUploading(false);
+        setSuccessAnimation(false);
+        setSelectedPhoto(null);
+        setNotes('');
+        loadProgressData();
+      }, 1500);
+
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Photo upload failed. Please verify your connection.');
+      if (err.message === "Upload cancelled by user.") {
+        setError("Upload was cancelled.");
+      } else {
+        setError(err.message || 'Photo upload failed. Please verify your connection.');
+      }
     } finally {
       setUploadingState(false);
+      setCancelUpload(null);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsUploading(false);
+    setError('');
+    setSelectedPhoto(null);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+    if (cancelUpload) {
+      cancelUpload();
+      setCancelUpload(null);
     }
   };
 
@@ -455,96 +501,121 @@ export default function Progress() {
 
       {/* UPLOAD PROGRESS PHOTO MODAL */}
       {isUploading && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-md glassmorphism p-6 rounded-2xl border border-border relative bg-card text-foreground">
+        <div 
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) handleCloseModal(); }}
+        >
+          <div className="w-full max-w-md glassmorphism p-6 rounded-2xl border border-border relative bg-card text-foreground shadow-2xl">
+            {/* Close trigger button */}
+            <button
+              onClick={handleCloseModal}
+              disabled={uploadingState}
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground text-sm font-bold disabled:opacity-50 cursor-pointer"
+            >
+              ✕
+            </button>
+
             <h3 className="text-lg font-bold text-foreground mb-2">Log Progress Photo</h3>
             <p className="text-xs text-muted-foreground mb-6">
               For accurate comparison, try to match the same lighting, angle, and camera position as your baseline photo.
             </p>
 
             {error && (
-              <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+              <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold leading-normal">
                 {error}
               </div>
             )}
 
-            <form onSubmit={handleUploadSubmit} className="space-y-4">
-              
-              <div className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-xl p-4 min-h-[160px] text-center bg-background">
-                {selectedPhoto ? (
-                  <div className="relative">
-                    <img 
-                      src={selectedPhoto} 
-                      alt="Uploaded preview" 
-                      className="max-h-[140px] rounded-lg object-contain"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setSelectedPhoto(null)}
-                      className="mt-2 text-xs font-semibold text-red-400 hover:underline block mx-auto cursor-pointer"
-                    >
-                      Clear Selection
-                    </button>
-                  </div>
-                ) : (
-                  <label className="cursor-pointer flex flex-col items-center gap-2">
-                    <PlusCircle size={32} className="text-primary" />
-                    <span className="text-xs font-bold text-foreground block">Select Photo File</span>
-                    <span className="text-[10px] text-muted-foreground">PNG or JPEG up to 5MB</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Description / Notes</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Skin texture is clearer, cheek definition improving."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl py-3 px-4 text-xs text-foreground focus:outline-none focus:border-primary placeholder-muted-foreground"
-                />
-              </div>
-
-              {uploadingState && (
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-xs font-semibold text-muted-foreground">
-                    <span>Uploading to Cloudinary...</span>
-                    <span>{uploadProgress}%</span>
-                  </div>
-                  <div className="w-full bg-secondary h-2 rounded-full overflow-hidden border border-border">
-                    <div 
-                      className="bg-primary h-full rounded-full transition-all duration-200"
-                      style={{ width: `${uploadProgress}%` }}
-                    ></div>
-                  </div>
+            {successAnimation ? (
+              <div className="py-8 text-center space-y-4 animate-fade-in">
+                <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-2xl animate-bounce shadow-lg">
+                  ✓
                 </div>
-              )}
-
-              <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => { setIsUploading(false); setError(''); setSelectedPhoto(null); }}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={uploadingState || !selectedPhoto}
-                  className="px-5 py-2.5 rounded-xl font-bold text-xs text-primary-foreground bg-primary hover:opacity-90 transition-colors shadow-lg cursor-pointer"
-                >
-                  {error ? 'Retry Upload' : (uploadingState ? `Uploading (${uploadProgress}%)` : 'Upload & Log (+100 XP)')}
-                </button>
+                <h4 className="text-sm font-bold text-foreground">Upload Successful!</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">Your progress photo has been logged (+100 XP)</p>
               </div>
+            ) : (
+              <form onSubmit={handleUploadSubmit} className="space-y-4">
+                
+                <div className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-xl p-4 min-h-[160px] text-center bg-background">
+                  {selectedPhoto ? (
+                    <div className="relative">
+                      <img 
+                        src={selectedPhoto} 
+                        alt="Uploaded preview" 
+                        className="max-h-[140px] rounded-lg object-contain"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPhoto(null)}
+                        disabled={uploadingState}
+                        className="mt-2 text-xs font-semibold text-red-400 hover:underline block mx-auto cursor-pointer disabled:opacity-50"
+                      >
+                        Clear Selection
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer flex flex-col items-center gap-2">
+                      <PlusCircle size={32} className="text-primary" />
+                      <span className="text-xs font-bold text-foreground block">Select Photo File</span>
+                      <span className="text-[10px] text-muted-foreground">PNG, JPG, or WEBP up to 10MB</span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleFileChange}
+                        disabled={uploadingState}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
 
-            </form>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Description / Notes</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Skin texture is clearer, cheek definition improving."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    disabled={uploadingState}
+                    className="w-full bg-background border border-border rounded-xl py-3 px-4 text-xs text-foreground focus:outline-none focus:border-primary placeholder-muted-foreground disabled:opacity-50"
+                  />
+                </div>
+
+                {uploadingState && (
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between text-xs font-semibold text-muted-foreground">
+                      <span>Uploading to Cloudinary...</span>
+                      <span>{uploadProgress}%</span>
+                    </div>
+                    <div className="w-full bg-secondary h-2 rounded-full overflow-hidden border border-border">
+                      <div 
+                        className="bg-primary h-full rounded-full transition-all duration-200"
+                        style={{ width: `${uploadProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-border">
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer disabled:opacity-50"
+                  >
+                    {uploadingState ? 'Cancel Upload' : 'Close'}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={uploadingState || !selectedPhoto}
+                    className="px-5 py-2.5 rounded-xl font-bold text-xs text-primary-foreground bg-primary hover:opacity-90 transition-colors shadow-lg cursor-pointer disabled:opacity-50"
+                  >
+                    {error ? 'Retry Upload' : (uploadingState ? `Uploading (${uploadProgress}%)` : 'Upload & Log (+100 XP)')}
+                  </button>
+                </div>
+
+              </form>
+            )}
           </div>
         </div>
       )}

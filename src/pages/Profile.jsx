@@ -20,7 +20,7 @@ import {
   Camera
 } from 'lucide-react';
 import { getProfile, updateProfile } from '../services/db';
-import { uploadProfilePhoto, getOptimizedUrl } from '../services/cloudinary';
+import { uploadProfilePhoto, getOptimizedUrl, validateImageFile } from '../services/cloudinary';
 
 export default function Profile() {
   const { theme, setTheme } = useTheme();
@@ -43,27 +43,27 @@ export default function Profile() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState('');
+  const [cancelAvatarUpload, setCancelAvatarUpload] = useState(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState(null);
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadError('Image size exceeds 5MB limit.');
-      return;
-    }
-
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      setUploadError('Format not supported. Only JPG, PNG, and WEBP allowed.');
-      return;
-    }
-
-    setUploadError('');
-    setIsUploading(true);
-    setUploadProgress(0);
-
     try {
+      validateImageFile(file);
+      setUploadError('');
+      
+      // Clean up previous preview URL to prevent memory leaks
+      if (avatarPreviewUrl) {
+        URL.revokeObjectURL(avatarPreviewUrl);
+      }
+      const objectUrl = URL.createObjectURL(file);
+      setAvatarPreviewUrl(objectUrl);
+
+      setIsUploading(true);
+      setUploadProgress(0);
+
       const reader = new FileReader();
       const base64Promise = new Promise((resolve) => {
         reader.onload = (event) => resolve(event.target.result);
@@ -71,9 +71,13 @@ export default function Profile() {
       reader.readAsDataURL(file);
       const base64Data = await base64Promise;
 
-      const metadata = await uploadProfilePhoto(base64Data, user.uid, (percent) => {
+      const { promise, cancel } = uploadProfilePhoto(base64Data, user.uid, (percent) => {
         setUploadProgress(percent);
       });
+
+      setCancelAvatarUpload(() => cancel);
+
+      const metadata = await promise;
 
       const updated = await updateProfile({
         profile_photo_url: metadata.imageUrl,
@@ -81,11 +85,33 @@ export default function Profile() {
       });
 
       setUser(prev => ({ ...prev, profile: updated }));
+
+      if (avatarPreviewUrl) {
+        URL.revokeObjectURL(avatarPreviewUrl);
+        setAvatarPreviewUrl(null);
+      }
     } catch (err) {
       console.error("Avatar upload failed:", err);
-      setUploadError(err.message || 'Upload failed. Please try again.');
+      if (err.message === "Upload cancelled by user.") {
+        setUploadError("Upload was cancelled.");
+      } else {
+        setUploadError(err.message || 'Upload failed. Please try again.');
+      }
     } finally {
       setIsUploading(false);
+      setCancelAvatarUpload(null);
+    }
+  };
+
+  const handleCancelAvatar = () => {
+    if (cancelAvatarUpload) {
+      cancelAvatarUpload();
+      setCancelAvatarUpload(null);
+    }
+    setIsUploading(false);
+    if (avatarPreviewUrl) {
+      URL.revokeObjectURL(avatarPreviewUrl);
+      setAvatarPreviewUrl(null);
     }
   };
 
@@ -163,18 +189,29 @@ export default function Profile() {
                 <span>EDIT</span>
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   onChange={handleAvatarChange}
+                  disabled={isUploading}
                   className="hidden"
                 />
               </label>
 
-              {/* Progress Overlay */}
+              {/* Progress Overlay / Cancel Trigger */}
               {isUploading && (
-                <div className="absolute inset-0 rounded-full bg-black/80 flex flex-col items-center justify-center text-[9px] text-white font-bold">
-                  <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mb-1"></span>
-                  <span>{uploadProgress}%</span>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleCancelAvatar}
+                  className="absolute inset-0 rounded-full bg-black/80 flex flex-col items-center justify-center text-[9px] text-white font-bold hover:bg-black/90 transition-colors group cursor-pointer"
+                  title="Click to cancel upload"
+                >
+                  <span className="group-hover:hidden flex flex-col items-center">
+                    <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mb-1"></span>
+                    <span>{uploadProgress}%</span>
+                  </span>
+                  <span className="hidden group-hover:flex flex-col items-center text-red-400">
+                    ✕ CANCEL
+                  </span>
+                </button>
               )}
             </div>
             

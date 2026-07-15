@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
 import { saveAnalysis, unlockAnalysis, getAnalyses, deleteAnalysis } from '../services/db';
-import { uploadScan, getOptimizedUrl } from '../services/cloudinary';
+import { uploadScan, getOptimizedUrl, validateImageFile } from '../services/cloudinary';
 import { analyzeFaceImage, generateTransformationTips } from '../services/mediapipe';
 import FaceMeshOverlay from '../components/FaceMeshOverlay';
 import EmptyState from '../components/EmptyState';
@@ -48,6 +48,11 @@ export default function Analysis() {
   const [frontProgress, setFrontProgress] = useState(0);
   const [sideProgress, setSideProgress] = useState(0);
   const [uploadError, setUploadError] = useState('');
+  const [frontPreviewUrl, setFrontPreviewUrl] = useState(null);
+  const [sidePreviewUrl, setSidePreviewUrl] = useState(null);
+  const [frontCancel, setFrontCancel] = useState(null);
+  const [sideCancel, setSideCancel] = useState(null);
+  const [stepError, setStepError] = useState('');
 
   // Ref elements to measure image sizes for canvas overlay alignment
   const imageRef = useRef(null);
@@ -93,17 +98,41 @@ export default function Analysis() {
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
+    try {
+      validateImageFile(file);
+      setStepError('');
+
+      // Generate local preview URL
+      const objectUrl = URL.createObjectURL(file);
       if (type === 'front') {
-        setFrontImage(event.target.result);
+        if (frontPreviewUrl) URL.revokeObjectURL(frontPreviewUrl);
+        setFrontPreviewUrl(objectUrl);
         setFrontFile(file);
       } else {
-        setSideImage(event.target.result);
+        if (sidePreviewUrl) URL.revokeObjectURL(sidePreviewUrl);
+        setSidePreviewUrl(objectUrl);
         setSideFile(file);
       }
-    };
-    reader.readAsDataURL(file);
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (type === 'front') {
+          setFrontImage(event.target.result);
+        } else {
+          setSideImage(event.target.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      setStepError(err.message || 'File validation failed.');
+      if (type === 'front') {
+        setFrontImage(null);
+        setFrontFile(null);
+      } else {
+        setSideImage(null);
+        setSideFile(null);
+      }
+    }
   };
 
   const handleStartAnalysis = async () => {
@@ -118,18 +147,22 @@ export default function Analysis() {
     try {
       // 1. Upload Front Image
       setProcessStatus('Uploading frontal view to Cloudinary...');
-      const frontMetadata = await uploadScan(frontImage, user.uid, (percent) => {
+      const frontUpload = uploadScan(frontImage, user.uid, (percent) => {
         setFrontProgress(percent);
       });
+      setFrontCancel(() => frontUpload.cancel);
+      const frontMetadata = await frontUpload.promise;
 
       // 2. Upload Side Image
       setProcessStatus('Uploading side view to Cloudinary...');
-      const sideMetadata = await uploadScan(sideImage, user.uid, (percent) => {
+      const sideUpload = uploadScan(sideImage, user.uid, (percent) => {
         setSideProgress(percent);
       });
+      setSideCancel(() => sideUpload.cancel);
+      const sideMetadata = await sideUpload.promise;
 
       // 3. Run MediaPipe analysis
-      setProcessStatus('Running local biometric face mesh landmarker...');
+      setProcessStatus('Running local face mesh landmarker...');
       
       const imgEl = new Image();
       imgEl.src = frontImage;
@@ -152,6 +185,16 @@ export default function Analysis() {
         tips
       );
 
+      // Clean up object URLs
+      if (frontPreviewUrl) {
+        URL.revokeObjectURL(frontPreviewUrl);
+        setFrontPreviewUrl(null);
+      }
+      if (sidePreviewUrl) {
+        URL.revokeObjectURL(sidePreviewUrl);
+        setSidePreviewUrl(null);
+      }
+
       setCurrentAnalysis(saved);
       
       // Refresh list
@@ -169,9 +212,23 @@ export default function Analysis() {
       setActiveView('step4');
     } catch (err) {
       console.error("Biometric analysis error:", err);
-      setUploadError(err.message || 'An error occurred during analysis or upload.');
+      if (err.message === "Upload cancelled by user.") {
+        setUploadError("Upload was cancelled.");
+      } else {
+        setUploadError(err.message || 'An error occurred during analysis or upload.');
+      }
       setIsProcessing(false);
+    } finally {
+      setFrontCancel(null);
+      setSideCancel(null);
     }
+  };
+
+  const handleCancelScan = () => {
+    if (frontCancel) frontCancel();
+    if (sideCancel) sideCancel();
+    setIsProcessing(false);
+    setUploadError("Upload was cancelled.");
   };
 
   const handleReset = () => {
@@ -179,7 +236,20 @@ export default function Analysis() {
     setSideImage(null);
     setFrontFile(null);
     setSideFile(null);
-    setLandmarks(null);
+    setFrontProgress(0);
+    setSideProgress(0);
+    setUploadError('');
+    setStepError('');
+    if (frontPreviewUrl) {
+      URL.revokeObjectURL(frontPreviewUrl);
+      setFrontPreviewUrl(null);
+    }
+    if (sidePreviewUrl) {
+      URL.revokeObjectURL(sidePreviewUrl);
+      setSidePreviewUrl(null);
+    }
+    if (frontCancel) frontCancel();
+    if (sideCancel) sideCancel();
     setActiveView('step1');
   };
 
@@ -225,6 +295,12 @@ export default function Analysis() {
             </p>
           </div>
 
+          {stepError && (
+            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold leading-normal max-w-xl mx-auto">
+              {stepError}
+            </div>
+          )}
+
           <div className="glassmorphism p-6 rounded-2xl flex flex-col items-center justify-center border border-border min-h-[340px] text-center relative overflow-hidden max-w-xl mx-auto">
             {frontImage ? (
               <div className="relative w-full h-full flex flex-col items-center">
@@ -234,7 +310,7 @@ export default function Analysis() {
                   className="w-full max-h-[240px] object-contain rounded-xl border border-border"
                 />
                 <button 
-                  onClick={() => { setFrontImage(null); setFrontFile(null); }}
+                  onClick={() => { setFrontImage(null); setFrontFile(null); setStepError(''); }}
                   className="mt-3 text-xs font-semibold text-red-400 hover:underline"
                 >
                   Change Photo
@@ -247,11 +323,11 @@ export default function Analysis() {
                 </div>
                 <div>
                   <span className="text-sm font-bold text-foreground block">Step 1: Frontal Profile Photo</span>
-                  <span className="text-[11px] text-muted-foreground mt-1 block">Click to select (JPG, PNG)</span>
+                  <span className="text-[11px] text-muted-foreground mt-1 block">Click to select (JPG, PNG, WEBP)</span>
                 </div>
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   onChange={(e) => handleImageUpload(e, 'front')}
                   className="hidden"
                 />
@@ -275,6 +351,12 @@ export default function Analysis() {
       {/* STEP 2: Upload Side Image */}
       {activeView === 'step2' && (
         <section className="space-y-6">
+          {stepError && (
+            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold leading-normal max-w-xl mx-auto">
+              {stepError}
+            </div>
+          )}
+
           <div className="glassmorphism p-6 rounded-2xl flex flex-col items-center justify-center border border-border min-h-[340px] text-center relative overflow-hidden max-w-xl mx-auto">
             {sideImage ? (
               <div className="relative w-full h-full flex flex-col items-center">
@@ -284,7 +366,7 @@ export default function Analysis() {
                   className="w-full max-h-[240px] object-contain rounded-xl border border-border"
                 />
                 <button 
-                  onClick={() => { setSideImage(null); setSideFile(null); }}
+                  onClick={() => { setSideImage(null); setSideFile(null); setStepError(''); }}
                   className="mt-3 text-xs font-semibold text-red-400 hover:underline"
                 >
                   Change Photo
@@ -297,11 +379,11 @@ export default function Analysis() {
                 </div>
                 <div>
                   <span className="text-sm font-bold text-foreground block">Step 2: Side Profile Photo</span>
-                  <span className="text-[11px] text-muted-foreground mt-1 block">Click to select (JPG, PNG)</span>
+                  <span className="text-[11px] text-muted-foreground mt-1 block">Click to select (JPG, PNG, WEBP)</span>
                 </div>
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   onChange={(e) => handleImageUpload(e, 'side')}
                   className="hidden"
                 />
@@ -311,7 +393,7 @@ export default function Analysis() {
 
           <div className="flex justify-between items-center max-w-xl mx-auto pt-4">
             <button
-              onClick={() => setActiveView('step1')}
+              onClick={() => { setActiveView('step1'); setStepError(''); }}
               className="px-5 py-3 rounded-xl border border-border hover:border-neutral-700 bg-card text-xs font-semibold text-foreground transition-colors flex items-center gap-1.5"
             >
               <ChevronLeft size={14} />
@@ -332,7 +414,7 @@ export default function Analysis() {
 
       {/* STEP 3: Scanning Animation */}
       {activeView === 'step3' && (
-        <section className="glassmorphism p-12 rounded-2xl border border-border flex flex-col items-center text-center space-y-8 min-h-[380px] justify-center max-w-xl mx-auto">
+        <section className="glassmorphism p-12 rounded-2xl border border-border flex flex-col items-center text-center space-y-8 min-h-[380px] justify-center max-w-xl mx-auto shadow-2xl">
           {!uploadError && (
             <div className="w-16 h-16 rounded-full border-4 border-blue-500/25 border-t-blue-500 animate-spin flex items-center justify-center relative">
               <div className="absolute inset-2 rounded-full border-2 border-indigo-500/10 border-t-indigo-500 animate-spin-reverse"></div>
@@ -372,6 +454,15 @@ export default function Analysis() {
                       style={{ width: `${sideProgress}%` }}
                     />
                   </div>
+                </div>
+
+                <div className="pt-4 text-center">
+                  <button
+                    onClick={handleCancelScan}
+                    className="px-4 py-2 rounded-xl border border-border hover:border-red-500/20 hover:text-red-400 text-xs font-semibold text-muted-foreground transition-all cursor-pointer"
+                  >
+                    Cancel Scan
+                  </button>
                 </div>
               </div>
             )}
