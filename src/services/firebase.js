@@ -1,5 +1,6 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\services\firebase.js
 import { initializeApp } from 'firebase/app';
+import { getAnalytics } from 'firebase/analytics';
 import { 
   getAuth, 
   GoogleAuthProvider 
@@ -15,7 +16,8 @@ const firebaseConfig = {
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "ascend-app",
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "ascend-app.appspot.com",
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1234567890",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1234567890:web:abcdef123456"
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1234567890:web:abcdef123456",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ""
 };
 
 // Initialize Firebase
@@ -25,6 +27,7 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+export const analytics = typeof window !== 'undefined' && firebaseConfig.measurementId ? getAnalytics(app) : null;
 
 // Providers
 export const googleProvider = new GoogleAuthProvider();
