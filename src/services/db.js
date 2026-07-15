@@ -1,7 +1,6 @@
-// C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\services\db.js
-import { doc, getDoc, updateDoc, setDoc, collection, getDocs, addDoc, query, orderBy } from 'firebase/firestore';
-import { ref, uploadString, getDownloadURL } from 'firebase/storage';
-import { db, auth, storage } from './firebase';
+import { doc, getDoc, updateDoc, setDoc, collection, getDocs, addDoc, query, orderBy, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import { db, auth } from './firebase';
+import { deleteImage } from './cloudinary';
 
 // Available badges configuration
 export const BADGES = [
@@ -295,29 +294,42 @@ export const getProgressPhotos = async () => {
   return list.sort((a, b) => new Date(b.date) - new Date(a.date));
 };
 
-// Upload progress photo to storage and log to Firestore
-export const addProgressPhoto = async (photoBase64, notes) => {
+// Store Cloudinary progress photo metadata and log to Firestore
+export const addProgressPhoto = async (photoMetadata, notes) => {
   const user = auth.currentUser;
   if (!user) return [];
   
-  // 1. Upload base64 image data to Storage bucket
-  const filename = `progress_${Date.now()}.jpg`;
-  const storageRef = ref(storage, `progress_photos/${user.uid}/${filename}`);
-  await uploadString(storageRef, photoBase64, 'data_url');
-  const downloadUrl = await getDownloadURL(storageRef);
-
-  // 2. Add document record in Firestore
   const collRef = collection(db, 'users', user.uid, 'progress_photos');
   const existing = await getProgressPhotos();
   const weekNum = existing.length + 1;
   
   const newPhotoDoc = {
+    uid: user.uid,
     date: new Date().toISOString().split('T')[0],
     week_number: weekNum,
-    photo_url: downloadUrl,
-    notes: notes || `Week ${weekNum} Progress Photo`
+    photo_url: photoMetadata.imageUrl,
+    publicId: photoMetadata.publicId,
+    folder: photoMetadata.folder,
+    notes: notes || `Week ${weekNum} Progress Photo`,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    type: 'progress'
   };
   await addDoc(collRef, newPhotoDoc);
+  return getProgressPhotos();
+};
+
+// Delete progress photo from Firestore and Cloudinary
+export const deleteProgressPhoto = async (photoId, publicId) => {
+  const user = auth.currentUser;
+  if (!user) return [];
+
+  const docRef = doc(db, 'users', user.uid, 'progress_photos', photoId);
+  await deleteDoc(docRef);
+
+  if (publicId) {
+    await deleteImage(publicId);
+  }
   return getProgressPhotos();
 };
 
@@ -331,38 +343,43 @@ export const getAnalyses = async () => {
   return list.sort((a, b) => new Date(b.date) - new Date(a.date));
 };
 
-// Save a new face symmetry harmony analysis
-export const saveAnalysis = async (analysis) => {
+// Save a new face symmetry harmony analysis using Cloudinary metadata
+export const saveAnalysis = async (frontMetadata, sideMetadata, scores, suggestions) => {
   const user = auth.currentUser;
   if (!user) return null;
 
-  // Upload front image if base64
-  let frontUrl = analysis.front_photo_url;
-  if (frontUrl && frontUrl.startsWith('data:image')) {
-    const refFront = ref(storage, `scans/${user.uid}/front_${Date.now()}.jpg`);
-    await uploadString(refFront, frontUrl, 'data_url');
-    frontUrl = await getDownloadURL(refFront);
-  }
-
-  // Upload side image if base64
-  let sideUrl = analysis.side_photo_url;
-  if (sideUrl && sideUrl.startsWith('data:image')) {
-    const refSide = ref(storage, `scans/${user.uid}/side_${Date.now()}.jpg`);
-    await uploadString(refSide, sideUrl, 'data_url');
-    sideUrl = await getDownloadURL(refSide);
-  }
-
   const collRef = collection(db, 'users', user.uid, 'scans');
   const newScan = {
+    uid: user.uid,
     date: new Date().toISOString().split('T')[0],
-    front_photo_url: frontUrl,
-    side_photo_url: sideUrl,
+    front_photo_url: frontMetadata.imageUrl,
+    front_public_id: frontMetadata.publicId,
+    side_photo_url: sideMetadata.imageUrl,
+    side_public_id: sideMetadata.publicId,
     is_premium_unlocked: true,
-    ...analysis
+    ...scores,
+    suggestions: suggestions,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    type: 'scan'
   };
   
   const docRef = await addDoc(collRef, newScan);
   return { id: docRef.id, ...newScan };
+};
+
+// Delete analysis scan from Firestore and Cloudinary
+export const deleteAnalysis = async (scanId, frontPublicId, sidePublicId) => {
+  const user = auth.currentUser;
+  if (!user) return [];
+
+  const docRef = doc(db, 'users', user.uid, 'scans', scanId);
+  await deleteDoc(docRef);
+
+  if (frontPublicId) await deleteImage(frontPublicId);
+  if (sidePublicId) await deleteImage(sidePublicId);
+
+  return getAnalyses();
 };
 
 // Unlock reports for single scan

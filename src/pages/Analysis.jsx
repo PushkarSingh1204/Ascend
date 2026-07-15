@@ -3,7 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
-import { saveAnalysis, unlockAnalysis, getAnalyses } from '../services/db';
+import { saveAnalysis, unlockAnalysis, getAnalyses, deleteAnalysis } from '../services/db';
+import { uploadScan, getOptimizedUrl } from '../services/cloudinary';
 import { analyzeFaceImage, generateTransformationTips } from '../services/mediapipe';
 import FaceMeshOverlay from '../components/FaceMeshOverlay';
 import EmptyState from '../components/EmptyState';
@@ -44,6 +45,9 @@ export default function Analysis() {
   const [activeTab, setActiveTab] = useState('suggestions'); // suggestions, comparison
   const [activeRecCategory, setActiveRecCategory] = useState('skincare');
   const [historySortOrder, setHistorySortOrder] = useState('date-desc');
+  const [frontProgress, setFrontProgress] = useState(0);
+  const [sideProgress, setSideProgress] = useState(0);
+  const [uploadError, setUploadError] = useState('');
 
   // Ref elements to measure image sizes for canvas overlay alignment
   const imageRef = useRef(null);
@@ -107,62 +111,67 @@ export default function Analysis() {
 
     setIsProcessing(true);
     setActiveView('step3');
-    
-    // Simulate steps of biometric calculations
-    const statuses = [
-      'Initializing local MediaPipe model...',
-      'Locating 478 face mesh coordinates...',
-      'Measuring Euclidean left-right coordinate deviations...',
-      'Calculating vertical facial thirds balance...',
-      'Calculating jaw ramus definition estimates...',
-      'Calibrating potential growth scores...'
-    ];
+    setUploadError('');
+    setFrontProgress(0);
+    setSideProgress(0);
 
-    for (let i = 0; i < statuses.length; i++) {
-      setProcessStatus(statuses[i]);
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
+    try {
+      // 1. Upload Front Image
+      setProcessStatus('Uploading frontal view to Cloudinary...');
+      const frontMetadata = await uploadScan(frontImage, user.uid, (percent) => {
+        setFrontProgress(percent);
+      });
 
-    // Load image inside browser to pass to analyzer
-    const imgEl = new Image();
-    imgEl.src = frontImage;
-    imgEl.onload = async () => {
-      try {
-        const detection = await analyzeFaceImage(imgEl, false);
-        setLandmarks(detection.landmarks);
-        
-        const tips = generateTransformationTips(detection.scores);
-        
-        // Save analysis to Firestore and Firebase Storage
-        const saved = await saveAnalysis({
-          front_photo_url: frontImage,
-          side_photo_url: sideImage,
-          ...detection.scores,
-          landmarks_json: detection.landmarks,
-          suggestions: tips
-        });
+      // 2. Upload Side Image
+      setProcessStatus('Uploading side view to Cloudinary...');
+      const sideMetadata = await uploadScan(sideImage, user.uid, (percent) => {
+        setSideProgress(percent);
+      });
 
-        setCurrentAnalysis(saved);
-        
-        // Refresh list
-        const updatedList = await getAnalyses() || [];
-        setAnalysesList(updatedList);
-        if (updatedList.length > 1) {
-          setCompareScanId(updatedList[1].id);
-        }
-        
-        // Award initial analysis achievements
-        await unlockBadge('first_analysis');
-        await addXP(200, "First Biometric Harmony Scan");
-        
-        setIsProcessing(false);
-        setActiveView('step4');
-      } catch (err) {
-        console.error(err);
-        setIsProcessing(false);
-        setActiveView('step1');
+      // 3. Run MediaPipe analysis
+      setProcessStatus('Running local biometric face mesh landmarker...');
+      
+      const imgEl = new Image();
+      imgEl.src = frontImage;
+      await new Promise((resolve, reject) => {
+        imgEl.onload = resolve;
+        imgEl.onerror = () => reject(new Error("Failed to load image for MediaPipe."));
+      });
+
+      const detection = await analyzeFaceImage(imgEl, false);
+      setLandmarks(detection.landmarks);
+      
+      const tips = generateTransformationTips(detection.scores);
+      
+      // 4. Save analysis to Firestore
+      setProcessStatus('Saving scan report metadata to Firestore...');
+      const saved = await saveAnalysis(
+        frontMetadata,
+        sideMetadata,
+        detection.scores,
+        tips
+      );
+
+      setCurrentAnalysis(saved);
+      
+      // Refresh list
+      const updatedList = await getAnalyses() || [];
+      setAnalysesList(updatedList);
+      if (updatedList.length > 1) {
+        setCompareScanId(updatedList[1].id);
       }
-    };
+      
+      // Award achievements
+      await unlockBadge('first_analysis');
+      await addXP(200, "First Biometric Harmony Scan");
+      
+      setIsProcessing(false);
+      setActiveView('step4');
+    } catch (err) {
+      console.error("Biometric analysis error:", err);
+      setUploadError(err.message || 'An error occurred during analysis or upload.');
+      setIsProcessing(false);
+    }
   };
 
   const handleReset = () => {
@@ -324,13 +333,71 @@ export default function Analysis() {
       {/* STEP 3: Scanning Animation */}
       {activeView === 'step3' && (
         <section className="glassmorphism p-12 rounded-2xl border border-border flex flex-col items-center text-center space-y-8 min-h-[380px] justify-center max-w-xl mx-auto">
-          <div className="w-16 h-16 rounded-full border-4 border-blue-500/25 border-t-blue-500 animate-spin flex items-center justify-center relative">
-            <div className="absolute inset-2 rounded-full border-2 border-indigo-500/10 border-t-indigo-500 animate-spin-reverse"></div>
-          </div>
+          {!uploadError && (
+            <div className="w-16 h-16 rounded-full border-4 border-blue-500/25 border-t-blue-500 animate-spin flex items-center justify-center relative">
+              <div className="absolute inset-2 rounded-full border-2 border-indigo-500/10 border-t-indigo-500 animate-spin-reverse"></div>
+            </div>
+          )}
 
-          <div className="space-y-2 max-w-sm">
-            <h3 className="text-lg font-bold text-foreground">Biometric Scanning In Progress</h3>
-            <p className="text-xs text-muted-foreground animate-pulse">{processStatus}</p>
+          <div className="space-y-2 max-w-sm w-full">
+            <h3 className="text-lg font-bold text-foreground">
+              {uploadError ? 'Biometric Upload Failed' : 'Biometric Scanning In Progress'}
+            </h3>
+            <p className="text-xs text-muted-foreground animate-pulse mb-4">{processStatus}</p>
+
+            {/* Display progress bars when uploading */}
+            {!uploadError && processStatus.includes('Uploading') && (
+              <div className="w-full space-y-3 bg-background/50 border border-border p-4 rounded-xl text-left">
+                <div className="space-y-1">
+                  <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase">
+                    <span>Frontal Profile</span>
+                    <span>{frontProgress}%</span>
+                  </div>
+                  <div className="w-full bg-secondary h-1.5 rounded-full overflow-hidden border border-border">
+                    <div 
+                      className="bg-blue-500 h-full rounded-full transition-all duration-200" 
+                      style={{ width: `${frontProgress}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1 pt-1">
+                  <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase">
+                    <span>Side Profile</span>
+                    <span>{sideProgress}%</span>
+                  </div>
+                  <div className="w-full bg-secondary h-1.5 rounded-full overflow-hidden border border-border">
+                    <div 
+                      className="bg-indigo-500 h-full rounded-full transition-all duration-200" 
+                      style={{ width: `${sideProgress}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {uploadError && (
+              <div className="space-y-4">
+                <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold leading-normal">
+                  {uploadError}
+                </div>
+                <div className="flex justify-center gap-3">
+                  <button
+                    onClick={handleReset}
+                    className="px-5 py-2.5 rounded-xl border border-border hover:border-neutral-700 text-xs font-bold text-foreground transition-all cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleStartAnalysis}
+                    className="px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:opacity-90 transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <RefreshCw size={12} className="animate-spin" />
+                    Retry Analysis
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </section>
       )}
@@ -556,7 +623,7 @@ export default function Analysis() {
                 <div className="relative rounded-xl overflow-hidden border border-border w-full max-w-[280px] aspect-square bg-background flex items-center justify-center">
                   <img 
                     ref={imageRef}
-                    src={currentAnalysis.front_photo_url} 
+                    src={getOptimizedUrl(currentAnalysis.front_photo_url)} 
                     alt="Symmetry scan" 
                     className="w-full h-full object-cover"
                   />

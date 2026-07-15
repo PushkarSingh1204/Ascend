@@ -1,9 +1,11 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\pages\Progress.jsx
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
-import { getProgressPhotos, addProgressPhoto, getJournals, getProfile, BADGES } from '../services/db';
+import { useAuth } from '../context/AuthContext';
+import { getProgressPhotos, addProgressPhoto, deleteProgressPhoto, getJournals, getProfile, BADGES } from '../services/db';
+import { uploadProgressPhoto, getOptimizedUrl } from '../services/cloudinary';
 import ImageSlider from '../components/ImageSlider';
-import { Camera, Calendar, PlusCircle, Trash, Sliders, Eye } from 'lucide-react';
+import { Camera, Calendar, PlusCircle, Trash, Sliders, RefreshCw } from 'lucide-react';
 import EmptyState from '../components/EmptyState';
 
 export default function Progress() {
@@ -38,6 +40,7 @@ export default function Progress() {
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
   const [uploadingState, setUploadingState] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const loadProgressData = async () => {
     try {
@@ -60,7 +63,8 @@ export default function Progress() {
         type: 'photo',
         title: `Week ${p.week_number} Photo`,
         notes: p.notes,
-        photoUrl: p.photo_url
+        photoUrl: p.photo_url,
+        publicId: p.publicId
       }));
 
       const journalItems = journals.map(j => ({
@@ -110,6 +114,20 @@ export default function Progress() {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Check size limit: 8MB
+    if (file.size > 8 * 1024 * 1024) {
+      setError('File size exceeds the maximum limit of 8MB.');
+      return;
+    }
+
+    // Check type limit: JPG, PNG, WEBP
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Invalid format. Only JPG, PNG, and WEBP formats are accepted.');
+      return;
+    }
+
+    setError('');
     const reader = new FileReader();
     reader.onload = (event) => {
       setSelectedPhoto(event.target.result);
@@ -127,10 +145,19 @@ export default function Progress() {
     try {
       setUploadingState(true);
       setError('');
-      
-      const updated = await addProgressPhoto(selectedPhoto, notes);
+      setUploadProgress(0);
 
-      // Award XP
+      // 1. Upload to Cloudinary using unsigned preset and track progress
+      const uploadedMetadata = await uploadProgressPhoto(
+        selectedPhoto,
+        user.uid,
+        (percent) => setUploadProgress(percent)
+      );
+
+      // 2. Save metadata to Firestore
+      const updated = await addProgressPhoto(uploadedMetadata, notes);
+
+      // 3. Award XP
       await addXP(100, "Log Progress Photo Baseline");
 
       setPhotos(updated);
@@ -140,18 +167,23 @@ export default function Progress() {
       await loadProgressData();
     } catch (err) {
       console.error(err);
-      setError('Photo upload failed. Please verify your connection.');
+      setError(err.message || 'Photo upload failed. Please verify your connection.');
     } finally {
       setUploadingState(false);
     }
   };
 
-  const handleDeletePhoto = async (id) => {
-    // Local delete for mock, usually we perform Firestore delete
-    const remaining = photos.filter(p => p.id !== id);
-    setPhotos(remaining);
-    localStorage.setItem('ascend_photos_gallery', JSON.stringify(remaining));
-    await loadProgressData();
+  const handleDeletePhoto = async (id, publicId) => {
+    try {
+      setLoading(true);
+      const updated = await deleteProgressPhoto(id, publicId);
+      setPhotos(updated);
+      await loadProgressData();
+    } catch (err) {
+      console.error("Delete photo error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const beforePhoto = photos[beforePhotoIdx];
@@ -206,8 +238,8 @@ export default function Progress() {
                   {beforePhoto && afterPhoto && (
                     <div className="w-full max-w-[340px] aspect-[3/4] rounded-xl overflow-hidden border border-border shadow-2xl relative">
                       <ImageSlider 
-                        beforeImage={beforePhoto.photo_url} 
-                        afterImage={afterPhoto.photo_url} 
+                        beforeImage={getOptimizedUrl(beforePhoto.photo_url, 400, 533)} 
+                        afterImage={getOptimizedUrl(afterPhoto.photo_url, 400, 533)} 
                       />
                     </div>
                   )}
@@ -346,16 +378,17 @@ export default function Progress() {
                         {item.type === 'photo' && (
                           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                             <img 
-                              src={item.photoUrl} 
+                              src={getOptimizedUrl(item.photoUrl, 160, 160)} 
                               alt="Progress photo" 
                               className="w-24 h-24 rounded-xl object-cover border border-border shrink-0"
+                              loading="lazy"
                             />
                             <div className="flex-1 flex justify-between items-start">
                               <p className="text-xs text-muted-foreground leading-normal italic">
                                 "{item.notes || 'No description logged.'}"
                               </p>
                               <button
-                                onClick={() => handleDeletePhoto(item.id)}
+                                onClick={() => handleDeletePhoto(item.id, item.publicId)}
                                 className="text-[9px] text-red-400 hover:underline flex items-center gap-1 shrink-0 p-1 cursor-pointer"
                               >
                                 <Trash size={10} />
@@ -479,6 +512,21 @@ export default function Progress() {
                 />
               </div>
 
+              {uploadingState && (
+                <div className="space-y-2 mb-4">
+                  <div className="flex justify-between text-xs font-semibold text-muted-foreground">
+                    <span>Uploading to Cloudinary...</span>
+                    <span>{uploadProgress}%</span>
+                  </div>
+                  <div className="w-full bg-secondary h-2 rounded-full overflow-hidden border border-border">
+                    <div 
+                      className="bg-primary h-full rounded-full transition-all duration-200"
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-end gap-3 pt-4 border-t border-border">
                 <button
                   type="button"
@@ -492,7 +540,7 @@ export default function Progress() {
                   disabled={uploadingState || !selectedPhoto}
                   className="px-5 py-2.5 rounded-xl font-bold text-xs text-primary-foreground bg-primary hover:opacity-90 transition-colors shadow-lg cursor-pointer"
                 >
-                  {uploadingState ? 'Uploading...' : 'Upload & Log (+100 XP)'}
+                  {error ? 'Retry Upload' : (uploadingState ? `Uploading (${uploadProgress}%)` : 'Upload & Log (+100 XP)')}
                 </button>
               </div>
 

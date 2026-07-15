@@ -4,7 +4,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
 import { useTheme } from '../context/ThemeContext';
-import { getProfile, updateProfile } from '../services/db';
 import { 
   User, 
   Settings, 
@@ -17,8 +16,11 @@ import {
   Bell,
   RefreshCw,
   Sparkles,
-  Info
+  Info,
+  Camera
 } from 'lucide-react';
+import { getProfile, updateProfile } from '../services/db';
+import { uploadProfilePhoto, getOptimizedUrl } from '../services/cloudinary';
 
 export default function Profile() {
   const { theme, setTheme } = useTheme();
@@ -36,6 +38,56 @@ export default function Profile() {
   const [nameInput, setNameInput] = useState('');
   const [isPlus, setIsPlus] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+
+  // Upload States
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState('');
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError('Image size exceeds 5MB limit.');
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setUploadError('Format not supported. Only JPG, PNG, and WEBP allowed.');
+      return;
+    }
+
+    setUploadError('');
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      const reader = new FileReader();
+      const base64Promise = new Promise((resolve) => {
+        reader.onload = (event) => resolve(event.target.result);
+      });
+      reader.readAsDataURL(file);
+      const base64Data = await base64Promise;
+
+      const metadata = await uploadProfilePhoto(base64Data, user.uid, (percent) => {
+        setUploadProgress(percent);
+      });
+
+      const updated = await updateProfile({
+        profile_photo_url: metadata.imageUrl,
+        profile_photo_public_id: metadata.publicId
+      });
+
+      setUser(prev => ({ ...prev, profile: updated }));
+    } catch (err) {
+      console.error("Avatar upload failed:", err);
+      setUploadError(err.message || 'Upload failed. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   useEffect(() => {
     if (user && user.profile) {
@@ -92,11 +144,46 @@ export default function Profile() {
           
           {/* Avatar Profile Box */}
           <div className="glassmorphism border border-border p-6 rounded-2xl text-center flex flex-col items-center shadow-xl bg-card">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-650 flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-blue-500/25 border-2 border-white/10 mb-4">
-              {user?.profile?.name?.substring(0, 2).toUpperCase() || 'TR'}
+            <div className="relative group w-20 h-20 mb-4">
+              {user?.profile?.profile_photo_url ? (
+                <img 
+                  src={getOptimizedUrl(user.profile.profile_photo_url, 160, 160)} 
+                  alt="Profile" 
+                  className="w-20 h-20 rounded-full object-cover border-2 border-white/10 shadow-lg shadow-blue-500/25"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-650 flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-blue-500/25 border-2 border-white/10">
+                  {user?.profile?.name?.substring(0, 2).toUpperCase() || 'TR'}
+                </div>
+              )}
+              
+              {/* Camera Trigger Overlay */}
+              <label className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-[9px] text-white font-bold cursor-pointer transition-opacity">
+                <Camera size={14} className="mb-0.5" />
+                <span>EDIT</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+              </label>
+
+              {/* Progress Overlay */}
+              {isUploading && (
+                <div className="absolute inset-0 rounded-full bg-black/80 flex flex-col items-center justify-center text-[9px] text-white font-bold">
+                  <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mb-1"></span>
+                  <span>{uploadProgress}%</span>
+                </div>
+              )}
             </div>
             
             <h2 className="text-lg font-black text-foreground">{user?.profile?.name || 'Transformer'}</h2>
+            {uploadError && (
+              <span className="text-[10px] font-semibold text-red-400 mt-1 block">
+                {uploadError}
+              </span>
+            )}
             <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider block mt-1">
               Member since: {user?.profile?.join_date || 'May 2026'}
             </span>
