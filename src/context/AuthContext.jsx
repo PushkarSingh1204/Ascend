@@ -20,8 +20,8 @@ export const translateAuthError = (err) => {
   }
 
   const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "";
-  if (!authDomain || authDomain === "ascend-app.firebaseapp.com") {
-    return "Configuration Error: VITE_FIREBASE_AUTH_DOMAIN is missing or using a fallback placeholder. Please ensure all Firebase environment variables are configured in Vercel/Local settings.";
+  if (!authDomain) {
+    return "Configuration Error: VITE_FIREBASE_AUTH_DOMAIN is missing. Please ensure all Firebase environment variables are configured in Vercel/Local settings.";
   }
 
   if (!err || !err.code) {
@@ -125,65 +125,50 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
       return true;
     } catch (err) {
       console.error("AuthContext Login Error:", err);
       throw new Error(translateAuthError(err));
-    } finally {
-      setLoading(false);
     }
   };
 
   const signup = async (email, password) => {
-    setLoading(true);
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       return true;
     } catch (err) {
       console.error("AuthContext Signup Error:", err);
       throw new Error(translateAuthError(err));
-    } finally {
-      setLoading(false);
     }
   };
 
   const loginGoogle = async () => {
-    setLoading(true);
     try {
       await signInWithPopup(auth, googleProvider);
       return true;
     } catch (err) {
       console.error("AuthContext Google Login Error:", err);
       throw new Error(translateAuthError(err));
-    } finally {
-      setLoading(false);
     }
   };
 
   const loginAnonymous = async () => {
-    setLoading(true);
     try {
       await signInAnonymously(auth);
       return true;
     } catch (err) {
       console.error("AuthContext Guest Login Error:", err);
       throw new Error(translateAuthError(err));
-    } finally {
-      setLoading(false);
     }
   };
 
   const logout = async () => {
-    setLoading(true);
     try {
       await signOut(auth);
     } catch (err) {
       console.error("AuthContext Logout Error:", err);
-    } finally {
-      setLoading(false);
     }
   };
 

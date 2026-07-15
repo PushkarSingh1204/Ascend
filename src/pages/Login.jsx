@@ -1,6 +1,6 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\pages\Login.jsx
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Lock, Mail, ArrowRight, User } from 'lucide-react';
 
@@ -10,8 +10,13 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, signup, loginGoogle, loginAnonymous } = useAuth();
+  const { login, signup, loginGoogle, loginAnonymous, user, isOnboarded } = useAuth();
   const navigate = useNavigate();
+
+  // Auto-redirect already authenticated users
+  if (user) {
+    return <Navigate to={isOnboarded ? '/dashboard' : '/onboarding'} replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,10 +31,10 @@ export default function Login() {
     try {
       if (isSignUp) {
         await signup(email, password);
-        navigate('/onboarding');
+        // onAuthStateChanged will fire → ProtectedRoute redirects to /onboarding
       } else {
         await login(email, password);
-        navigate('/dashboard');
+        // onAuthStateChanged will fire → OnboardedRoute redirects to /dashboard
       }
     } catch (err) {
       console.error(err);
@@ -44,7 +49,7 @@ export default function Login() {
     setError('');
     try {
       await loginGoogle();
-      navigate('/dashboard');
+      // onAuthStateChanged will fire → route guards handle redirect
     } catch (err) {
       console.error(err);
       setError(err.message || 'Google Authentication failed.');
@@ -58,7 +63,7 @@ export default function Login() {
     setError('');
     try {
       await loginAnonymous();
-      navigate('/dashboard');
+      // onAuthStateChanged will fire → route guards handle redirect
     } catch (err) {
       console.error(err);
       setError(err.message || 'Guest Login failed.');
