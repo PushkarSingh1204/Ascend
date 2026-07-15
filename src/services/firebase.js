@@ -24,8 +24,17 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 if (typeof window !== 'undefined') {
-  const k = import.meta.env.VITE_FIREBASE_API_KEY || "";
-  console.log("Firebase API Key Preview:", k ? (k.slice(0, 6) + "..." + k.slice(-4)) : "MISSING", "Length:", k.length);
+  console.log("=== FIREBASE STARTUP DEBUG LOGS ===");
+  console.log("VITE_FIREBASE_API_KEY raw preview:", import.meta.env.VITE_FIREBASE_API_KEY ? (import.meta.env.VITE_FIREBASE_API_KEY.slice(0, 6) + "..." + import.meta.env.VITE_FIREBASE_API_KEY.slice(-4)) : "UNDEFINED");
+  console.log("VITE_FIREBASE_AUTH_DOMAIN raw:", import.meta.env.VITE_FIREBASE_AUTH_DOMAIN);
+  console.log("VITE_FIREBASE_PROJECT_ID raw:", import.meta.env.VITE_FIREBASE_PROJECT_ID);
+  
+  const maskedConfig = {
+    ...firebaseConfig,
+    apiKey: firebaseConfig.apiKey ? (firebaseConfig.apiKey.slice(0, 6) + "..." + firebaseConfig.apiKey.slice(-4)) : "MISSING"
+  };
+  console.log("Final firebaseConfig object:", JSON.stringify(maskedConfig, null, 2));
+  console.log("===================================");
 }
 
 // Initialize Services
