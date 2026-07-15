@@ -19,6 +19,11 @@ export const translateAuthError = (err) => {
     return "Configuration Error: Firebase environment variables are missing on this host. If you deployed to Vercel, please add VITE_FIREBASE_API_KEY and other Firebase variables to your Vercel Project Settings.";
   }
 
+  const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "";
+  if (!authDomain || authDomain === "ascend-app.firebaseapp.com") {
+    return "Configuration Error: VITE_FIREBASE_AUTH_DOMAIN is missing or using a fallback placeholder. Please ensure all Firebase environment variables are configured in Vercel/Local settings.";
+  }
+
   if (!err || !err.code) {
     return err?.message || "An unexpected authentication error occurred. Please try again.";
   }
