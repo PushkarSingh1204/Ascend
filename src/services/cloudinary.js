@@ -126,18 +126,58 @@ export const processAndCompressImage = (imageBase64, maxSizeKB = 400, maxDimensi
  * @param {function(number): void} onProgress - Progress percentage callback (0-100)
  * @returns {{promise: Promise<{imageUrl: string, publicId: string, folder: string}>, cancel: function(): void}} XHR controllers
  */
+/**
+ * Converts a base64 data URL to a Blob object.
+ * Required because Cloudinary's unsigned upload API expects a Blob/File in FormData,
+ * not a raw base64 string. Sending a string causes a malformed multipart body which
+ * Cloudinary reports as "Upload preset not found".
+ * @param {string} dataUrl - base64 data URL e.g. "data:image/jpeg;base64,..."
+ * @returns {Blob}
+ */
+const dataUrlToBlob = (dataUrl) => {
+  const [header, base64Data] = dataUrl.split(',');
+  const mime = header.match(/:(.*?);/)[1];
+  const binary = atob(base64Data);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return new Blob([bytes], { type: mime });
+};
+
 export const uploadImageWithCancel = (fileBase64, folder, onProgress) => {
   checkCloudinaryConfig();
+
+  const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
+
+  // Diagnostic: log config before every upload attempt
+  console.log('[Cloudinary Upload] Starting upload');
+  console.log('[Cloudinary Upload] Cloud Name:', CLOUD_NAME);
+  console.log('[Cloudinary Upload] Upload Preset:', UPLOAD_PRESET);
+  console.log('[Cloudinary Upload] URL:', uploadUrl);
+  console.log('[Cloudinary Upload] Folder:', folder);
 
   let xhr = null;
   const promise = new Promise(async (resolve, reject) => {
     try {
-      // 1. Run client-side verification and compression check
+      // 1. Client-side compression
       const payload = await processAndCompressImage(fileBase64);
 
-      // 2. Setup XMLHttpRequest
+      // 2. Convert base64 data URL → Blob (required by Cloudinary multipart upload)
+      const blob = dataUrlToBlob(payload);
+      console.log('[Cloudinary Upload] Blob size:', blob.size, 'bytes | type:', blob.type);
+
+      // 3. Build FormData with Blob (not a base64 string)
+      const formData = new FormData();
+      formData.append('file', blob, 'upload.jpg');
+      formData.append('upload_preset', UPLOAD_PRESET);
+      formData.append('folder', folder);
+
+      console.log('[Cloudinary Upload] FormData fields: file (Blob), upload_preset =', UPLOAD_PRESET, ', folder =', folder);
+
+      // 4. Setup XHR
       xhr = new XMLHttpRequest();
-      xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
+      xhr.open('POST', uploadUrl);
 
       // Track upload percentage progress
       xhr.upload.onprogress = (event) => {
@@ -149,6 +189,9 @@ export const uploadImageWithCancel = (fileBase64, folder, onProgress) => {
 
       // Handle server responses
       xhr.onload = () => {
+        console.log('[Cloudinary Upload] HTTP Status:', xhr.status);
+        console.log('[Cloudinary Upload] Response Body:', xhr.responseText);
+
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const response = JSON.parse(xhr.responseText);
@@ -158,38 +201,33 @@ export const uploadImageWithCancel = (fileBase64, folder, onProgress) => {
               folder: folder
             });
           } catch (e) {
-            reject(new Error("Failed to parse Cloudinary response."));
+            reject(new Error('Failed to parse Cloudinary response.'));
           }
         } else {
           try {
             const errorResp = JSON.parse(xhr.responseText);
-            reject(new Error(errorResp.error?.message || "Upload failed."));
+            const msg = errorResp.error?.message || 'Upload failed.';
+            console.error('[Cloudinary Upload] Error from Cloudinary:', msg);
+            reject(new Error(msg));
           } catch (e) {
-            reject(new Error(`Upload failed with status: ${xhr.status}`));
+            reject(new Error(`Upload failed with HTTP status: ${xhr.status}`));
           }
         }
       };
 
-      // Handle failures
       xhr.onerror = () => {
-        reject(new Error("Network connection interrupted. Please check your connection and try again."));
+        reject(new Error('Network connection interrupted. Please check your connection and try again.'));
       };
 
       xhr.ontimeout = () => {
-        reject(new Error("Upload timed out. Please try again."));
+        reject(new Error('Upload timed out. Please try again.'));
       };
 
       xhr.onabort = () => {
-        reject(new Error("Upload cancelled by user."));
+        reject(new Error('Upload cancelled by user.'));
       };
 
-      xhr.timeout = 60000; // 60 seconds timeout
-
-      const formData = new FormData();
-      formData.append('file', payload);
-      formData.append('upload_preset', UPLOAD_PRESET);
-      formData.append('folder', folder);
-
+      xhr.timeout = 60000;
       xhr.send(formData);
     } catch (err) {
       reject(err);
@@ -199,9 +237,7 @@ export const uploadImageWithCancel = (fileBase64, folder, onProgress) => {
   return {
     promise,
     cancel: () => {
-      if (xhr) {
-        xhr.abort();
-      }
+      if (xhr) xhr.abort();
     }
   };
 };
