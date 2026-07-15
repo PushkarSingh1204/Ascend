@@ -47,7 +47,7 @@ export default function Login() {
       navigate('/dashboard');
     } catch (err) {
       console.error(err);
-      setError('Google Authentication failed.');
+      setError(err.message || 'Google Authentication failed.');
     } finally {
       setLoading(false);
     }
@@ -61,7 +61,7 @@ export default function Login() {
       navigate('/dashboard');
     } catch (err) {
       console.error(err);
-      setError('Guest Login failed.');
+      setError(err.message || 'Guest Login failed.');
     } finally {
       setLoading(false);
     }

@@ -13,6 +13,40 @@ import { auth, db, googleProvider } from '../services/firebase';
 
 const AuthContext = createContext();
 
+export const translateAuthError = (err) => {
+  if (!err || !err.code) {
+    return err?.message || "An unexpected authentication error occurred. Please try again.";
+  }
+
+  switch (err.code) {
+    case 'auth/api-key-not-valid':
+    case 'auth/invalid-api-key':
+      return "The application security credentials are invalid. Please contact the administrator.";
+    case 'auth/network-request-failed':
+      return "Network connection unavailable. Please check your internet connection and try again.";
+    case 'auth/popup-blocked':
+      return "The Google authentication popup was blocked by your browser. Please allow popups for this site.";
+    case 'auth/popup-closed-by-user':
+      return "Authentication was cancelled because the sign-in window was closed.";
+    case 'auth/unauthorized-domain':
+      return "This domain is not authorized for Firebase Authentication. Please check your console settings.";
+    case 'auth/user-disabled':
+      return "This account has been disabled. Please contact support.";
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':
+      return "Invalid email address or password. Please verify your credentials.";
+    case 'auth/email-already-in-use':
+      return "An account already exists with this email address.";
+    case 'auth/weak-password':
+      return "Your password is too weak. Please choose a password with at least 6 characters.";
+    case 'auth/operation-not-allowed':
+      return "The requested sign-in method is not enabled. Please check Firebase console configuration.";
+    default:
+      return `Authentication failed: ${err.message || 'please verify your input.'}`;
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -87,7 +121,7 @@ export const AuthProvider = ({ children }) => {
       return true;
     } catch (err) {
       console.error("AuthContext Login Error:", err);
-      throw err;
+      throw new Error(translateAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -100,7 +134,7 @@ export const AuthProvider = ({ children }) => {
       return true;
     } catch (err) {
       console.error("AuthContext Signup Error:", err);
-      throw err;
+      throw new Error(translateAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -113,7 +147,7 @@ export const AuthProvider = ({ children }) => {
       return true;
     } catch (err) {
       console.error("AuthContext Google Login Error:", err);
-      throw err;
+      throw new Error(translateAuthError(err));
     } finally {
       setLoading(false);
     }
@@ -126,7 +160,7 @@ export const AuthProvider = ({ children }) => {
       return true;
     } catch (err) {
       console.error("AuthContext Guest Login Error:", err);
-      throw err;
+      throw new Error(translateAuthError(err));
     } finally {
       setLoading(false);
     }
