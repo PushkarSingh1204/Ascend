@@ -8,34 +8,21 @@ import {
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
-// Production-ready Firebase configuration using Vite environment variables
-// Fallbacks are provided so the build compilation and initial mount will succeed out-of-the-box
+// Firebase configuration — all values must be set as environment variables.
+// For local development: create a .env file in the project root.
+// For Vercel: add each VITE_FIREBASE_* variable in Project Settings → Environment Variables.
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDummyKeyForCompilationPurposeOnly",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "ascend-app.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "ascend-app",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "ascend-app.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1234567890",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1234567890:web:abcdef123456",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ""
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ''
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-if (typeof window !== 'undefined') {
-  console.log("=== FIREBASE STARTUP DEBUG LOGS ===");
-  console.log("VITE_FIREBASE_API_KEY raw preview:", import.meta.env.VITE_FIREBASE_API_KEY ? (import.meta.env.VITE_FIREBASE_API_KEY.slice(0, 6) + "..." + import.meta.env.VITE_FIREBASE_API_KEY.slice(-4)) : "UNDEFINED");
-  console.log("VITE_FIREBASE_AUTH_DOMAIN raw:", import.meta.env.VITE_FIREBASE_AUTH_DOMAIN);
-  console.log("VITE_FIREBASE_PROJECT_ID raw:", import.meta.env.VITE_FIREBASE_PROJECT_ID);
-  
-  const maskedConfig = {
-    ...firebaseConfig,
-    apiKey: firebaseConfig.apiKey ? (firebaseConfig.apiKey.slice(0, 6) + "..." + firebaseConfig.apiKey.slice(-4)) : "MISSING"
-  };
-  console.log("Final firebaseConfig object:", JSON.stringify(maskedConfig, null, 2));
-  console.log("===================================");
-}
 
 // Initialize Services
 export const auth = getAuth(app);
