@@ -23,6 +23,11 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
+if (typeof window !== 'undefined') {
+  const k = import.meta.env.VITE_FIREBASE_API_KEY || "";
+  console.log("Firebase API Key Preview:", k ? (k.slice(0, 6) + "..." + k.slice(-4)) : "MISSING", "Length:", k.length);
+}
+
 // Initialize Services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
