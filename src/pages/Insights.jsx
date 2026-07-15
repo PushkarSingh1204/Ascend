@@ -57,49 +57,56 @@ export default function Insights() {
   });
 
   useEffect(() => {
-    const analyses = getAnalyses() || [];
-    const reversed = [...analyses].reverse();
-    const formatted = reversed.map((item, idx) => ({
-      name: `Scan ${idx + 1}`,
-      harmony: item.facial_harmony_score,
-      symmetry: item.symmetry_score,
-      proportion: item.facial_proportion_score,
-      date: item.date
-    }));
-    setAnalysisData(formatted);
+    const fetchInsightsData = async () => {
+      try {
+        const analyses = await getAnalyses() || [];
+        const reversed = [...analyses].reverse();
+        const formatted = reversed.map((item, idx) => ({
+          name: `Scan ${idx + 1}`,
+          harmony: item.facial_harmony_score,
+          symmetry: item.symmetry_score,
+          proportion: item.facial_proportion_score,
+          date: item.date
+        }));
+        setAnalysisData(formatted);
 
-    const checkinDates = getCheckins() || [];
-    setCheckins(checkinDates);
+        const checkinDates = await getCheckins() || [];
+        setCheckins(checkinDates);
 
-    const waterLog = getWaterLog() || { current: 0, target: 2000 };
-    setWater(waterLog);
+        const waterLog = await getWaterLog() || { current: 0, target: 2000 };
+        setWater(waterLog);
 
-    const sleepLog = getSleepLog() || { current: 0, target: 8.0 };
-    setSleep(sleepLog);
+        const sleepLog = await getSleepLog() || { current: 0, target: 8.0 };
+        setSleep(sleepLog);
 
-    const journals = getJournals() || [];
-    setJournalsCount(journals.length);
+        const journals = await getJournals() || [];
+        setJournalsCount(journals.length);
 
-    // Calculate dynamic stats
-    const totalXP = xp || 0;
-    const analysesLen = analyses.length;
-    const streakMax = user?.profile?.longest_streak || streak || 7;
-    const jLen = journals.length;
-    const photosCount = analysesLen * 2;
-    const routineCount = checkinDates.length * 4 + analysesLen * 2;
-    const totalWater = checkinDates.length * 1850 + waterLog.current;
-    const totalSleep = checkinDates.length * 7.2 + sleepLog.current;
+        // Calculate dynamic stats
+        const totalXP = xp || 0;
+        const analysesLen = analyses.length;
+        const streakMax = user?.profile?.longest_streak || streak || 7;
+        const jLen = journals.length;
+        const photosCount = analysesLen * 2;
+        const routineCount = checkinDates.length * 4 + analysesLen * 2;
+        const totalWater = checkinDates.length * 1850 + waterLog.current;
+        const totalSleep = checkinDates.length * 7.2 + sleepLog.current;
 
-    setLifetimeStats({
-      totalXp: totalXP,
-      longestStreak: streakMax,
-      analysesCompleted: analysesLen,
-      journalEntries: jLen,
-      photosUploaded: photosCount,
-      routinesCompleted: routineCount,
-      waterLogged: Math.round(totalWater / 100) / 10, // In Liters
-      sleepHours: Math.round(totalSleep)
-    });
+        setLifetimeStats({
+          totalXp: totalXP,
+          longestStreak: streakMax,
+          analysesCompleted: analysesLen,
+          journalEntries: jLen,
+          photosUploaded: photosCount,
+          routinesCompleted: routineCount,
+          waterLogged: Math.round(totalWater / 100) / 10, // In Liters
+          sleepHours: Math.round(totalSleep)
+        });
+      } catch (err) {
+        console.error("Insights logs fetch error:", err);
+      }
+    };
+    fetchInsightsData();
   }, [xp, streak, user]);
 
   const chartMockData = [

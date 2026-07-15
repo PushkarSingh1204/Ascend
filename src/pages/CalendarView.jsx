@@ -25,9 +25,21 @@ export default function CalendarView() {
   const [selectedDayDetails, setSelectedDayDetails] = useState(null);
 
   useEffect(() => {
-    setCheckins(getCheckins() || []);
-    setJournals(getJournals() || []);
-    setAnalyses(getAnalyses() || []);
+    const fetchLogs = async () => {
+      try {
+        const checkinsData = await getCheckins();
+        setCheckins(checkinsData || []);
+        
+        const journalsData = await getJournals();
+        setJournals(journalsData || []);
+        
+        const analysesData = await getAnalyses();
+        setAnalyses(analysesData || []);
+      } catch (err) {
+        console.error("CalendarView logs fetch error:", err);
+      }
+    };
+    fetchLogs();
   }, []);
 
   // Calendar calculations

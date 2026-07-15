@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { getJournals, addJournalEntry } from '../services/db';
-import { BookOpen, Smile, Calendar, Sparkles, MessageSquare, ChevronDown } from 'lucide-react';
+import { BookOpen, Calendar, Sparkles } from 'lucide-react';
 import EmptyState from '../components/EmptyState';
 
 export default function Journal() {
@@ -14,14 +14,27 @@ export default function Journal() {
   const [reflections, setReflections] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [isDistractionFree, setIsDistractionFree] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Filters State
   const [filterMood, setFilterMood] = useState('all');
   const [filterDate, setFilterDate] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
 
+  const fetchJournalLogs = async () => {
+    try {
+      setLoading(true);
+      const data = await getJournals();
+      setLogs(data || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    setLogs(getJournals() || []);
+    fetchJournalLogs();
   }, []);
 
   const moodEmojis = [
@@ -36,34 +49,41 @@ export default function Journal() {
     const matchMood = filterMood === 'all' || log.mood === parseInt(filterMood);
     const matchDate = !filterDate || log.date.includes(filterDate);
     const matchKeyword = !searchKeyword || 
-      log.notes.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+      (log.notes && log.notes.toLowerCase().includes(searchKeyword.toLowerCase())) ||
       (log.reflections && log.reflections.toLowerCase().includes(searchKeyword.toLowerCase()));
     
     return matchMood && matchDate && matchKeyword;
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!notes) return;
 
-    const updated = addJournalEntry({
-      mood: parseInt(mood),
-      notes,
-      reflections
-    });
-    
-    setLogs(updated);
-    
-    // Reward Achievements
-    unlockBadge('journal_entry');
-    addXP(100, "Log Daily Reflection Journal");
+    try {
+      setLoading(true);
+      const updated = await addJournalEntry({
+        mood: parseInt(mood),
+        notes,
+        reflections
+      });
+      
+      setLogs(updated);
+      
+      // Reward Achievements
+      await unlockBadge('journal_entry');
+      await addXP(100, "Log Daily Reflection Journal");
 
-    // Clear inputs & show success
-    setNotes('');
-    setReflections('');
-    setMood(4);
-    setIsSuccess(true);
-    setTimeout(() => setIsSuccess(false), 3000);
+      // Clear inputs & show success
+      setNotes('');
+      setReflections('');
+      setMood(4);
+      setIsSuccess(true);
+      setTimeout(() => setIsSuccess(false), 3000);
+    } catch (err) {
+      console.error("Journal Submit Error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (isDistractionFree) {
@@ -141,11 +161,11 @@ export default function Journal() {
               Clear & Close
             </button>
             <button
-              onClick={(e) => {
-                handleSubmit(e);
+              onClick={async (e) => {
+                await handleSubmit(e);
                 setIsDistractionFree(false);
               }}
-              disabled={!notes}
+              disabled={!notes || loading}
               className={`px-8 py-3 rounded-xl font-bold text-xs text-white transition-all duration-300 cursor-pointer ${notes ? 'bg-primary hover:opacity-90 shadow-lg' : 'bg-secondary border border-border text-muted-foreground cursor-not-allowed'}`}
             >
               Save Reflection Log (+100 XP)
@@ -241,10 +261,11 @@ export default function Journal() {
 
             <button
               type="submit"
+              disabled={loading || !notes}
               className="w-full py-3.5 rounded-xl font-bold text-xs text-primary-foreground bg-primary hover:opacity-90 transition-all duration-300 shadow-md flex items-center justify-center gap-2 cursor-pointer"
             >
               <Sparkles size={12} />
-              Save Journal Entry
+              {loading ? 'Saving...' : 'Save Journal Entry'}
             </button>
 
           </form>
@@ -305,7 +326,12 @@ export default function Journal() {
             </div>
           </div>
 
-          {filteredLogs.length > 0 ? (
+          {loading ? (
+            <div className="py-20 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
+              <span className="w-6 h-6 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin"></span>
+              <span>Loading Journals...</span>
+            </div>
+          ) : filteredLogs.length > 0 ? (
             <div className="space-y-4 max-h-[640px] overflow-y-auto pr-2 scrollbar-none">
               {filteredLogs.map((log) => {
                 const currentMoodObj = moodEmojis.find(m => m.value === log.mood);

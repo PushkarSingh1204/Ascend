@@ -38,14 +38,13 @@ export default function Profile() {
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
-    const profile = getProfile();
-    if (profile) {
-      setIsPlus(profile.is_premium || false);
-      setNameInput(profile.name || '');
-      if (profile.preferences) {
-        setMorningReminder(profile.preferences.morningReminder);
-        setNightReminder(profile.preferences.nightReminder);
-        setWeeklyDigest(profile.preferences.weeklyDigest);
+    if (user && user.profile) {
+      setIsPlus(user.profile.is_premium || false);
+      setNameInput(user.profile.name || '');
+      if (user.profile.preferences) {
+        setMorningReminder(user.profile.preferences.morningReminder);
+        setNightReminder(user.profile.preferences.nightReminder);
+        setWeeklyDigest(user.profile.preferences.weeklyDigest);
       }
     }
   }, [user]);
@@ -57,9 +56,9 @@ export default function Profile() {
     }
   }, [searchParams]);
 
-  const handleSavePreferences = (e) => {
+  const handleSavePreferences = async (e) => {
     e.preventDefault();
-    const updated = updateProfile({
+    const updated = await updateProfile({
       name: nameInput,
       preferences: {
         morningReminder,

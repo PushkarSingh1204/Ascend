@@ -1,309 +1,289 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\pages\Routine.jsx
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
-import { 
-  getRoutines, 
-  updateRoutineTask, 
-  getWaterLog, 
-  updateWaterLog, 
-  getSleepLog, 
-  updateSleepLog 
-} from '../services/db';
-import { 
-  CheckSquare, 
-  Square, 
-  Droplet, 
-  Moon, 
-  Sparkles, 
-  Sun, 
-  Dumbbell, 
-  Heart,
-  Plus
-} from 'lucide-react';
+import { getRoutines, updateRoutineTask, getWaterLog, updateWaterLog, getSleepLog, updateSleepLog } from '../services/db';
+import { Sun, Moon, Sparkles, Smile, ShieldCheck, HeartPulse } from 'lucide-react';
 
 export default function Routine() {
-  const { addXP, unlockBadge } = useGame();
+  const { addXP, syncGameState } = useGame();
   
-  // Routines state
+  // Routines and logs states
   const [routines, setRoutines] = useState({ morning: [], night: [], skincare: [], workout: [] });
   const [water, setWater] = useState({ current: 0, target: 2000 });
   const [sleep, setSleep] = useState({ current: 0, target: 8.0 });
-  const [sleepInput, setSleepInput] = useState(7.0);
+  
+  const [waterInput, setWaterInput] = useState(250);
+  const [sleepInput, setSleepInput] = useState(7.5);
+  const [loading, setLoading] = useState(true);
 
-  // Load routines data on mount
+  const fetchRoutinesData = async () => {
+    try {
+      setLoading(true);
+      const routinesData = await getRoutines();
+      setRoutines(routinesData);
+      
+      const waterData = await getWaterLog();
+      setWater(waterData);
+      
+      const sleepData = await getSleepLog();
+      setSleep(sleepData);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    setRoutines(getRoutines());
-    setWater(getWaterLog());
-    const initialSleep = getSleepLog();
-    setSleep(initialSleep);
-    setSleepInput(initialSleep.current);
+    fetchRoutinesData();
   }, []);
 
-  const handleToggleTask = (category, taskId, currentStatus) => {
-    const updated = updateRoutineTask(category, taskId, !currentStatus);
-    setRoutines(updated);
-    
-    if (!currentStatus) {
-      // Completed task -> Award XP
-      addXP(10, `Completed task in ${category} routine`);
+  const handleToggleTask = async (category, taskId, completedStatus) => {
+    try {
+      const updated = await updateRoutineTask(category, taskId, completedStatus);
+      setRoutines(updated);
       
-      // Check if all routines completed to award badge
-      const allDone = Object.values(updated).every(list => list.every(t => t.completed));
-      if (allDone) {
-        unlockBadge('routine_pioneer');
+      // Award minor XP for checklist checks
+      if (completedStatus) {
+        await addXP(15, `Routine Task Completed in ${category.toUpperCase()}`);
       }
+      
+      await syncGameState();
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  const handleAddWater = (amount) => {
-    const updated = updateWaterLog(amount);
-    setWater(updated);
-    
-    addXP(15, `Log water intake (+${amount}ml)`);
-
-    if (updated.current >= updated.target) {
-      unlockBadge('hydration_king');
-    }
-  };
-
-  const handleSaveSleep = (e) => {
+  const handleWaterSubmit = async (e) => {
     e.preventDefault();
-    const updated = updateSleepLog(parseFloat(sleepInput));
-    setSleep(updated);
-    
-    addXP(20, `Log sleep duration (${sleepInput} hours)`);
-
-    if (updated.current >= updated.target) {
-      unlockBadge('deep_sleep');
+    try {
+      const updated = await updateWaterLog(parseInt(waterInput));
+      setWater(updated);
+      
+      await addXP(20, "Logged Hydration Intake");
+      await syncGameState();
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  // Water level height calculator
-  const waterPercent = Math.min(100, Math.round((water.current / water.target) * 100));
+  const handleSleepSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const updated = await updateSleepLog(parseFloat(sleepInput));
+      setSleep(updated);
+      
+      await addXP(30, "Logged Sleep Recovery Hours");
+      await syncGameState();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const getPercent = (curr, target) => {
+    return Math.min(100, Math.round((curr / target) * 100));
+  };
+
+  if (loading) {
+    return (
+      <div className="py-20 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
+        <span className="w-8 h-8 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin"></span>
+        <span>Loading Routines...</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8 animate-fade-in text-foreground pb-10">
+    <div className="space-y-8 animate-fade-in text-foreground pb-12 max-w-4xl mx-auto">
       
       {/* Header */}
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">
-          Transformation Routines
+          Daily Routine Habits
         </h1>
         <p className="text-sm text-muted-foreground">
-          Build consistency across critical self-improvement areas. Every completed activity boosts your level.
+          Perform morning/night checklists, record hydration targets, and log sleep to support cellular regeneration.
         </p>
       </div>
 
-      {/* Grid: Checklists on Left, Logs on Right */}
+      {/* Grid: Skincare & Workout on left, Sleep/Water on right */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Morning & Night Checklists (Left 2 Columns) */}
+        {/* Left Columns (Checklists) */}
         <div className="lg:col-span-2 space-y-6">
           
-          {/* Morning / Night Routines Card */}
-          <div className="glassmorphism border border-border p-6 rounded-2xl shadow-xl space-y-6">
-            <h3 className="text-base font-bold text-foreground border-b border-border pb-2 flex items-center gap-2">
-              <Sun size={18} className="text-yellow-400" />
-              Daily Checklists
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Morning & Night routines */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            
+            {/* Morning Checklist */}
+            <div className="glassmorphism p-5 rounded-2xl border border-border bg-card space-y-4">
+              <h3 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2 border-b border-border pb-3">
+                <Sun size={16} className="text-yellow-500" />
+                Morning Focus
+              </h3>
               
-              {/* Morning Checklist */}
-              <div className="space-y-3">
-                <span className="text-xs font-bold text-yellow-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <Sun size={12} /> Morning Routine
-                </span>
-                <div className="space-y-2">
-                  {routines.morning.map((task) => (
-                    <button
-                      key={task.id}
-                      onClick={() => handleToggleTask('morning', task.id, task.completed)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl border text-xs text-left transition-colors ${task.completed ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-background/40 border-border/85 hover:border-neutral-700 text-foreground'}`}
-                    >
-                      {task.completed ? <CheckSquare size={14} className="text-emerald-500" /> : <Square size={14} className="text-muted-foreground" />}
-                      <span className={task.completed ? 'line-through opacity-60' : ''}>{task.text}</span>
-                    </button>
-                  ))}
-                </div>
+              <div className="space-y-2.5 text-xs">
+                {routines.morning.map((task) => (
+                  <label key={task.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-background border border-border hover:border-neutral-500 transition-colors cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={task.completed}
+                      onChange={(e) => handleToggleTask('morning', task.id, e.target.checked)}
+                      className="rounded border-border focus:ring-0 text-primary w-4 h-4 cursor-pointer"
+                    />
+                    <span className={task.completed ? 'line-through text-muted-foreground' : 'text-foreground font-semibold'}>
+                      {task.text}
+                    </span>
+                  </label>
+                ))}
               </div>
-
-              {/* Night Checklist */}
-              <div className="space-y-3">
-                <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <Moon size={12} /> Night Routine
-                </span>
-                <div className="space-y-2">
-                  {routines.night.map((task) => (
-                    <button
-                      key={task.id}
-                      onClick={() => handleToggleTask('night', task.id, task.completed)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl border text-xs text-left transition-colors ${task.completed ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-background/40 border-border/85 hover:border-neutral-700 text-foreground'}`}
-                    >
-                      {task.completed ? <CheckSquare size={14} className="text-emerald-500" /> : <Square size={14} className="text-muted-foreground" />}
-                      <span className={task.completed ? 'line-through opacity-60' : ''}>{task.text}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
             </div>
+
+            {/* Night Checklist */}
+            <div className="glassmorphism p-5 rounded-2xl border border-border bg-card space-y-4">
+              <h3 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2 border-b border-border pb-3">
+                <Moon size={16} className="text-purple-400" />
+                Night Recovery
+              </h3>
+              
+              <div className="space-y-2.5 text-xs">
+                {routines.night.map((task) => (
+                  <label key={task.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-background border border-border hover:border-neutral-500 transition-colors cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={task.completed}
+                      onChange={(e) => handleToggleTask('night', task.id, e.target.checked)}
+                      className="rounded border-border focus:ring-0 text-primary w-4 h-4 cursor-pointer"
+                    />
+                    <span className={task.completed ? 'line-through text-muted-foreground' : 'text-foreground font-semibold'}>
+                      {task.text}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
           </div>
 
-          {/* Skincare / Workout Checklists */}
-          <div className="glassmorphism border border-border p-6 rounded-2xl shadow-xl space-y-6">
-            <h3 className="text-base font-bold text-foreground border-b border-border pb-2 flex items-center gap-2">
-              <Dumbbell size={18} className="text-blue-400" />
-              Focus Checklists
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Skincare & Workout routines */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            
+            {/* Skincare Checklist */}
+            <div className="glassmorphism p-5 rounded-2xl border border-border bg-card space-y-4">
+              <h3 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2 border-b border-border pb-3">
+                <Smile size={16} className="text-indigo-400" />
+                Skincare Cycle
+              </h3>
               
-              {/* Skincare Checklist */}
-              <div className="space-y-3">
-                <span className="text-xs font-bold text-purple-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <Heart size={12} /> Skincare Regime
-                </span>
-                <div className="space-y-2">
-                  {routines.skincare.map((task) => (
-                    <button
-                      key={task.id}
-                      onClick={() => handleToggleTask('skincare', task.id, task.completed)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl border text-xs text-left transition-colors ${task.completed ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-background/40 border-border/85 hover:border-neutral-700 text-foreground'}`}
-                    >
-                      {task.completed ? <CheckSquare size={14} className="text-emerald-500" /> : <Square size={14} className="text-muted-foreground" />}
-                      <span className={task.completed ? 'line-through opacity-60' : ''}>{task.text}</span>
-                    </button>
-                  ))}
-                </div>
+              <div className="space-y-2.5 text-xs">
+                {routines.skincare.map((task) => (
+                  <label key={task.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-background border border-border hover:border-neutral-500 transition-colors cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={task.completed}
+                      onChange={(e) => handleToggleTask('skincare', task.id, e.target.checked)}
+                      className="rounded border-border focus:ring-0 text-primary w-4 h-4 cursor-pointer"
+                    />
+                    <span className={task.completed ? 'line-through text-muted-foreground' : 'text-foreground font-semibold'}>
+                      {task.text}
+                    </span>
+                  </label>
+                ))}
               </div>
-
-              {/* Workout Checklist */}
-              <div className="space-y-3">
-                <span className="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <Dumbbell size={12} /> Workout Tasks
-                </span>
-                <div className="space-y-2">
-                  {routines.workout.map((task) => (
-                    <button
-                      key={task.id}
-                      onClick={() => handleToggleTask('workout', task.id, task.completed)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-xl border text-xs text-left transition-colors ${task.completed ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-background/40 border-border/85 hover:border-neutral-700 text-foreground'}`}
-                    >
-                      {task.completed ? <CheckSquare size={14} className="text-emerald-500" /> : <Square size={14} className="text-muted-foreground" />}
-                      <span className={task.completed ? 'line-through opacity-60' : ''}>{task.text}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
             </div>
+
+            {/* Workout Checklist */}
+            <div className="glassmorphism p-5 rounded-2xl border border-border bg-card space-y-4">
+              <h3 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2 border-b border-border pb-3">
+                <HeartPulse size={16} className="text-emerald-450" />
+                Posture & Muscles
+              </h3>
+              
+              <div className="space-y-2.5 text-xs">
+                {routines.workout.map((task) => (
+                  <label key={task.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-background border border-border hover:border-neutral-500 transition-colors cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={task.completed}
+                      onChange={(e) => handleToggleTask('workout', task.id, e.target.checked)}
+                      className="rounded border-border focus:ring-0 text-primary w-4 h-4 cursor-pointer"
+                    />
+                    <span className={task.completed ? 'line-through text-muted-foreground' : 'text-foreground font-semibold'}>
+                      {task.text}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
           </div>
 
         </div>
 
-        {/* Logs Card (Right Column) */}
+        {/* Right Column (Water & Sleep Logs) */}
         <div className="space-y-6">
           
-          {/* Water Tracker Card */}
-          <div className="glassmorphism border border-border p-6 rounded-2xl shadow-xl flex flex-col justify-between min-h-[300px]">
-            <div>
-              <h3 className="text-base font-bold text-foreground mb-1.5 flex items-center gap-2">
-                <Droplet size={18} className="text-blue-400" />
-                Water Tracker
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                Log fluids. Reaching 2.5L targets awards badges.
-              </p>
+          {/* Water Hydration Log */}
+          <div className="glassmorphism p-5 rounded-2xl border border-border bg-card space-y-4 shadow-xl">
+            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center justify-between border-b border-border pb-3">
+              <span className="flex items-center gap-2">
+                💧 Water Log
+              </span>
+              <span className="text-[10px] font-bold text-muted-foreground">
+                {getPercent(water.current, water.target)}% TARGET
+              </span>
+            </h3>
+
+            <div className="text-center py-4 bg-background border border-border rounded-xl">
+              <span className="text-3xl font-black text-foreground block">{water.current} / {water.target} ml</span>
+              <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold mt-1 block">Hydrated Today</span>
             </div>
 
-            {/* Elegant Circular Progress Indicator */}
-            <div className="my-8 relative w-32 h-32 mx-auto flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90">
-                <circle cx="64" cy="64" r="50" stroke="rgba(255,255,255,0.03)" strokeWidth="8" fill="transparent" />
-                <circle cx="64" cy="64" r="50" stroke="rgba(56,189,248,0.15)" strokeWidth="8" fill="transparent" />
-                <circle 
-                  cx="64" 
-                  cy="64" 
-                  r="50" 
-                  stroke="#38bdf8" 
-                  strokeWidth="8" 
-                  fill="transparent" 
-                  strokeDasharray={2 * Math.PI * 50}
-                  strokeDashoffset={2 * Math.PI * 50 * (1 - waterPercent / 100)}
-                  className="transition-all duration-700 ease-out"
-                />
-              </svg>
-              <div className="absolute flex flex-col items-center justify-center">
-                <span className="text-xl font-black text-foreground">{waterPercent}%</span>
-                <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">Hydrated</span>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="text-center">
-                <span className="text-xs text-muted-foreground block">Logged Status</span>
-                <span className="text-xl font-black text-foreground">{water.current} / {water.target} ml</span>
-              </div>
-
-              {/* Action buttons */}
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => handleAddWater(250)}
-                  className="py-2.5 rounded-xl border border-blue-500/20 hover:border-blue-500/40 bg-blue-500/5 hover:bg-blue-500/10 text-xs font-bold text-blue-400 transition-colors flex items-center justify-center gap-1"
-                >
-                  <Plus size={12} /> 250ml
-                </button>
-                <button
-                  onClick={() => handleAddWater(500)}
-                  className="py-2.5 rounded-xl border border-blue-500/20 hover:border-blue-500/40 bg-blue-500/5 hover:bg-blue-500/10 text-xs font-bold text-blue-400 transition-colors flex items-center justify-center gap-1"
-                >
-                  <Plus size={12} /> 500ml
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Sleep Tracker Card */}
-          <div className="glassmorphism border border-border p-6 rounded-2xl shadow-xl flex flex-col justify-between min-h-[260px]">
-            <div>
-              <h3 className="text-base font-bold text-foreground mb-1.5 flex items-center gap-2">
-                <Moon size={18} className="text-indigo-400" />
-                Sleep Tracker
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                Log hours of sleep from the previous night.
-              </p>
-            </div>
-
-            <form onSubmit={handleSaveSleep} className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs text-muted-foreground font-semibold">
-                  <span>Duration: {sleepInput} hrs</span>
-                  <span>Goal: {sleep.target} hrs</span>
-                </div>
-                
-                <input
-                  type="range"
-                  min="4.0"
-                  max="12.0"
-                  step="0.5"
-                  value={sleepInput}
-                  onChange={(e) => setSleepInput(e.target.value)}
-                  className="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
-                />
-              </div>
-
-              <div className="bg-background/40 border border-border px-4 py-3 rounded-xl flex justify-between items-center text-xs text-muted-foreground">
-                <span>Last logged:</span>
-                <strong className="text-foreground">{sleep.current} Hours</strong>
-              </div>
-
+            <form onSubmit={handleWaterSubmit} className="flex gap-2">
+              <input
+                type="number"
+                value={waterInput}
+                onChange={(e) => setWaterInput(e.target.value)}
+                className="flex-1 text-xs bg-background border border-border rounded-lg px-3 py-2 outline-none text-foreground"
+              />
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl font-bold text-xs text-foreground bg-indigo-600 hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-600/10"
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-xs hover:opacity-90 transition-opacity cursor-pointer"
               >
-                Log Sleep (+20 XP)
+                Log Water
+              </button>
+            </form>
+          </div>
+
+          {/* Sleep Recovery Log */}
+          <div className="glassmorphism p-5 rounded-2xl border border-border bg-card space-y-4 shadow-xl">
+            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center justify-between border-b border-border pb-3">
+              <span className="flex items-center gap-2">
+                🌙 Sleep Log
+              </span>
+              <span className="text-[10px] font-bold text-muted-foreground">
+                {getPercent(sleep.current, sleep.target)}% TARGET
+              </span>
+            </h3>
+
+            <div className="text-center py-4 bg-background border border-border rounded-xl">
+              <span className="text-3xl font-black text-foreground block">{sleep.current} / {sleep.target} hrs</span>
+              <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold mt-1 block">Recovery Sleep</span>
+            </div>
+
+            <form onSubmit={handleSleepSubmit} className="flex gap-2">
+              <input
+                type="number"
+                step="0.1"
+                value={sleepInput}
+                onChange={(e) => setSleepInput(e.target.value)}
+                className="flex-1 text-xs bg-background border border-border rounded-lg px-3 py-2 outline-none text-foreground"
+              />
+              <button
+                type="submit"
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-bold text-xs hover:opacity-90 transition-opacity cursor-pointer"
+              >
+                Log Sleep
               </button>
             </form>
           </div>

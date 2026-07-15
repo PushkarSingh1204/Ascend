@@ -48,22 +48,27 @@ export default function Analysis() {
   // Ref elements to measure image sizes for canvas overlay alignment
   const imageRef = useRef(null);
   const [imgSize, setImgSize] = useState({ width: 0, height: 0 });
-
   // Load analysis list on mount
   useEffect(() => {
-    const list = getAnalyses() || [];
-    setAnalysesList(list);
-    if (list.length > 0) {
-      setCurrentAnalysis(list[0]);
-      setActiveView('step4');
-      if (list.length > 1) {
-        setCompareScanId(list[1].id);
+    const fetchAnalyses = async () => {
+      try {
+        const list = await getAnalyses() || [];
+        setAnalysesList(list);
+        if (list.length > 0) {
+          setCurrentAnalysis(list[0]);
+          setActiveView('step4');
+          if (list.length > 1) {
+            setCompareScanId(list[1].id);
+          }
+        } else {
+          setActiveView('step1');
+        }
+      } catch (err) {
+        console.error("Analysis mount load error:", err);
       }
-    } else {
-      setActiveView('step1');
-    }
+    };
+    fetchAnalyses();
   }, []);
-
   // Set up resize listener for overlay canvas
   useEffect(() => {
     if (imageRef.current) {
@@ -128,8 +133,8 @@ export default function Analysis() {
         
         const tips = generateTransformationTips(detection.scores);
         
-        // Save analysis to local DB
-        const saved = saveAnalysis({
+        // Save analysis to Firestore and Firebase Storage
+        const saved = await saveAnalysis({
           front_photo_url: frontImage,
           side_photo_url: sideImage,
           ...detection.scores,
@@ -140,15 +145,15 @@ export default function Analysis() {
         setCurrentAnalysis(saved);
         
         // Refresh list
-        const updatedList = getAnalyses() || [];
+        const updatedList = await getAnalyses() || [];
         setAnalysesList(updatedList);
         if (updatedList.length > 1) {
           setCompareScanId(updatedList[1].id);
         }
         
         // Award initial analysis achievements
-        unlockBadge('first_analysis');
-        addXP(200, "First Biometric Harmony Scan");
+        await unlockBadge('first_analysis');
+        await addXP(200, "First Biometric Harmony Scan");
         
         setIsProcessing(false);
         setActiveView('step4');

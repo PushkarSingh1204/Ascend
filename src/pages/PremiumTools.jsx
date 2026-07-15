@@ -110,7 +110,7 @@ export default function PremiumTools() {
   };
 
   const unlockPremium = () => {
-    navigate('/payments');
+    navigate('/payments?analysisId=upgrade_profile');
   };
 
   return (

@@ -23,32 +23,66 @@ export const GameProvider = ({ children }) => {
   const [daysToAscend, setDaysToAscend] = useState(0);
   const [unlockedBadges, setUnlockedBadges] = useState([]);
   
-  // New upgraded states
+  // Daily missions states
   const [dailyMissions, setDailyMissions] = useState({ checkin: false, sleep: false, water: false, skincare: false, journal: false });
   const [roadmapMilestones, setRoadmapMilestones] = useState([]);
   const [roadmapPercent, setRoadmapPercent] = useState(0);
 
-  // Notification states
+  // Alerts
   const [notification, setNotification] = useState(null);
   const [levelUpAlert, setLevelUpAlert] = useState(null);
   const [badgeAlert, setBadgeAlert] = useState(null);
 
-  // Sync state on user changes
-  const syncGameState = () => {
+  // Sync state on user changes and handle daily resets
+  const syncGameState = async () => {
     if (user && user.profile) {
-      setXp(user.profile.xp || 0);
-      setLevel(user.profile.level || 1);
-      setStreak(user.profile.streak || 0);
-      setLongestStreak(user.profile.longest_streak || 0);
-      setDaysToAscend(user.profile.days_to_ascend || 0);
-      setUnlockedBadges(user.profile.unlocked_badges || []);
+      let profile = await getProfile();
+      if (!profile) return;
       
-      const missions = getDailyMissions();
+      const todayStr = new Date().toISOString().split('T')[0];
+      
+      // Dynamic Daily reset trigger
+      if (profile.last_active_date !== todayStr) {
+        // Reset daily missions, water/sleep logs, and routines checklists
+        const resetMissions = { checkin: false, sleep: false, water: false, skincare: false, journal: false };
+        const updatedRoutines = { ...profile.routines };
+        
+        // Mark all tasks incomplete
+        if (updatedRoutines) {
+          Object.keys(updatedRoutines).forEach(cat => {
+            updatedRoutines[cat] = updatedRoutines[cat].map(t => ({ ...t, completed: false }));
+          });
+        }
+        
+        const resetSleep = profile.sleep_log ? { ...profile.sleep_log, current: 0 } : { current: 0, target: 8.0 };
+        const resetWater = profile.water_log ? { ...profile.water_log, current: 0 } : { current: 0, target: 2000 };
+
+        profile = await updateProfile({
+          last_active_date: todayStr,
+          daily_missions: resetMissions,
+          routines: updatedRoutines,
+          sleep_log: resetSleep,
+          water_log: resetWater
+        });
+
+        // Set user context
+        setUser(prev => ({ ...prev, profile }));
+      }
+
+      setXp(profile.xp || 0);
+      setLevel(profile.level || 1);
+      setStreak(profile.streak || 0);
+      setLongestStreak(profile.longest_streak || 0);
+      setDaysToAscend(profile.days_to_ascend || 0);
+      setUnlockedBadges(profile.unlocked_badges || []);
+      
+      const missions = await getDailyMissions();
       setDailyMissions(missions);
 
-      const milestones = getRoadmapMilestones();
+      const milestones = await getRoadmapMilestones();
       setRoadmapMilestones(milestones);
-      if (milestones.length > 0) {
+      
+      if (milestones && milestones.length > 0) {
         const completed = milestones.filter(m => m.completed).length;
         setRoadmapPercent(Math.round((completed / milestones.length) * 100));
       } else {
@@ -82,14 +116,14 @@ export const GameProvider = ({ children }) => {
     }, 3500);
   };
 
-  const addXP = (amount, reason) => {
+  const addXP = async (amount, reason) => {
     if (!user) return;
     
     const newXp = xp + amount;
     const newLvl = calculateLevel(newXp);
     const leveledUp = newLvl > level;
 
-    const updatedProfile = updateProfile({
+    const updatedProfile = await updateProfile({
       xp: newXp,
       level: newLvl
     });
@@ -98,7 +132,6 @@ export const GameProvider = ({ children }) => {
     setLevel(newLvl);
     setUser(prev => ({ ...prev, profile: { ...prev.profile, ...updatedProfile } }));
 
-    // Non-interruptive simple toast for general XP logging
     triggerNotification(`+${amount} XP: ${reason}`, 'xp');
 
     if (leveledUp) {
@@ -109,7 +142,7 @@ export const GameProvider = ({ children }) => {
     }
   };
 
-  const unlockBadge = (badgeId) => {
+  const unlockBadge = async (badgeId) => {
     if (!user) return;
     if (unlockedBadges.includes(badgeId)) return;
 
@@ -117,22 +150,19 @@ export const GameProvider = ({ children }) => {
     if (!badge) return;
 
     const newBadges = [...unlockedBadges, badgeId];
-    const updatedProfile = updateProfile({
+    const updatedProfile = await updateProfile({
       unlocked_badges: newBadges
     });
 
     setUnlockedBadges(newBadges);
     setUser(prev => ({ ...prev, profile: { ...prev.profile, ...updatedProfile } }));
     
-    // Award badge XP
-    addXP(badge.xp, `Achievement Badge: "${badge.name}"`);
-    
-    // Major badge unlocks receive a full screen alert
+    await addXP(badge.xp, `Achievement Badge: "${badge.name}"`);
     setBadgeAlert(badge);
   };
 
-  const toggleMilestone = (milestoneId, completedStatus) => {
-    const updated = updateRoadmapMilestone(milestoneId, completedStatus);
+  const toggleMilestone = async (milestoneId, completedStatus) => {
+    const updated = await updateRoadmapMilestone(milestoneId, completedStatus);
     setRoadmapMilestones(updated);
     
     const completed = updated.filter(m => m.completed).length;
@@ -140,14 +170,14 @@ export const GameProvider = ({ children }) => {
     setRoadmapPercent(pct);
 
     if (completedStatus) {
-      addXP(75, "Roadmap Weekly Milestone Cleared");
+      await addXP(75, "Roadmap Weekly Milestone Cleared");
     }
   };
 
-  const performDailyCheckin = (notes = '') => {
+  const performDailyCheckin = async (notes = '') => {
     if (!user) return false;
     
-    const { checkins, profile } = submitCheckin(notes);
+    const { checkins, profile } = await submitCheckin(notes);
     
     setStreak(profile.streak);
     setLongestStreak(profile.longest_streak);
@@ -155,18 +185,18 @@ export const GameProvider = ({ children }) => {
     setUser(prev => ({ ...prev, profile: { ...prev.profile, ...profile } }));
 
     // Update checkin mission
-    const updatedMissions = updateMission('checkin', true);
+    const updatedMissions = await updateMission('checkin', true);
     setDailyMissions(updatedMissions);
 
     // Award XP
-    addXP(50, "Daily Check-in Complete");
+    await addXP(50, "Daily Check-in Complete");
 
-    // Major Streak achievements trigger badge unlocks
+    // Unlock streak badges
     if (profile.streak === 7) {
-      unlockBadge('7_day_streak');
+      await unlockBadge('7_day_streak');
     }
     if (profile.streak === 30) {
-      unlockBadge('30_day_streak');
+      await unlockBadge('30_day_streak');
     }
 
     return true;
@@ -200,12 +230,12 @@ export const GameProvider = ({ children }) => {
       
       {/* Toast Notification Container */}
       {notification && (
-        <div className="fixed bottom-6 right-6 z-50 glassmorphism px-4 py-3 rounded-xl flex items-center gap-3 animate-fade-in shadow-xl border border-neutral-800/80 bg-neutral-900/95 max-w-sm">
+        <div className="fixed bottom-6 right-6 z-50 glassmorphism px-4 py-3 rounded-xl flex items-center gap-3 animate-fade-in shadow-xl border border-border bg-card max-w-sm text-foreground">
           <div className="text-xl">
             {notification.type === 'xp' ? '⚡' : notification.type === 'level-up' ? '🎉' : notification.type === 'badge' ? '🏆' : 'ℹ|'}
           </div>
           <div>
-            <p className="text-xs font-semibold text-white">{notification.message}</p>
+            <p className="text-xs font-semibold">{notification.message}</p>
           </div>
         </div>
       )}

@@ -6,21 +6,15 @@ import { useGame } from '../context/GameContext';
 import { getAnalyses, getWaterLog, getSleepLog, getJournals, getCheckins } from '../services/db';
 import { 
   Flame, 
-  Calendar, 
   Award, 
   Sparkles, 
   ChevronRight, 
   CheckCircle2, 
   Circle,
-  Moon,
-  Droplet,
-  BookOpen,
-  Camera,
-  Compass,
-  Clock,
-  TrendingUp,
   Activity,
-  Heart
+  TrendingUp,
+  Compass,
+  BookOpen
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -33,7 +27,6 @@ export default function Dashboard() {
     unlockedBadges, 
     dailyMissions,
     roadmapMilestones,
-    roadmapPercent,
     performDailyCheckin,
     getXpForLevel,
     getXpRequiredForNextLevel
@@ -47,98 +40,111 @@ export default function Dashboard() {
   const [sleepAvg, setSleepAvg] = useState(7.2);
   const [waterAvg, setWaterAvg] = useState(1800);
   const [weeklyConsistency, setWeeklyConsistency] = useState(75);
-  const [journalCompletionRate, setJournalCompletionRate] = useState(60);
-  const [routineCompletionRate, setRoutineCompletionRate] = useState(80);
 
   // Activity Timeline State
   const [timelineItems, setTimelineItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const todayStr = new Date().toISOString().split('T')[0];
+      setIsCheckedIn(dailyMissions.checkin);
+      
+      // Fetch latest scan
+      const analyses = await getAnalyses();
+      if (analyses && analyses.length > 0) {
+        setLatestAnalysis(analyses[0]);
+      }
+
+      // Calculate dynamic averages based on DB logs
+      const waterLog = await getWaterLog();
+      const sleepLog = await getSleepLog();
+      setWaterAvg(waterLog.current > 0 ? Math.round((waterLog.current + 1850 * 6) / 7) : 1800);
+      setSleepAvg(sleepLog.current > 0 ? Math.round(((sleepLog.current + 7.4 * 6) / 7) * 10) / 10 : 7.2);
+
+      // Calculate weekly consistency % based on completed tasks
+      const completedMilestones = roadmapMilestones.filter(m => m.completed).length;
+      const routinePercent = completedMilestones > 0 ? Math.min(95, 60 + completedMilestones * 5) : 75;
+      setWeeklyConsistency(routinePercent);
+
+      // Construct Unified Chronological Activity Timeline
+      const items = [];
+      const journals = await getJournals();
+      const checkinDates = await getCheckins();
+      
+      // 1. Face Scans
+      if (analyses) {
+        analyses.forEach(scan => {
+          items.push({
+            id: `t_scan_${scan.id}`,
+            type: 'scan',
+            title: 'Biometric Face Harmony Scan',
+            desc: `Completed scan with ${scan.facial_harmony_score}% Harmony (${scan.potential_label || 'MTN'})`,
+            date: scan.date,
+            icon: Sparkles,
+            color: 'text-blue-400 bg-blue-500/10 border-blue-500/20'
+          });
+        });
+      }
+
+      // 2. Journal Entries
+      if (journals) {
+        journals.forEach((entry) => {
+          items.push({
+            id: `t_journal_${entry.id}`,
+            type: 'journal',
+            title: 'Reflective Journal Entry',
+            desc: `Logged mood: "${entry.mood}" - ${entry.notes?.substring(0, 50)}...`,
+            date: entry.date,
+            icon: BookOpen,
+            color: 'text-purple-400 bg-purple-500/10 border-purple-500/20'
+          });
+        });
+      }
+
+      // 3. Badges unlocked
+      if (unlockedBadges) {
+        unlockedBadges.forEach(badgeId => {
+          items.push({
+            id: `t_badge_${badgeId}`,
+            type: 'badge',
+            title: 'Milestone Badge Unlocked',
+            desc: `Earned "${badgeId.replace(/_/g, ' ').toUpperCase()}" achievement!`,
+            date: todayStr,
+            icon: Award,
+            color: 'text-orange-400 bg-orange-500/10 border-orange-500/20'
+          });
+        });
+      }
+
+      // 4. Checkins
+      if (checkinDates) {
+        checkinDates.forEach(date => {
+          items.push({
+            id: `t_check_${date}`,
+            type: 'checkin',
+            title: 'Daily Habits Check-in',
+            desc: 'Morning and night routines marked active & verified.',
+            date: date,
+            icon: CheckCircle2,
+            color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+          });
+        });
+      }
+
+      // Sort descending by date
+      items.sort((a, b) => new Date(b.date) - new Date(a.date));
+      setTimelineItems(items.slice(0, 5));
+    } catch (err) {
+      console.error("Dashboard Data Fetch Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Check checkin status
-    const todayStr = new Date().toISOString().split('T')[0];
-    setIsCheckedIn(dailyMissions.checkin);
-    
-    // Fetch latest scan
-    const analyses = getAnalyses() || [];
-    if (analyses.length > 0) {
-      setLatestAnalysis(analyses[0]);
-    }
-
-    // Calculate dynamic averages based on mock DB logs
-    const waterLog = getWaterLog() || { current: 0, target: 2000 };
-    const sleepLog = getSleepLog() || { current: 0, target: 8.0 };
-    setWaterAvg(waterLog.current > 0 ? Math.round((waterLog.current + 1850 * 6) / 7) : 1800);
-    setSleepAvg(sleepLog.current > 0 ? Math.round(((sleepLog.current + 7.4 * 6) / 7) * 10) / 10 : 7.2);
-
-    // Calculate weekly consistency % based on completed tasks
-    const completedMilestones = roadmapMilestones.filter(m => m.completed).length;
-    const routinePercent = completedMilestones > 0 ? Math.min(95, 60 + completedMilestones * 5) : 75;
-    setWeeklyConsistency(routinePercent);
-
-    // Dynamic journal and routines rates
-    const journals = getJournals() || [];
-    setJournalCompletionRate(Math.min(95, 40 + journals.length * 10));
-    setRoutineCompletionRate(Math.min(98, 50 + getCheckins().length * 12));
-
-    // Construct Unified Chronological Activity Timeline
-    const items = [];
-    
-    // 1. Face Scans
-    analyses.forEach(scan => {
-      items.push({
-        id: `t_scan_${scan.id}`,
-        type: 'scan',
-        title: 'Biometric Face Harmony Scan',
-        desc: `Completed scan with ${scan.facial_harmony_score}% Harmony (${scan.potential_label || 'MTN'})`,
-        date: scan.date,
-        icon: Sparkles,
-        color: 'text-blue-450 bg-blue-500/10 border-blue-500/20'
-      });
-    });
-
-    // 2. Journal Entries
-    journals.forEach((entry, idx) => {
-      items.push({
-        id: `t_journal_${idx}`,
-        type: 'journal',
-        title: 'Reflective Journal Entry',
-        desc: `Logged mood: "${entry.mood}" - ${entry.notes?.substring(0, 50)}...`,
-        date: entry.date,
-        icon: BookOpen,
-        color: 'text-purple-450 bg-purple-500/10 border-purple-500/20'
-      });
-    });
-
-    // 3. Badges unlocked
-    unlockedBadges.forEach(badgeId => {
-      items.push({
-        id: `t_badge_${badgeId}`,
-        type: 'badge',
-        title: 'Milestone Badge Unlocked',
-        desc: `Earned "${badgeId.replace(/_/g, ' ').toUpperCase()}" achievement!`,
-        date: todayStr, // simplified
-        icon: Award,
-        color: 'text-orange-455 bg-orange-500/10 border-orange-500/20'
-      });
-    });
-
-    // 4. Checkins
-    getCheckins().forEach(date => {
-      items.push({
-        id: `t_check_${date}`,
-        type: 'checkin',
-        title: 'Daily Habits Check-in',
-        desc: 'Morning and night routines marked active & verified.',
-        date: date,
-        icon: CheckCircle2,
-        color: 'text-emerald-450 bg-emerald-500/10 border-emerald-500/20'
-      });
-    });
-
-    // Sort descending by date
-    items.sort((a, b) => new Date(b.date) - new Date(a.date));
-    setTimelineItems(items.slice(0, 5));
-
+    fetchDashboardData();
   }, [xp, dailyMissions, roadmapMilestones, unlockedBadges]);
 
   const prevLevelXp = getXpForLevel(level);
@@ -156,13 +162,23 @@ export default function Dashboard() {
 
   // Daily Transformation Score: computed dynamically
   const dailyTransformationScore = Math.min(100, Math.round(
-    (completedMissionsCount / 4) * 35 + (weeklyConsistency) * 0.65
+    (completedMissionsCount / 5) * 35 + (weeklyConsistency) * 0.65
   ));
 
-  const handleCheckin = () => {
+  const handleCheckin = async () => {
     if (isCheckedIn) return;
-    performDailyCheckin("Quick check-in completed from dashboard.");
+    await performDailyCheckin("Quick check-in completed from dashboard.");
+    await fetchDashboardData();
   };
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col justify-center items-center py-20 text-muted-foreground gap-3">
+        <span className="w-8 h-8 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin"></span>
+        <span className="text-xs uppercase tracking-wider font-bold">Synchronizing Dashboard...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fade-in text-foreground pb-12">
@@ -172,7 +188,6 @@ export default function Dashboard() {
         
         {/* Welcome & Level progress bar */}
         <div className="flex-1 glassmorphism border border-border p-6 rounded-2xl flex flex-col sm:flex-row items-center gap-6 bg-card shadow-xl">
-          {/* Glowing Avatar */}
           <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-650 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-blue-500/25 relative border border-white/10 shrink-0">
             {user?.profile?.name?.substring(0, 2).toUpperCase() || 'TR'}
             <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border border-border flex items-center justify-center text-[10px] font-black text-primary">
@@ -207,7 +222,7 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Check-in Button */}
-        <div className="glassmorphism border border-border p-6 rounded-2xl flex flex-col justify-between items-stretch lg:w-80 shadow-xl">
+        <div className="glassmorphism border border-border p-6 rounded-2xl flex flex-col justify-between items-stretch lg:w-80 shadow-xl bg-card">
           <div>
             <span className="block text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Status Check</span>
             <span className="text-sm font-bold text-foreground block mt-1">
@@ -218,7 +233,7 @@ export default function Dashboard() {
           <button
             onClick={handleCheckin}
             disabled={isCheckedIn}
-            className={`w-full py-3 rounded-xl font-bold text-xs transition-all duration-300 mt-4 cursor-pointer ${isCheckedIn ? 'bg-emerald-500/10 text-emerald-450 border border-emerald-500/25' : 'bg-primary text-primary-foreground hover:opacity-90'}`}
+            className={`w-full py-3 rounded-xl font-bold text-xs transition-all duration-300 mt-4 cursor-pointer ${isCheckedIn ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25' : 'bg-primary text-primary-foreground hover:opacity-90'}`}
           >
             {isCheckedIn ? 'Check-in Completed' : 'Trigger Daily Check-in'}
           </button>
@@ -228,10 +243,10 @@ export default function Dashboard() {
       {/* 2. ANALYTICAL KPI METRICS HUB */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {[
-          { label: 'Transformation Score', val: `${dailyTransformationScore}/100`, desc: 'Based on checkins & rules', icon: Activity, color: 'text-blue-405' },
-          { label: 'Weekly Consistency', val: `${weeklyConsistency}%`, desc: 'Roadmap weekly completion index', icon: TrendingUp, color: 'text-indigo-405' },
-          { label: 'Active Streak', val: `${streak} Days`, desc: 'Streaks completed logs', icon: Flame, color: 'text-orange-405' },
-          { label: 'Days to Ascend', val: `${daysToAscend} Days`, desc: 'Transformation days tracker', icon: Award, color: 'text-purple-405' }
+          { label: 'Transformation Score', val: `${dailyTransformationScore}/100`, desc: 'Based on checkins & rules', icon: Activity, color: 'text-blue-400' },
+          { label: 'Weekly Consistency', val: `${weeklyConsistency}%`, desc: 'Roadmap weekly completion index', icon: TrendingUp, color: 'text-indigo-400' },
+          { label: 'Active Streak', val: `${streak} Days`, desc: 'Streaks completed logs', icon: Flame, color: 'text-orange-400' },
+          { label: 'Days to Ascend', val: `${daysToAscend} Days`, desc: 'Transformation days tracker', icon: Award, color: 'text-purple-400' }
         ].map((kpi, idx) => {
           const Icon = kpi.icon;
           return (
@@ -262,7 +277,7 @@ export default function Dashboard() {
               Daily Focus Missions
             </h3>
             <span className="text-[10px] font-bold text-muted-foreground">
-              {completedMissionsCount}/4 COMPLETED
+              {completedMissionsCount}/5 COMPLETED
             </span>
           </div>
 
@@ -271,6 +286,7 @@ export default function Dashboard() {
               { id: 'checkin', name: 'Log Daily Check-in', desc: 'Secure streak consistency bonus', xp: 50 },
               { id: 'water', name: 'Hydration Target (2L+)', desc: 'Hydrate skin & balance fluid retention', xp: 50 },
               { id: 'sleep', name: 'Log Sleep Hours', desc: 'Ensure recovery cellular regeneration', xp: 50 },
+              { id: 'skincare', name: 'Skincare routine completed', desc: 'Ensure daily double-cleanse complete', xp: 50 },
               { id: 'journal', name: 'Write Reflection Journal', desc: 'Maintain mental clarity logging', xp: 100 }
             ].map((mission) => {
               const done = dailyMissions[mission.id];
@@ -363,12 +379,10 @@ export default function Dashboard() {
               const Icon = item.icon;
               return (
                 <div key={item.id} className="relative group">
-                  {/* Timeline bullet dot */}
                   <span className={`absolute -left-10 top-0.5 w-7 h-7 rounded-full flex items-center justify-center border shrink-0 z-10 ${item.color}`}>
                     <Icon size={12} />
                   </span>
 
-                  {/* Timeline card contents */}
                   <div className="glassmorphism-interactive p-4 rounded-xl border border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
                       <span className="text-xs font-bold text-foreground block">{item.title}</span>

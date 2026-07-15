@@ -1,6 +1,7 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\pages\Payments.jsx
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
 import { unlockAnalysis, updateProfile } from '../services/db';
 import { CreditCard, ShieldCheck, Lock, CheckCircle2, ChevronLeft } from 'lucide-react';
@@ -8,6 +9,7 @@ import { CreditCard, ShieldCheck, Lock, CheckCircle2, ChevronLeft } from 'lucide
 export default function Payments() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { setUser } = useAuth();
   const { addXP, unlockBadge } = useGame();
 
   const analysisId = searchParams.get('analysisId');
@@ -26,7 +28,7 @@ export default function Payments() {
     }
   }, [analysisId]);
 
-  const handlePay = (e) => {
+  const handlePay = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -36,30 +38,29 @@ export default function Payments() {
     }
 
     setLoading(true);
-    // Simulate transaction delay
-    setTimeout(() => {
-      try {
-        // Set user is_premium globally for Ascend Plus
-        updateProfile({ is_premium: true });
+    try {
+      // Set user is_premium globally for Ascend Plus
+      const updatedProfile = await updateProfile({ is_premium: true });
+      setUser(prev => ({ ...prev, profile: updatedProfile }));
 
-        // Unlock specific analysis if valid
-        if (analysisId && analysisId !== 'upgrade_profile') {
-          unlockAnalysis(analysisId);
-        }
-        
-        setSuccess(true);
-        unlockBadge('premium_unlocked');
-        addXP(300, "Unlock Ascend Plus Premium");
-        
-        setTimeout(() => {
-          navigate(analysisId === 'upgrade_profile' ? '/profile' : '/analysis');
-        }, 2000);
-      } catch (err) {
-        setError('Transaction failed. Use any mock card info to retry.');
-      } finally {
-        setLoading(false);
+      // Unlock specific analysis if valid
+      if (analysisId && analysisId !== 'upgrade_profile') {
+        await unlockAnalysis(analysisId);
       }
-    }, 2000);
+      
+      setSuccess(true);
+      await unlockBadge('premium_unlocked');
+      await addXP(300, "Unlock Ascend Plus Premium");
+      
+      setTimeout(() => {
+        navigate(analysisId === 'upgrade_profile' ? '/profile' : '/analysis');
+      }, 2000);
+    } catch (err) {
+      console.error(err);
+      setError('Transaction failed. Use any mock card info to retry.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
