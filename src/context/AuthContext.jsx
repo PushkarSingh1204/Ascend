@@ -14,6 +14,11 @@ import { auth, db, googleProvider } from '../services/firebase';
 const AuthContext = createContext();
 
 export const translateAuthError = (err) => {
+  const apiKey = import.meta.env.VITE_FIREBASE_API_KEY || "";
+  if (!apiKey || apiKey === "AIzaSyDummyKeyForCompilationPurposeOnly") {
+    return "Configuration Error: Firebase environment variables are missing on this host. If you deployed to Vercel, please add VITE_FIREBASE_API_KEY and other Firebase variables to your Vercel Project Settings.";
+  }
+
   if (!err || !err.code) {
     return err?.message || "An unexpected authentication error occurred. Please try again.";
   }
