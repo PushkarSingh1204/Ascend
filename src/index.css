@@ -1,77 +1,79 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @layer base {
   :root {
     --font-sans: 'Outfit', 'Inter', system-ui, sans-serif;
     
-    /* Harmonious HSL tailwind colors for premium dark mode */
-    --background: 240 10% 4%;
+    /* Premium Violet / Indigo brand palette */
+    --background: 240 10% 3.5%;
     --foreground: 0 0% 98%;
     
-    --card: 240 10% 6%;
+    --card: 240 10% 5.5%;
     --card-foreground: 0 0% 98%;
     
     --popover: 240 10% 4%;
     --popover-foreground: 0 0% 98%;
     
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 262 83% 62%;
+    --primary-foreground: 0 0% 100%;
     
-    --secondary: 240 3.7% 15.9%;
+    --secondary: 240 4% 12%;
     --secondary-foreground: 0 0% 98%;
     
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 240 4% 10%;
+    --muted-foreground: 240 5% 65%;
     
-    --accent: 263.4 70% 50.4%;
-    --accent-foreground: 210 20% 98%;
+    --accent: 262 83% 62%;
+    --accent-foreground: 0 0% 100%;
     
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --border: 240 4% 12%;
+    --input: 240 4% 12%;
+    --ring: 262 83% 62%;
     
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    /* Dynamic glassmorphism variables */
-    --glass-bg: rgba(13, 13, 18, 0.65);
-    --glass-border: rgba(255, 255, 255, 0.08);
+    /* Signature Glassmorphism colors */
+    --glass-bg: rgba(8, 8, 14, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.04);
+    --glass-glow: rgba(134, 59, 255, 0.03);
   }
 
   .light {
-    --background: 240 10% 98%;
-    --foreground: 240 10% 3.9%;
+    --background: 240 15% 98%;
+    --foreground: 240 10% 8%;
     
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 240 10% 8%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover-foreground: 240 10% 8%;
     
-    --primary: 221.2 83.2% 53.3%;
+    --primary: 262 80% 58%;
     --primary-foreground: 210 20% 98%;
     
-    --secondary: 240 4.8% 90%;
-    --secondary-foreground: 240 5.9% 10%;
+    --secondary: 240 5% 92%;
+    --secondary-foreground: 240 10% 10%;
     
-    --muted: 240 4.8% 90%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: 240 5% 95%;
+    --muted-foreground: 240 4% 45%;
     
-    --accent: 262.1 83.3% 57.8%;
+    --accent: 262 80% 58%;
     --accent-foreground: 210 20% 98%;
     
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 20% 98%;
     
-    --border: 240 5.9% 85%;
-    --input: 240 5.9% 85%;
-    --ring: 240 5.9% 10%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 262 80% 58%;
 
-    --glass-bg: rgba(255, 255, 255, 0.75);
-    --glass-border: rgba(0, 0, 0, 0.06);
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(0, 0, 0, 0.04);
+    --glass-glow: rgba(134, 59, 255, 0.01);
   }
 }
 
@@ -96,104 +98,100 @@
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
   
+  --radius-xl: 1.5rem;
   --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-sm: calc(var(--radius) - 8px);
   
   --font-sans: var(--font-sans);
 
   /* Keyframe animations */
   --animate-wave: wave 8s linear infinite;
-  --animate-fade-in: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-fade-in: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   --animate-scale-up: scaleUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   --animate-spin-reverse: spin-reverse 2s linear infinite;
+  --animate-mesh: mesh-drift 20s ease-in-out infinite alternate;
 
   @keyframes wave {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
   }
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
   @keyframes scaleUp {
-    from { opacity: 0; transform: scale(0.95); }
+    from { opacity: 0; transform: scale(0.96); }
     to { opacity: 1; transform: scale(1); }
   }
   @keyframes spin-reverse {
     from { transform: rotate(360deg); }
     to { transform: rotate(0deg); }
   }
+  @keyframes mesh-drift {
+    0% { background-position: 0% 0%; }
+    50% { background-position: 50% 100%; }
+    100% { background-position: 100% 50%; }
+  }
 }
 
 /* Custom premium design system utility classes */
 @utility glassmorphism {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
 }
 
 @utility glassmorphism-interactive {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   
   &:hover {
-    background: var(--glass-bg);
-    opacity: 0.95;
-    border-color: rgba(99, 102, 241, 0.4);
-    box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15);
+    background: rgba(13, 13, 22, 0.85);
+    border-color: rgba(134, 59, 255, 0.3);
+    box-shadow: 0 10px 40px rgba(134, 59, 255, 0.08);
     transform: translateY(-2px);
   }
 }
 
-@utility text-primary {
-  color: hsl(var(--foreground));
-}
-
-@utility text-secondary {
-  color: hsl(var(--muted-foreground));
-}
-
-@utility bg-surface {
-  background-color: hsl(var(--card));
-}
-
-@utility border-subtle {
-  border-color: hsl(var(--border));
-}
-
-@utility bg-background-base {
-  background-color: hsl(var(--background));
+@utility bg-mesh {
+  background-color: #030306;
+  background-image: 
+    radial-gradient(at 10% 10%, rgba(134, 59, 255, 0.08) 0px, transparent 50%),
+    radial-gradient(at 90% 10%, rgba(79, 191, 255, 0.06) 0px, transparent 50%),
+    radial-gradient(at 50% 80%, rgba(134, 59, 255, 0.05) 0px, transparent 50%);
+  background-size: 200% 200%;
 }
 
 @utility card-premium {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @utility card-premium-interactive {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   
   &:hover {
-    transform: translateY(-2px);
-    border-color: hsl(var(--primary) / 0.4);
-    box-shadow: 0 12px 30px rgba(99, 102, 241, 0.15);
+    transform: translateY(-4px);
+    border-color: rgba(134, 59, 255, 0.25);
+    box-shadow: 0 20px 40px rgba(134, 59, 255, 0.12);
   }
 }
 
