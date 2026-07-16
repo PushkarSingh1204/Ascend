@@ -38,9 +38,17 @@ export default class ErrorBoundary extends React.Component {
               We encountered a minor visual parsing issue. The rest of your dashboard is safe.
             </p>
             {this.state.error && (
-              <span className="block text-[10px] font-mono text-red-400 bg-red-500/5 px-2.5 py-1 rounded border border-red-500/10 truncate max-w-xs">
-                {this.state.error.message}
-              </span>
+              <div className="space-y-2 max-w-xs w-full">
+                <span className="block text-[10px] font-mono text-red-400 bg-red-500/5 px-2.5 py-1 rounded border border-red-500/10 truncate">
+                  {this.state.error.message}
+                </span>
+                {import.meta.env.DEV && this.state.error.stack && (
+                  <details className="w-full text-left bg-black/40 border border-border p-2 rounded-xl text-[9px] font-mono text-red-400 overflow-x-auto max-h-40">
+                    <summary className="cursor-pointer font-bold select-none mb-1">View Stack Trace</summary>
+                    <pre className="whitespace-pre-wrap">{this.state.error.stack}</pre>
+                  </details>
+                )}
+              </div>
             )}
           </div>
           <button

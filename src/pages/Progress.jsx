@@ -25,11 +25,12 @@ export default function Progress() {
   const [filterDate, setFilterDate] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredTimelineItems = timelineItems.filter(item => {
+  const filteredTimelineItems = (timelineItems || []).filter(item => {
+    if (!item) return false;
     const matchType = filterType === 'all' || item.type === filterType;
-    const matchDate = !filterDate || item.date.includes(filterDate);
+    const matchDate = !filterDate || (item.date && item.date.includes(filterDate));
     const matchSearch = !searchQuery || 
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ((item.title || '').toLowerCase().includes(searchQuery.toLowerCase())) ||
       (item.notes && item.notes.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (item.reflections && item.reflections.toLowerCase().includes(searchQuery.toLowerCase()));
     
@@ -310,10 +311,10 @@ export default function Progress() {
             {/* Image Slider Wrapper */}
             <div className="lg:col-span-3">
               <ImageSlider 
-                beforeImage={getOptimizedUrl(photos[beforePhotoIdx].photo_url)} 
-                afterImage={getOptimizedUrl(photos[afterPhotoIdx].photo_url)}
-                beforeLabel={`Week ${photos[beforePhotoIdx].week_number}`}
-                afterLabel={`Week ${photos[afterPhotoIdx].week_number}`}
+                beforeImage={photos[beforePhotoIdx] ? getOptimizedUrl(photos[beforePhotoIdx].photo_url) : ''} 
+                afterImage={photos[afterPhotoIdx] ? getOptimizedUrl(photos[afterPhotoIdx].photo_url) : ''}
+                beforeLabel={photos[beforePhotoIdx] ? `Week ${photos[beforePhotoIdx].week_number}` : 'Week 1'}
+                afterLabel={photos[afterPhotoIdx] ? `Week ${photos[afterPhotoIdx].week_number}` : 'Current'}
               />
             </div>
           </div>

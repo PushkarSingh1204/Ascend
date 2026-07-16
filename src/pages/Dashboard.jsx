@@ -99,7 +99,7 @@ export default function Dashboard() {
           id: `t_journal_${entry.id}`,
           type: 'journal',
           title: 'Reflective Journal Entry',
-          desc: `Logged mood: "${entry.mood}" - ${entry.notes?.substring(0, 50)}...`,
+          desc: `Logged mood: "${entry.mood || 'Normal'}" - ${(entry.notes || '').substring(0, 50)}...`,
           date: entry.date,
           icon: BookOpen,
           color: 'text-purple-400 bg-purple-500/10 border-purple-500/20'
@@ -144,18 +144,20 @@ export default function Dashboard() {
     }
   };
 
+  const completedMissionsCount = Object.values(dailyMissions || {}).filter(Boolean).length;
+  const milestonesCount = Array.isArray(roadmapMilestones) ? roadmapMilestones.length : 0;
+  const milestonesCompletedCount = Array.isArray(roadmapMilestones) ? roadmapMilestones.filter(m => m.completed).length : 0;
+  const badgesCount = Array.isArray(unlockedBadges) ? unlockedBadges.length : 0;
+
   useEffect(() => {
     fetchDashboardData();
-  }, [xp, dailyMissions, roadmapMilestones, unlockedBadges]);
+  }, [xp, level, streak, completedMissionsCount, milestonesCount, milestonesCompletedCount, badgesCount]);
 
   const prevLevelXp = getXpForLevel(level);
   const nextLevelXp = getXpRequiredForNextLevel(level);
   const xpInCurrentLevel = xp - prevLevelXp;
   const xpNeededForNext = nextLevelXp - prevLevelXp;
   const progressPercent = xpNeededForNext > 0 ? Math.min(100, Math.round((xpInCurrentLevel / xpNeededForNext) * 100)) : 0;
-
-  // Count active daily missions completed
-  const completedMissionsCount = Object.values(dailyMissions).filter(Boolean).length;
 
   // Determine current roadmap stage details
   const safeMilestones = Array.isArray(roadmapMilestones) ? roadmapMilestones : [];

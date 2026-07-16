@@ -439,3 +439,68 @@ export const submitCheckin = async (notes = '') => {
   
   return { checkins, profile };
 };
+
+// In-memory mock stores for Community page support to guarantee zero failed imports
+let mockPosts = [
+  {
+    id: 'post_1',
+    author: 'SymmetrySage',
+    content: 'Just reached 85% facial harmony score using posture correction and facial yoga! Highly recommend daily tracking.',
+    image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&auto=format&fit=crop&q=80',
+    date: 'Today',
+    votes: { fire: 12, thumb: 8 }
+  },
+  {
+    id: 'post_2',
+    author: 'MewingMentor',
+    content: 'Day 30 progress scan. My cheekbone definition has improved significantly. Focus area: posture alignment.',
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80',
+    date: 'Yesterday',
+    votes: { fire: 19, thumb: 15 }
+  }
+];
+
+let mockChallenges = [
+  { id: 'ch_1', title: 'Perfect Posture Mewing', desc: 'Maintain correct tongue posture all day.', xp: 150, completed: false },
+  { id: 'ch_2', title: 'Skincare Baseline Log', desc: 'Perform and log morning + night routines.', xp: 100, completed: true },
+  { id: 'ch_3', title: 'Deep Sleep 8h Cycle', desc: 'Log at least 8 hours of sleep.', xp: 100, completed: false }
+];
+
+export const getCommunityPosts = () => mockPosts;
+
+export const voteOnPost = (postId, category) => {
+  mockPosts = mockPosts.map(p => {
+    if (p.id === postId) {
+      const votes = { ...p.votes };
+      votes[category] = (votes[category] || 0) + 1;
+      return { ...p, votes };
+    }
+    return p;
+  });
+  return mockPosts;
+};
+
+export const addCommunityPost = (content, image) => {
+  const newPost = {
+    id: `post_${Date.now()}`,
+    author: 'You',
+    content,
+    image,
+    date: 'Just now',
+    votes: { fire: 0, thumb: 0 }
+  };
+  mockPosts = [newPost, ...mockPosts];
+  return mockPosts;
+};
+
+export const getChallenges = () => mockChallenges;
+
+export const toggleChallenge = (challengeId) => {
+  mockChallenges = mockChallenges.map(c => {
+    if (c.id === challengeId) {
+      return { ...c, completed: !c.completed };
+    }
+    return c;
+  });
+  return mockChallenges;
+};

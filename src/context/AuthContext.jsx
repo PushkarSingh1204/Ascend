@@ -62,63 +62,69 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isOnboarded, setIsOnboarded] = useState(false);
 
-  // Initialize and listen to Auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setLoading(true);
-      if (firebaseUser) {
-        // Fetch user profile from Firestore users collection
-        const userDocRef = doc(db, 'users', firebaseUser.uid);
-        let userDocSnap = await getDoc(userDocRef);
-        
-        let profile = null;
-        if (userDocSnap.exists()) {
-          profile = userDocSnap.data();
-        } else {
-          // Initialize user profile in Firestore
-          profile = {
-            name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || "Guest Ascender",
-            join_date: new Date().toISOString().split('T')[0],
-            age: 24,
-            gender: "Male",
-            height_cm: 180,
-            weight_kg: 75,
-            goal_description: "I want to track and refine my facial posture & skin routines.",
-            focus_area: "",
-            previous_experience: "Beginner",
-            is_premium: false,
-            xp: 100,
-            level: 1,
-            days_to_ascend: 0,
-            streak: 0,
-            longest_streak: 0,
-            unlocked_badges: ['first_step'],
-            preferences: {
-              morningReminder: true,
-              nightReminder: true,
-              weeklyDigest: true
-            }
-          };
-          await setDoc(userDocRef, profile);
-        }
+      try {
+        if (firebaseUser) {
+          // Fetch user profile from Firestore users collection
+          const userDocRef = doc(db, 'users', firebaseUser.uid);
+          let userDocSnap = await getDoc(userDocRef);
+          
+          let profile = null;
+          if (userDocSnap.exists()) {
+            profile = userDocSnap.data();
+          } else {
+            // Initialize user profile in Firestore
+            profile = {
+              name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || "Guest Ascender",
+              join_date: new Date().toISOString().split('T')[0],
+              age: 24,
+              gender: "Male",
+              height_cm: 180,
+              weight_kg: 75,
+              goal_description: "I want to track and refine my facial posture & skin routines.",
+              focus_area: "",
+              previous_experience: "Beginner",
+              is_premium: false,
+              xp: 100,
+              level: 1,
+              days_to_ascend: 0,
+              streak: 0,
+              longest_streak: 0,
+              unlocked_badges: ['first_step'],
+              preferences: {
+                morningReminder: true,
+                nightReminder: true,
+                weeklyDigest: true
+              }
+            };
+            await setDoc(userDocRef, profile);
+          }
 
-        setUser({
-          uid: firebaseUser.uid,
-          email: firebaseUser.email || 'guest@ascend.app',
-          profile: profile
-        });
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email || 'guest@ascend.app',
+            profile: profile
+          });
 
-        // User is onboarded if focus_area is defined
-        if (profile && profile.focus_area) {
-          setIsOnboarded(true);
+          // User is onboarded if focus_area is defined
+          if (profile && profile.focus_area) {
+            setIsOnboarded(true);
+          } else {
+            setIsOnboarded(false);
+          }
         } else {
+          setUser(null);
           setIsOnboarded(false);
         }
-      } else {
+      } catch (err) {
+        console.error("AuthContext state change logic error:", err);
         setUser(null);
         setIsOnboarded(false);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();

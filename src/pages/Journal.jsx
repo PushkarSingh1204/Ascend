@@ -49,7 +49,7 @@ export default function Journal() {
   const safeLogs = Array.isArray(logs) ? logs : [];
   const filteredLogs = safeLogs.filter(log => {
     const matchMood = filterMood === 'all' || log.mood === parseInt(filterMood);
-    const matchDate = !filterDate || log.date.includes(filterDate);
+    const matchDate = !filterDate || (log.date && log.date.includes(filterDate));
     const matchKeyword = !searchKeyword || 
       (log.notes && log.notes.toLowerCase().includes(searchKeyword.toLowerCase())) ||
       (log.reflections && log.reflections.toLowerCase().includes(searchKeyword.toLowerCase()));

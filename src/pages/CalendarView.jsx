@@ -279,7 +279,7 @@ export default function CalendarView() {
                 )}
 
                 {/* Journals logged */}
-                {selectedDayDetails.journals && selectedDayDetails.journals.length > 0 && (
+                {Array.isArray(selectedDayDetails?.journals) && selectedDayDetails.journals.length > 0 && (
                   <div className="space-y-2">
                     <span className="text-[9px] font-black text-muted-foreground uppercase tracking-wider block">Reflections Logged</span>
                     {selectedDayDetails.journals.map((j) => (
@@ -301,7 +301,7 @@ export default function CalendarView() {
                 )}
 
                 {/* Scan reports */}
-                {selectedDayDetails.analyses && selectedDayDetails.analyses.length > 0 && (
+                {Array.isArray(selectedDayDetails?.analyses) && selectedDayDetails.analyses.length > 0 && (
                   <div className="space-y-2">
                     <span className="text-[9px] font-black text-muted-foreground uppercase tracking-wider block">Biometric Scan Reports</span>
                     {selectedDayDetails.analyses.map((a) => (

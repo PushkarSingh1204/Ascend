@@ -6,6 +6,7 @@ import { GameProvider } from './context/GameContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import Layout from './components/Layout';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy Loaded Pages
 const Landing = lazy(() => import('./pages/Landing'));
@@ -46,7 +47,11 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  return children;
+  return (
+    <ErrorBoundary>
+      {children}
+    </ErrorBoundary>
+  );
 };
 
 // Route Guard for Pages that require Onboarding completion
@@ -65,7 +70,13 @@ const OnboardedRoute = ({ children }) => {
     return <Navigate to="/onboarding" replace />;
   }
 
-  return <Layout>{children}</Layout>;
+  return (
+    <Layout>
+      <ErrorBoundary>
+        {children}
+      </ErrorBoundary>
+    </Layout>
+  );
 };
 
 function App() {

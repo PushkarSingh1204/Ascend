@@ -36,57 +36,64 @@ export const GameProvider = ({ children }) => {
   // Sync state on user changes and handle daily resets
   const syncGameState = async () => {
     if (user && user.profile) {
-      let profile = await getProfile();
-      if (!profile) return;
-      
-      const todayStr = new Date().toISOString().split('T')[0];
-      
-      // Dynamic Daily reset trigger
-      if (profile.last_active_date !== todayStr) {
-        // Reset daily missions, water/sleep logs, and routines checklists
-        const resetMissions = { checkin: false, sleep: false, water: false, skincare: false, journal: false };
-        const updatedRoutines = { ...profile.routines };
+      try {
+        let profile = await getProfile();
+        if (!profile) return;
         
-        // Mark all tasks incomplete
-        if (updatedRoutines) {
-          Object.keys(updatedRoutines).forEach(cat => {
-            updatedRoutines[cat] = updatedRoutines[cat].map(t => ({ ...t, completed: false }));
+        const todayStr = new Date().toISOString().split('T')[0];
+        
+        // Dynamic Daily reset trigger
+        if (profile.last_active_date !== todayStr) {
+          // Reset daily missions, water/sleep logs, and routines checklists
+          const resetMissions = { checkin: false, sleep: false, water: false, skincare: false, journal: false };
+          const updatedRoutines = { ...profile.routines };
+          
+          // Mark all tasks incomplete
+          if (updatedRoutines) {
+            Object.keys(updatedRoutines).forEach(cat => {
+              const catTasks = updatedRoutines[cat];
+              if (Array.isArray(catTasks)) {
+                updatedRoutines[cat] = catTasks.map(t => ({ ...t, completed: false }));
+              }
+            });
+          }
+          
+          const resetSleep = profile.sleep_log ? { ...profile.sleep_log, current: 0 } : { current: 0, target: 8.0 };
+          const resetWater = profile.water_log ? { ...profile.water_log, current: 0 } : { current: 0, target: 2000 };
+
+          profile = await updateProfile({
+            last_active_date: todayStr,
+            daily_missions: resetMissions,
+            routines: updatedRoutines,
+            sleep_log: resetSleep,
+            water_log: resetWater
           });
+
+          // Set user context
+          setUser(prev => ({ ...prev, profile }));
         }
+
+        setXp(profile.xp || 0);
+        setLevel(profile.level || 1);
+        setStreak(profile.streak || 0);
+        setLongestStreak(profile.longest_streak || 0);
+        setDaysToAscend(profile.days_to_ascend || 0);
+        setUnlockedBadges(profile.unlocked_badges || []);
         
-        const resetSleep = profile.sleep_log ? { ...profile.sleep_log, current: 0 } : { current: 0, target: 8.0 };
-        const resetWater = profile.water_log ? { ...profile.water_log, current: 0 } : { current: 0, target: 2000 };
+        const missions = await getDailyMissions();
+        setDailyMissions(missions);
 
-        profile = await updateProfile({
-          last_active_date: todayStr,
-          daily_missions: resetMissions,
-          routines: updatedRoutines,
-          sleep_log: resetSleep,
-          water_log: resetWater
-        });
-
-        // Set user context
-        setUser(prev => ({ ...prev, profile }));
-      }
-
-      setXp(profile.xp || 0);
-      setLevel(profile.level || 1);
-      setStreak(profile.streak || 0);
-      setLongestStreak(profile.longest_streak || 0);
-      setDaysToAscend(profile.days_to_ascend || 0);
-      setUnlockedBadges(profile.unlocked_badges || []);
-      
-      const missions = await getDailyMissions();
-      setDailyMissions(missions);
-
-      const milestones = await getRoadmapMilestones();
-      setRoadmapMilestones(milestones);
-      
-      if (milestones && milestones.length > 0) {
-        const completed = milestones.filter(m => m.completed).length;
-        setRoadmapPercent(Math.round((completed / milestones.length) * 100));
-      } else {
-        setRoadmapPercent(0);
+        const milestones = await getRoadmapMilestones();
+        setRoadmapMilestones(Array.isArray(milestones) ? milestones : []);
+        
+        if (Array.isArray(milestones) && milestones.length > 0) {
+          const completed = milestones.filter(m => m.completed).length;
+          setRoadmapPercent(Math.round((completed / milestones.length) * 100));
+        } else {
+          setRoadmapPercent(0);
+        }
+      } catch (err) {
+        console.error("GameContext syncGameState error:", err);
       }
     }
   };

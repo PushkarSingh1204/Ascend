@@ -257,7 +257,9 @@ export default function Analysis() {
   };
 
   const handleUnlockMock = () => {
-    navigate(`/payments?analysisId=${currentAnalysis.id}`);
+    if (currentAnalysis?.id) {
+      navigate(`/payments?analysisId=${currentAnalysis.id}`);
+    }
   };
 
   const isPremiumUser = !!user?.profile?.is_premium;
@@ -663,7 +665,7 @@ export default function Analysis() {
                     </div>
 
                     <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 border border-border rounded-xl p-1 bg-secondary/40 scrollbar-none">
-                      {sortedAnalysesList.filter(s => s.id !== currentAnalysis.id).map((scan) => (
+                      {sortedAnalysesList.filter(s => currentAnalysis && s.id !== currentAnalysis.id).map((scan) => (
                         <button
                           key={scan.id}
                           onClick={() => setCompareScanId(scan.id)}
