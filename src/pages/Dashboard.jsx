@@ -245,7 +245,7 @@ export default function Dashboard() {
           <ProgressRing percent={progressPercent} size={110} strokeWidth={8}>
             <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-violet-650 to-indigo-650 flex items-center justify-center text-white font-black text-xl shadow-lg relative border border-white/5">
               {user?.profile?.name?.substring(0, 2).toUpperCase() || 'TR'}
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#0c0c14] border border-border flex items-center justify-center text-[10px] font-bold text-primary">
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-secondary/40 border border-border flex items-center justify-center text-[10px] font-bold text-primary">
                 {level}
               </div>
             </div>

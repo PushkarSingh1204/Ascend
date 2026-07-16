@@ -241,7 +241,7 @@ export function Modal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ type: 'spring', duration: 0.4 }}
-            className={`w-full max-w-md glassmorphism p-6 rounded-2xl relative z-10 bg-[#0c0c14] border border-border shadow-2xl flex flex-col space-y-4 ${className}`}
+            className={`w-full max-w-md glassmorphism p-6 rounded-2xl relative z-10 border border-border shadow-2xl flex flex-col space-y-4 ${className}`}
           >
             <div className="flex items-center justify-between border-b border-border pb-3">
               <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">{title}</h3>

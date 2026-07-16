@@ -166,7 +166,7 @@ export default function PremiumTools() {
           
           {/* Locked screen if user is not premium */}
           {!isPremium && (
-            <Card className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-[#0c0c12]/80 backdrop-blur-md text-center">
+            <Card className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-card/85 backdrop-blur-md text-center">
               <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center mb-4">
                 <Lock size={20} className="animate-pulse" />
               </div>
@@ -192,7 +192,7 @@ export default function PremiumTools() {
                   <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest block text-left w-full mb-4">
                     Photo Coach Lab
                   </span>
-                  <div className="w-full aspect-square rounded-xl bg-[#0c0c14] border border-border flex flex-col items-center justify-center p-6 text-center border-dashed">
+                  <div className="w-full aspect-square rounded-xl bg-secondary/40 border border-border flex flex-col items-center justify-center p-6 text-center border-dashed">
                     <Camera className="text-primary/30 mb-3" size={24} />
                     <span className="text-xs font-bold text-foreground">Front or 3/4 Profile</span>
                     <span className="text-[9px] text-muted-foreground mt-1">Natural diffused indoor light</span>
@@ -216,7 +216,7 @@ export default function PremiumTools() {
 
                     {photoFeedback ? (
                       <div className="space-y-4 mt-4">
-                        <div className="flex justify-between items-center bg-[#0c0c14] p-3 rounded-xl border border-border">
+                        <div className="flex justify-between items-center bg-secondary/40 p-3 rounded-xl border border-border">
                           <div>
                             <span className="text-[9px] font-bold text-muted-foreground uppercase block">Composition Score</span>
                             <span className="text-xs font-black text-emerald-400 block mt-0.5">{photoFeedback.score}/100</span>
@@ -296,7 +296,7 @@ export default function PremiumTools() {
 
                     {outfitFeedback ? (
                       <div className="space-y-4 mt-4">
-                        <div className="flex justify-between items-center bg-[#0c0c14] p-3 rounded-xl border border-border">
+                        <div className="flex justify-between items-center bg-secondary/40 p-3 rounded-xl border border-border">
                           <div>
                             <span className="text-[9px] font-bold text-muted-foreground uppercase block">Facial Frame Match</span>
                             <span className="text-xs font-black text-primary block mt-0.5">{outfitFeedback.score}/100</span>
@@ -427,7 +427,7 @@ export default function PremiumTools() {
                   <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest text-left w-full mb-4">
                     Similarity Engine
                   </span>
-                  <div className="w-full aspect-square rounded-xl bg-[#0c0c14] border border-border flex flex-col items-center justify-center p-6 text-center border-dashed">
+                  <div className="w-full aspect-square rounded-xl bg-secondary/40 border border-border flex flex-col items-center justify-center p-6 text-center border-dashed">
                     <UserCheck className="text-primary/30 mb-3 animate-pulse" size={24} />
                     <span className="text-xs font-bold text-foreground">Compare Facial Thirds</span>
                     <span className="text-[9px] text-muted-foreground mt-1">Scans 478 points against database</span>
@@ -452,7 +452,7 @@ export default function PremiumTools() {
                     {celebMatches ? (
                       <div className="space-y-3 mt-4">
                         {safeMatches.map((match) => (
-                          <div key={match.name} className="bg-[#0c0c14] p-3 rounded-xl border border-border flex justify-between items-center">
+                          <div key={match.name} className="bg-secondary/40 p-3 rounded-xl border border-border flex justify-between items-center">
                             <div className="space-y-1">
                               <span className="text-xs font-bold text-foreground block">{match.name}</span>
                               <span className="text-[9px] text-muted-foreground block leading-normal">{match.reason}</span>
@@ -519,7 +519,7 @@ export default function PremiumTools() {
                     </h3>
 
                     <div className="space-y-4 mt-4">
-                      <div className="bg-[#0c0c14] p-3.5 rounded-xl border border-border text-xs">
+                      <div className="bg-secondary/40 p-3.5 rounded-xl border border-border text-xs">
                         <span className="text-muted-foreground font-bold uppercase tracking-wider text-[9px] block">Expected Skin Laxity Status</span>
                         <p className="text-foreground mt-1.5 leading-relaxed">{getAgingDescription(selectedAge)}</p>
                       </div>

@@ -152,7 +152,7 @@
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   
   &:hover {
-    background: rgba(13, 13, 22, 0.85);
+    background: hsl(var(--secondary) / 0.85);
     border-color: rgba(134, 59, 255, 0.3);
     box-shadow: 0 10px 40px rgba(134, 59, 255, 0.08);
     transform: translateY(-2px);
@@ -160,7 +160,7 @@
 }
 
 @utility bg-mesh {
-  background-color: #030306;
+  background-color: hsl(var(--background));
   background-image: 
     radial-gradient(at 10% 10%, rgba(134, 59, 255, 0.08) 0px, transparent 50%),
     radial-gradient(at 90% 10%, rgba(79, 191, 255, 0.06) 0px, transparent 50%),

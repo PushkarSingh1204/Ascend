@@ -245,7 +245,7 @@ export default function Routine() {
               </span>
             </h3>
 
-            <div className="text-center py-4 bg-[#0c0c14] border border-border rounded-xl">
+            <div className="text-center py-4 bg-secondary/40 border border-border rounded-xl">
               <span className="text-2xl font-black text-foreground block">{water.current} / {water.target} ml</span>
               <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold mt-1 block">Hydrated Today</span>
             </div>
@@ -277,7 +277,7 @@ export default function Routine() {
               </span>
             </h3>
 
-            <div className="text-center py-4 bg-[#0c0c14] border border-border rounded-xl">
+            <div className="text-center py-4 bg-secondary/40 border border-border rounded-xl">
               <span className="text-2xl font-black text-foreground block">{sleep.current} / {sleep.target} hrs</span>
               <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold mt-1 block">Sleep Logged</span>
             </div>

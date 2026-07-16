@@ -302,7 +302,7 @@ export default function Progress() {
                 </div>
               </div>
 
-              <div className="text-[10px] text-muted-foreground leading-relaxed bg-[#0c0c14] border border-border p-3.5 rounded-xl italic">
+              <div className="text-[10px] text-muted-foreground leading-relaxed bg-secondary/40 border border-border p-3.5 rounded-xl italic">
                 * Drag the center handle left and right to transition between selected dates.
               </div>
             </Card>
@@ -379,7 +379,7 @@ export default function Progress() {
               {filteredTimelineItems.map((item) => {
                 return (
                   <div key={item.id} className="relative group">
-                    <span className="absolute -left-10 top-1.5 w-8 h-8 rounded-xl bg-[#0c0c14] border border-border flex items-center justify-center text-xs group-hover:border-primary/30 transition-colors z-10">
+                    <span className="absolute -left-10 top-1.5 w-8 h-8 rounded-xl bg-secondary/40 border border-border flex items-center justify-center text-xs group-hover:border-primary/30 transition-colors z-10">
                       {item.type === 'photo' ? '📸' : item.type === 'journal' ? '📝' : '🏆'}
                     </span>
                     
@@ -388,7 +388,7 @@ export default function Progress() {
                       <div className="flex justify-between items-center text-xs">
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-foreground text-sm">{item.title}</span>
-                          <span className="text-[9px] uppercase font-extrabold tracking-widest text-muted-foreground bg-[#0c0c14] px-2.5 py-0.5 rounded border border-border">
+                          <span className="text-[9px] uppercase font-extrabold tracking-widest text-muted-foreground bg-secondary/40 px-2.5 py-0.5 rounded border border-border">
                             {item.type}
                           </span>
                         </div>
@@ -429,12 +429,12 @@ export default function Progress() {
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-1">
                               <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">Notes</span>
-                              <p className="text-foreground bg-[#0c0c14] border border-border p-3 rounded-xl leading-relaxed">{item.notes}</p>
+                              <p className="text-foreground bg-secondary/40 border border-border p-3 rounded-xl leading-relaxed">{item.notes}</p>
                             </div>
                             {item.reflections && (
                               <div className="space-y-1">
                                 <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">Reflections</span>
-                                <p className="text-muted-foreground bg-[#0c0c14] border border-border p-3 rounded-xl italic">"{item.reflections}"</p>
+                                <p className="text-muted-foreground bg-secondary/40 border border-border p-3 rounded-xl italic">"{item.reflections}"</p>
                               </div>
                             )}
                           </div>
@@ -483,7 +483,7 @@ export default function Progress() {
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="w-full max-w-md glassmorphism p-6 rounded-2xl relative z-10 bg-[#0d0d16] border border-border shadow-2xl flex flex-col space-y-4"
+              className="w-full max-w-md glassmorphism p-6 rounded-2xl relative z-10 bg-card border border-border shadow-2xl flex flex-col space-y-4"
             >
               <div className="flex items-center justify-between border-b border-border pb-3">
                 <h3 className="text-sm font-bold uppercase tracking-wider">Log progress photo</h3>

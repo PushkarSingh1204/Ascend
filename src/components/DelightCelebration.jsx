@@ -59,7 +59,7 @@ export default function DelightCelebration({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 30 }}
             transition={{ type: 'spring', damping: 15, stiffness: 200 }}
-            className="w-full max-w-sm glassmorphism p-6 rounded-2xl relative z-10 text-center bg-[#0d0d16] border border-border shadow-2xl space-y-5"
+            className="w-full max-w-sm glassmorphism p-6 rounded-2xl relative z-10 text-center border border-border shadow-2xl space-y-5"
           >
             {/* Close button */}
             <button 

@@ -91,7 +91,7 @@ export default function AICoach() {
 
       {/* 2. CHAT DRAWER PANEL */}
       {isOpen && (
-        <div className="fixed bottom-20 right-6 z-40 w-90 h-112 glassmorphism rounded-2xl border border-neutral-800 shadow-2xl overflow-hidden flex flex-col bg-[#0c0c12] animate-scale-up">
+        <div className="fixed bottom-20 right-6 z-40 w-90 h-112 glassmorphism rounded-2xl border border-neutral-800 shadow-2xl overflow-hidden flex flex-col animate-scale-up">
           
           {/* Header */}
           <div className="p-4 border-b border-neutral-900 bg-neutral-950/20 flex items-center justify-between">

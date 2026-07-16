@@ -150,7 +150,7 @@ export default function CommandPalette({ isOpen, onClose }) {
       <div className="absolute inset-0" onClick={onClose}></div>
 
       {/* Palette Container */}
-      <div className="w-full max-w-xl glassmorphism rounded-2xl border border-neutral-800 shadow-2xl relative overflow-hidden flex flex-col max-h-[440px] bg-[#0c0c12]">
+      <div className="w-full max-w-xl glassmorphism rounded-2xl border border-neutral-800 shadow-2xl relative overflow-hidden flex flex-col max-h-[440px]">
         {/* Search Input Bar */}
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-neutral-900 bg-neutral-950/20">
           <Search className="text-neutral-500 shrink-0" size={18} />

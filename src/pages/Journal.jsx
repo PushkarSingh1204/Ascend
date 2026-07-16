@@ -90,7 +90,7 @@ export default function Journal() {
 
   if (isDistractionFree) {
     return (
-      <div className="fixed inset-0 z-50 bg-[#030307] text-foreground flex flex-col p-6 md:p-12 animate-fade-in">
+      <div className="fixed inset-0 z-50 bg-background text-foreground flex flex-col p-6 md:p-12 animate-fade-in">
         <div className="max-w-2xl w-full mx-auto flex-1 flex flex-col justify-between py-6">
           <div className="flex items-center justify-between border-b border-border pb-4 mb-8">
             <h2 className="text-sm font-bold tracking-wider text-foreground flex items-center gap-2 uppercase">
@@ -361,7 +361,7 @@ export default function Journal() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                       <div className="space-y-1">
                         <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block">Daily Notes</span>
-                        <p className="text-foreground leading-relaxed bg-[#0c0c14] p-3 rounded-xl border border-border">
+                        <p className="text-foreground leading-relaxed bg-secondary/40 p-3 rounded-xl border border-border">
                           {log.notes}
                         </p>
                       </div>
@@ -369,7 +369,7 @@ export default function Journal() {
                       {log.reflections && (
                         <div className="space-y-1">
                           <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block">Progress Reflections</span>
-                          <p className="text-foreground leading-relaxed bg-[#0c0c14] p-3 rounded-xl border border-border italic">
+                          <p className="text-foreground leading-relaxed bg-secondary/40 p-3 rounded-xl border border-border italic">
                             "{log.reflections}"
                           </p>
                         </div>

@@ -367,7 +367,7 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => setMorningReminder(!morningReminder)}
-                    className="w-full flex items-center justify-between p-3 rounded-xl bg-[#0c0c14] border border-border text-xs text-left cursor-pointer"
+                    className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/40 border border-border text-xs text-left cursor-pointer"
                   >
                     <div>
                       <span className="font-bold text-foreground block">Morning Routine Alert</span>
@@ -381,7 +381,7 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => setNightReminder(!nightReminder)}
-                    className="w-full flex items-center justify-between p-3 rounded-xl bg-[#0c0c14] border border-border text-xs text-left cursor-pointer"
+                    className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/40 border border-border text-xs text-left cursor-pointer"
                   >
                     <div>
                       <span className="font-bold text-foreground block">Night Routine Alert</span>
@@ -395,7 +395,7 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => setWeeklyDigest(!weeklyDigest)}
-                    className="w-full flex items-center justify-between p-3 rounded-xl bg-[#0c0c14] border border-border text-xs text-left cursor-pointer"
+                    className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary/40 border border-border text-xs text-left cursor-pointer"
                   >
                     <div>
                       <span className="font-bold text-foreground block">Weekly Digest Email</span>

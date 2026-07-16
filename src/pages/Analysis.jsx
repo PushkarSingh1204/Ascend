@@ -554,7 +554,7 @@ export default function Analysis() {
               {/* Suggestions Panel (Locked if not premium) */}
               <Card className="lg:col-span-3 p-6 relative flex flex-col justify-between min-h-[360px]">
                 {!isUnlocked && (
-                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-[#0c0c12]/75 backdrop-blur-md rounded-2xl text-center">
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-card/75 backdrop-blur-md rounded-2xl text-center">
                     <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center mb-4">
                       <Lock size={20} className="animate-pulse" />
                     </div>
@@ -662,7 +662,7 @@ export default function Analysis() {
                       </select>
                     </div>
 
-                    <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 border border-border rounded-xl p-1 bg-[#0c0c14] scrollbar-none">
+                    <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 border border-border rounded-xl p-1 bg-secondary/40 scrollbar-none">
                       {sortedAnalysesList.filter(s => s.id !== currentAnalysis.id).map((scan) => (
                         <button
                           key={scan.id}
@@ -680,7 +680,7 @@ export default function Analysis() {
                   <div className="md:col-span-2 space-y-4">
                     {compareScan ? (
                       <div className="space-y-4">
-                        <div className="bg-[#0c0c14] border border-border p-4 rounded-xl flex items-center justify-between text-xs">
+                        <div className="bg-secondary/40 border border-border p-4 rounded-xl flex items-center justify-between text-xs">
                           <div>
                             <span className="text-muted-foreground uppercase tracking-wider font-bold text-[9px] block">Comparing Against</span>
                             <span className="text-foreground font-bold block mt-0.5">Scan date: {compareScan.date}</span>

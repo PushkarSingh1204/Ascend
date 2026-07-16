@@ -175,7 +175,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
                 </motion.span>
               )}
               {isCollapsed && (
-                <div className="absolute left-16 bg-[#0c0c14] border border-border px-2.5 py-1 rounded-lg text-[10px] font-bold text-foreground opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl z-30 delay-100">
+                <div className="absolute left-16 bg-card border border-border px-2.5 py-1 rounded-lg text-[10px] font-bold text-foreground opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl z-30 delay-100">
                   {item.name}
                 </div>
               )}
@@ -227,7 +227,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
       </header>
 
       {/* MOBILE FLOATING DOCK (iOS Style, centered, floating, no visual noise, hidden on desktop) */}
-      <nav className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-[340px] h-14 rounded-2xl glassmorphism z-30 flex items-center justify-around py-1 px-2 shadow-2xl border border-border/60 bg-[#08080f]/80 backdrop-blur-md">
+      <nav className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-[340px] h-14 rounded-2xl glassmorphism z-30 flex items-center justify-around py-1 px-2 shadow-2xl border border-border/60 bg-card/85 backdrop-blur-md">
         {mobileDockItems.map((item) => (
           <NavLink
             key={item.path}

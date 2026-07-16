@@ -138,7 +138,7 @@ export default function Layout({ children }) {
 
               {/* Dropdown panel */}
               {isNotifOpen && (
-                <div className="absolute right-0 mt-2 w-80 glassmorphism rounded-xl border border-border shadow-2xl z-30 p-4 space-y-3 bg-[#0c0c14] text-foreground">
+                <div className="absolute right-0 mt-2 w-80 glassmorphism rounded-xl border border-border shadow-2xl z-30 p-4 space-y-3 text-foreground">
                   <div className="flex justify-between items-center border-b border-border pb-2">
                     <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
                       <Bell size={12} className="text-primary" />

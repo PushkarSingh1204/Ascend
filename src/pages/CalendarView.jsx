@@ -283,7 +283,7 @@ export default function CalendarView() {
                   <div className="space-y-2">
                     <span className="text-[9px] font-black text-muted-foreground uppercase tracking-wider block">Reflections Logged</span>
                     {selectedDayDetails.journals.map((j) => (
-                      <div key={j.id} className="p-3 bg-[#0c0c14] border border-border rounded-xl space-y-1">
+                      <div key={j.id} className="p-3 bg-secondary/40 border border-border rounded-xl space-y-1">
                         <div className="flex justify-between items-center">
                           <span className="text-[10px] font-bold text-primary flex items-center gap-1">
                             <BookOpen size={10} />
@@ -305,7 +305,7 @@ export default function CalendarView() {
                   <div className="space-y-2">
                     <span className="text-[9px] font-black text-muted-foreground uppercase tracking-wider block">Biometric Scan Reports</span>
                     {selectedDayDetails.analyses.map((a) => (
-                      <div key={a.id} className="p-3 bg-[#0c0c14] border border-border rounded-xl space-y-1">
+                      <div key={a.id} className="p-3 bg-secondary/40 border border-border rounded-xl space-y-1">
                         <span className="text-[10px] font-bold text-primary flex items-center gap-1">
                           <Sparkles size={10} />
                           Harmony Scan

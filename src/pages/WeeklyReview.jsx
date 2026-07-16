@@ -238,7 +238,7 @@ export default function WeeklyReview() {
               Sprinting Milestones Unlocked
             </h3>
             
-            <div className="flex items-start gap-4 p-4 rounded-xl bg-[#0c0c14] border border-border">
+            <div className="flex items-start gap-4 p-4 rounded-xl bg-secondary/40 border border-border">
               <Flame size={20} className="text-orange-500 shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <span className="text-xs font-bold text-foreground block">Active Streak Status</span>
@@ -247,11 +247,11 @@ export default function WeeklyReview() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-2">
-              <div className="p-3.5 bg-[#0c0c14] rounded-xl border border-border flex items-center justify-between">
+              <div className="p-3.5 bg-secondary/40 rounded-xl border border-border flex items-center justify-between">
                 <span className="text-muted-foreground font-semibold">Reflections logged this week:</span>
                 <strong className="text-foreground">{summary.journalsLogged} Entries</strong>
               </div>
-              <div className="p-3.5 bg-[#0c0c14] rounded-xl border border-border flex items-center justify-between">
+              <div className="p-3.5 bg-secondary/40 rounded-xl border border-border flex items-center justify-between">
                 <span className="text-muted-foreground font-semibold">Habit consistency ratio:</span>
                 <strong className="text-foreground">{summary.routineCompletion}% Complete</strong>
               </div>

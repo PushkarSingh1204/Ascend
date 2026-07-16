@@ -119,7 +119,7 @@ export default function Roadmap() {
                 <div 
                   className={`w-5 h-5 rounded-full flex items-center justify-center border shrink-0 z-10 mt-1.5 transition-colors duration-300 ${
                     isLocked 
-                      ? 'bg-[#030307] border-border text-muted-foreground' 
+                      ? 'bg-background border-border text-muted-foreground' 
                       : 'bg-primary/10 border-primary text-primary shadow-[0_0_12px_rgba(134,59,255,0.15)]'
                   }`}
                 >

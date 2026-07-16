@@ -92,7 +92,7 @@ export default function Onboarding() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#07070b] text-foreground flex flex-col items-center justify-center p-4 relative">
+    <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4 relative">
       {/* Background radial glows */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
 
@@ -131,7 +131,7 @@ export default function Onboarding() {
                   max="60"
                   value={age}
                   onChange={(e) => setAge(e.target.value)}
-                  className="w-full h-1.5 bg-[#0c0c14] border border-border rounded-lg appearance-none cursor-pointer accent-primary"
+                  className="w-full h-1.5 bg-secondary/40 border border-border rounded-lg appearance-none cursor-pointer accent-primary"
                 />
                 <div className="flex justify-between text-[9px] text-muted-foreground font-black uppercase tracking-wider">
                   <span>16 Yrs</span>

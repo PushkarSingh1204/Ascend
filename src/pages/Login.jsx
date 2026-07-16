@@ -87,7 +87,7 @@ export default function Login() {
       <Card className="w-full max-w-md p-8 shadow-2xl z-10">
         
         {/* Toggle tabs */}
-        <div className="flex bg-[#0c0c14] p-1.5 rounded-xl border border-border mb-8">
+        <div className="flex bg-secondary/40 p-1.5 rounded-xl border border-border mb-8">
           <button
             onClick={() => { setIsSignUp(false); setError(''); }}
             className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${!isSignUp ? 'bg-background text-foreground shadow-md' : 'text-muted-foreground hover:text-foreground'}`}
@@ -168,7 +168,7 @@ export default function Login() {
 
         <div className="relative my-8 text-center">
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border"></div></div>
-          <span className="relative bg-[#07070b] px-3 text-[9px] uppercase font-black tracking-widest text-muted-foreground">Or Continue With</span>
+          <span className="relative bg-background px-3 text-[9px] uppercase font-black tracking-widest text-muted-foreground">Or Continue With</span>
         </div>
 
         {/* Social login */}
