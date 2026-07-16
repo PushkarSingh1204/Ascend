@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
 import { getAnalyses, getCheckins, getWaterLog, getSleepLog, getJournals } from '../services/db';
+import { Card, Button, Badge, Skeleton } from '../components/DesignSystem';
 import { 
   ResponsiveContainer, 
   LineChart, 
@@ -43,6 +44,7 @@ export default function Insights() {
   const [water, setWater] = useState({ current: 0, target: 2000 });
   const [sleep, setSleep] = useState({ current: 0, target: 8.0 });
   const [journalsCount, setJournalsCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   // Dynamic statistics
   const [lifetimeStats, setLifetimeStats] = useState({
@@ -56,147 +58,128 @@ export default function Insights() {
     sleepHours: 0
   });
 
-  useEffect(() => {
-    const fetchInsightsData = async () => {
-      try {
-        const analyses = await getAnalyses() || [];
-        const reversed = [...analyses].reverse();
-        const formatted = reversed.map((item, idx) => ({
-          name: `Scan ${idx + 1}`,
-          harmony: item.facial_harmony_score,
-          symmetry: item.symmetry_score,
-          proportion: item.facial_proportion_score,
-          date: item.date
-        }));
-        setAnalysisData(formatted);
+  const fetchInsightsData = async () => {
+    try {
+      setLoading(true);
+      const analyses = await getAnalyses();
+      const safeAnalyses = Array.isArray(analyses) ? analyses : [];
+      const reversed = [...safeAnalyses].reverse();
+      const formatted = reversed.map((item, idx) => ({
+        name: `Scan ${idx + 1}`,
+        harmony: item.facial_harmony_score,
+        symmetry: item.symmetry_score,
+        proportion: item.facial_proportion_score,
+        date: item.date
+      }));
+      setAnalysisData(formatted);
 
-        const checkinDates = await getCheckins() || [];
-        setCheckins(checkinDates);
+      const checkinDates = await getCheckins();
+      const safeCheckins = Array.isArray(checkinDates) ? checkinDates : [];
+      setCheckins(safeCheckins);
 
-        const waterLog = await getWaterLog() || { current: 0, target: 2000 };
-        setWater(waterLog);
+      const waterLog = await getWaterLog() || { current: 0, target: 2000 };
+      setWater(waterLog);
 
-        const sleepLog = await getSleepLog() || { current: 0, target: 8.0 };
-        setSleep(sleepLog);
+      const sleepLog = await getSleepLog() || { current: 0, target: 8.0 };
+      setSleep(sleepLog);
 
-        const journals = await getJournals() || [];
-        setJournalsCount(journals.length);
+      const journals = await getJournals();
+      const safeJournals = Array.isArray(journals) ? journals : [];
+      setJournalsCount(safeJournals.length);
 
-        // Calculate dynamic stats
-        const totalXP = xp || 0;
-        const analysesLen = analyses.length;
-        const streakMax = user?.profile?.longest_streak || streak || 7;
-        const jLen = journals.length;
-        const photosCount = analysesLen * 2;
-        const routineCount = checkinDates.length * 4 + analysesLen * 2;
-        const totalWater = checkinDates.length * 1850 + waterLog.current;
-        const totalSleep = checkinDates.length * 7.2 + sleepLog.current;
+      // Calculate dynamic stats
+      const totalXP = xp || 0;
+      const analysesLen = safeAnalyses.length;
+      const streakMax = user?.profile?.longest_streak || streak || 7;
+      const jLen = safeJournals.length;
+      const photosCount = analysesLen * 2;
+      const routineCount = safeCheckins.length * 4 + analysesLen * 2;
+      const totalWater = Math.round((safeCheckins.length * 1850 + waterLog.current) / 1000);
+      const totalSleep = Math.round(safeCheckins.length * 7.2 + sleepLog.current);
 
-        setLifetimeStats({
-          totalXp: totalXP,
-          longestStreak: streakMax,
-          analysesCompleted: analysesLen,
-          journalEntries: jLen,
-          photosUploaded: photosCount,
-          routinesCompleted: routineCount,
-          waterLogged: Math.round(totalWater / 100) / 10, // In Liters
-          sleepHours: Math.round(totalSleep)
-        });
-      } catch (err) {
-        console.error("Insights logs fetch error:", err);
-      }
-    };
-    fetchInsightsData();
-  }, [xp, streak, user]);
-
-  const chartMockData = [
-    { name: 'Mon', water: 1500, sleep: 7.0 },
-    { name: 'Tue', water: 2000, sleep: 6.5 },
-    { name: 'Wed', water: 2250, sleep: 7.5 },
-    { name: 'Thu', water: 1800, sleep: 8.0 },
-    { name: 'Fri', water: 2400, sleep: 7.0 },
-    { name: 'Sat', water: water.current, sleep: sleep.current }
-  ];
-
-  // CSV Exporter Helper
-  const exportToCSV = (filename, headers, rows) => {
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleExportCSV = (type) => {
-    if (type === 'habits') {
-      const headers = ['Date', 'Checkin Done', 'Routine Completed'];
-      const rows = checkins.map(date => [date, 'Yes', 'Yes']);
-      exportToCSV('ascend_habit_logs.csv', headers, rows);
-    } else if (type === 'sleep') {
-      const headers = ['Date', 'Sleep Hours', 'Target Hours'];
-      const rows = checkins.map((date, idx) => [date, (7.0 + (idx % 3) * 0.5).toFixed(1), '8.0']);
-      exportToCSV('ascend_sleep_logs.csv', headers, rows);
-    } else if (type === 'water') {
-      const headers = ['Date', 'Water intake (ml)', 'Target (ml)'];
-      const rows = checkins.map((date, idx) => [date, (1800 + (idx % 2) * 400).toString(), '2000']);
-      exportToCSV('ascend_water_logs.csv', headers, rows);
+      setLifetimeStats({
+        totalXp: totalXP,
+        longestStreak: streakMax,
+        analysesCompleted: analysesLen,
+        journalEntries: jLen,
+        photosUploaded: photosCount,
+        routinesCompleted: routineCount,
+        waterLogged: totalWater,
+        sleepHours: totalSleep
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Mock PDF Generation using Print Frame
-  const triggerPDFPrint = (title) => {
+  useEffect(() => {
+    fetchInsightsData();
+  }, [xp, streak]);
+
+  // Chart placeholder data if no inputs are filled yet
+  const chartMockData = [
+    { name: 'Mon', sleep: 7.0, water: 1500 },
+    { name: 'Tue', sleep: 7.5, water: 2200 },
+    { name: 'Wed', sleep: 6.8, water: 1800 },
+    { name: 'Thu', sleep: 8.0, water: 2500 },
+    { name: 'Fri', sleep: 7.2, water: 2000 },
+    { name: 'Sat', sleep: sleep.current > 0 ? sleep.current : 7.0, water: water.current > 0 ? water.current : 1500 },
+    { name: 'Sun', sleep: 8.2, water: 2400 }
+  ];
+
+  const handlePrintPdf = () => {
     const printContent = `
       <html>
         <head>
-          <title>${title}</title>
+          <title>Ascend Transformation Report — ${new Date().toLocaleDateString()}</title>
           <style>
-            body { font-family: sans-serif; padding: 40px; color: #111; background-color: #fff; }
-            h1 { font-size: 24px; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
-            .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 30px; }
-            .stat-card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; }
-            .stat-val { font-size: 20px; font-weight: bold; color: #4f46e5; margin-top: 5px; }
-            .disclaimer { font-size: 10px; color: #666; margin-top: 50px; text-align: center; }
+            body { font-family: sans-serif; background-color: #ffffff; color: #1a1a1a; padding: 40px; }
+            h1 { font-size: 28px; border-bottom: 2px solid #863bff; padding-bottom: 12px; margin-bottom: 30px; }
+            h2 { font-size: 20px; color: #863bff; margin-top: 40px; }
+            .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-top: 20px; }
+            .stat-card { border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; }
+            .stat-val { font-size: 24px; font-weight: 800; color: #863bff; margin-top: 8px; }
           </style>
         </head>
         <body>
-          <h1>ASCEND INSIGHTS REPORT - ${title.toUpperCase()}</h1>
-          <p>Generated on: ${new Date().toLocaleDateString()}</p>
-          <p>User: ${user?.profile?.name || 'User'}</p>
-          <div class="stat-grid">
+          <h1>Ascend Self-Transformation Report</h1>
+          <p>Generated for: <strong>${user?.email || 'Ascend User'}</strong> on ${new Date().toLocaleDateString()}</p>
+          
+          <h2>Lifetime Metrics Overview</h2>
+          <div class="grid">
             <div class="stat-card">
-              <div>Lifetime XP</div>
+              <div>Total Experience</div>
               <div class="stat-val">${lifetimeStats.totalXp} XP</div>
             </div>
             <div class="stat-card">
-              <div>Analyses Completed</div>
+              <div>Longest Login Streak</div>
+              <div class="stat-val">${lifetimeStats.longestStreak} Days</div>
+            </div>
+            <div class="stat-card">
+              <div>Biometric Harmony Scans</div>
               <div class="stat-val">${lifetimeStats.analysesCompleted} Scans</div>
             </div>
             <div class="stat-card">
-              <div>Streak Length</div>
-              <div class="stat-val">${streak} Days</div>
-            </div>
-            <div class="stat-card">
-              <div>Sleep Averaged</div>
-              <div class="stat-val">${lifetimeStats.sleepHours} Hours</div>
+              <div>Reflection Journal Notes</div>
+              <div class="stat-val">${lifetimeStats.journalEntries} Entries</div>
             </div>
           </div>
-          <div class="disclaimer">
-            * Ascend is a private self-improvement platform. All metrics are structural estimates.
-          </div>
+          
+          <h2>Data Guidelines Disclaimer</h2>
+          <p style="font-size: 11px; color: #718096; margin-top: 40px; border-t: 1px solid #edf2f7; padding-top: 15px;">
+            All metrics represent automated geometric estimates computed client-side. Ascend is a habit tracking tool and does not provide medical or scientific diagnosis.
+          </p>
         </body>
       </html>
     `;
+
     const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = '0';
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0px';
+    iframe.style.height = '0px';
+    iframe.style.border = 'none';
     document.body.appendChild(iframe);
     
     const doc = iframe.contentWindow.document;
@@ -211,15 +194,25 @@ export default function Insights() {
     }, 500);
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6 py-6">
+        <Skeleton variant="rect" height="100px" />
+        <Skeleton variant="rect" height="340px" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8 animate-fade-in text-foreground pb-12 max-w-4xl mx-auto">
+    <div className="space-y-8 animate-fade-in text-foreground pb-16 max-w-4xl mx-auto">
       
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">
+        <span className="text-[9px] font-black text-primary uppercase tracking-widest block mb-1">Telemetry Command</span>
+        <h1 className="text-3xl font-black tracking-tight mb-2">
           Insights & Reports
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
           Track structural harmony statistics, export local habits database logs, and generate PDF summaries.
         </p>
       </div>
@@ -228,19 +221,19 @@ export default function Insights() {
       <div className="flex border-b border-border">
         <button
           onClick={() => setActiveSubTab('charts')}
-          className={`px-5 py-3 text-xs font-bold border-b-2 transition-all ${activeSubTab === 'charts' ? 'border-indigo-500 text-foreground' : 'border-transparent text-muted-foreground hover:text-neutral-350'}`}
+          className={`px-5 py-3 text-xs font-bold border-b-2 transition-all cursor-pointer ${activeSubTab === 'charts' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
           Trend Analytics
         </button>
         <button
           onClick={() => setActiveSubTab('stats')}
-          className={`px-5 py-3 text-xs font-bold border-b-2 transition-all ${activeSubTab === 'stats' ? 'border-indigo-500 text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          className={`px-5 py-3 text-xs font-bold border-b-2 transition-all cursor-pointer ${activeSubTab === 'stats' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
           Lifetime Statistics
         </button>
         <button
           onClick={() => setActiveSubTab('export')}
-          className={`px-5 py-3 text-xs font-bold border-b-2 transition-all ${activeSubTab === 'export' ? 'border-indigo-500 text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+          className={`px-5 py-3 text-xs font-bold border-b-2 transition-all cursor-pointer ${activeSubTab === 'export' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
           Export Center
         </button>
@@ -250,9 +243,9 @@ export default function Insights() {
       {activeSubTab === 'charts' && (
         <div className="space-y-6">
           {/* Biometric Scores trendlines */}
-          <div className="glassmorphism border border-border p-6 rounded-2xl shadow-xl space-y-4">
-            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-              <TrendingUp size={16} className="text-blue-400" />
+          <Card className="p-6 space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+              <TrendingUp size={14} className="text-blue-400" />
               Symmetry & Harmony Trends
             </h3>
 
@@ -264,12 +257,12 @@ export default function Insights() {
                     <XAxis dataKey="name" stroke="#6b7280" style={{ fontSize: 10 }} />
                     <YAxis domain={[40, 100]} stroke="#6b7280" style={{ fontSize: 10 }} />
                     <Tooltip 
-                      contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px' }}
-                      labelStyle={{ color: 'hsl(var(--foreground))', fontSize: 11, fontWeight: 'bold' }}
+                      contentStyle={{ background: '#0a0a0f', border: '1px solid #1f1f2e', borderRadius: '12px' }}
+                      labelStyle={{ color: '#ffffff', fontSize: 11, fontWeight: 'bold' }}
                     />
-                    <Line type="monotone" dataKey="harmony" name="Harmony" stroke="#3b82f6" strokeWidth={2.5} activeDot={{ r: 6 }} />
-                    <Line type="monotone" dataKey="symmetry" name="Symmetry" stroke="#6366f1" strokeWidth={2} />
-                    <Line type="monotone" dataKey="proportion" name="Proportion" stroke="#a855f7" strokeWidth={2} />
+                    <Line type="monotone" dataKey="harmony" name="Harmony" stroke="#863bff" strokeWidth={2.5} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="symmetry" name="Symmetry" stroke="#2563eb" strokeWidth={2} />
+                    <Line type="monotone" dataKey="proportion" name="Proportion" stroke="#06b6d4" strokeWidth={2} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -284,13 +277,13 @@ export default function Insights() {
                 />
               </div>
             )}
-          </div>
+          </Card>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Sleep Bar Chart */}
-            <div className="glassmorphism border border-border p-6 rounded-2xl shadow-xl space-y-4">
-              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                <Moon size={16} className="text-indigo-400" />
+            <Card className="p-6 space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                <Moon size={14} className="text-indigo-400 animate-pulse" />
                 Sleep Log (Last 7 Days)
               </h3>
               <div className="w-full h-56 pt-4">
@@ -299,17 +292,17 @@ export default function Insights() {
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
                     <XAxis dataKey="name" stroke="#6b7280" style={{ fontSize: 10 }} />
                     <YAxis domain={[0, 10]} stroke="#6b7280" style={{ fontSize: 10 }} />
-                    <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px' }} />
-                    <Bar dataKey="sleep" name="Sleep Hours" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                    <Tooltip contentStyle={{ background: '#0a0a0f', border: '1px solid #1f1f2e', borderRadius: '12px' }} />
+                    <Bar dataKey="sleep" name="Sleep Hours" fill="#863bff" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            </div>
+            </Card>
 
             {/* Water Bar Chart */}
-            <div className="glassmorphism border border-border p-6 rounded-2xl shadow-xl space-y-4">
-              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                <Droplet size={16} className="text-blue-400" />
+            <Card className="p-6 space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                <Droplet size={14} className="text-blue-400" />
                 Hydration Log (Last 7 Days)
               </h3>
               <div className="w-full h-56 pt-4">
@@ -318,12 +311,12 @@ export default function Insights() {
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
                     <XAxis dataKey="name" stroke="#6b7280" style={{ fontSize: 10 }} />
                     <YAxis domain={[0, 3000]} stroke="#6b7280" style={{ fontSize: 10 }} />
-                    <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px' }} />
-                    <Bar dataKey="water" name="Water (ml)" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    <Tooltip contentStyle={{ background: '#0a0a0f', border: '1px solid #1f1f2e', borderRadius: '12px' }} />
+                    <Bar dataKey="water" name="Water (ml)" fill="#863bff" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            </div>
+            </Card>
           </div>
         </div>
       )}
@@ -333,7 +326,7 @@ export default function Insights() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {[
             { label: 'Total Experience', val: `${lifetimeStats.totalXp} XP`, icon: Award, color: 'text-indigo-400' },
-            { label: 'Longest Streak', val: `${lifetimeStats.longestStreak} Days`, icon: Flame, color: 'text-orange-400' },
+            { label: 'Longest Streak', val: `${lifetimeStats.longestStreak} Days`, icon: Flame, color: 'text-orange-400 animate-pulse' },
             { label: 'Analyses Finished', val: `${lifetimeStats.analysesCompleted} Scans`, icon: Sparkles, color: 'text-blue-400' },
             { label: 'Journal Logs', val: `${lifetimeStats.journalEntries} Notes`, icon: BookOpen, color: 'text-purple-400' },
             { label: 'Photos Uploaded', val: `${lifetimeStats.photosUploaded} Images`, icon: Camera, color: 'text-cyan-400' },
@@ -343,15 +336,15 @@ export default function Insights() {
           ].map((stat, idx) => {
             const Icon = stat.icon;
             return (
-              <div key={idx} className="glassmorphism p-5 rounded-2xl border border-border flex flex-col justify-between h-28">
+              <Card key={idx} className="p-5 flex flex-col justify-between h-28 bg-secondary/15">
                 <div className="flex justify-between items-start">
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+                  <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-black">
                     {stat.label}
                   </span>
-                  <Icon size={14} className={stat.color} />
+                  <Icon size={14} className={`${stat.color}`} />
                 </div>
-                <div className="text-xl font-black text-foreground mt-4">{stat.val}</div>
-              </div>
+                <span className="text-xl font-black text-foreground block mt-2">{stat.val}</span>
+              </Card>
             );
           })}
         </div>
@@ -359,83 +352,43 @@ export default function Insights() {
 
       {/* TAB 3: EXPORT CENTER */}
       {activeSubTab === 'export' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* PDF Reports Card */}
-          <div className="glassmorphism p-6 rounded-2xl border border-border space-y-4 flex flex-col justify-between">
-            <div className="space-y-2">
-              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                <FileText size={16} className="text-indigo-400" />
-                Transformation PDF Summaries
-              </h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Generate beautifully structured print-ready PDF reports summarizing your consistency ratios, streak history, and scanning stats.
-              </p>
+        <Card className="p-6 max-w-xl mx-auto space-y-6">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
+              <FileText size={18} />
             </div>
-            
-            <div className="space-y-2.5 pt-4">
-              <button 
-                onClick={() => triggerPDFPrint('Weekly Transformation Review')}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-border bg-card/60 hover:bg-neutral-850 transition-colors text-xs font-bold text-foreground cursor-pointer"
-              >
-                <span>Weekly Summary Report (PDF)</span>
-                <Download size={12} className="text-primary" />
-              </button>
-              <button 
-                onClick={() => triggerPDFPrint('Monthly Transformation Progress')}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-border bg-card/60 hover:bg-neutral-850 transition-colors text-xs font-bold text-foreground cursor-pointer"
-              >
-                <span>Monthly Progress Report (PDF)</span>
-                <Download size={12} className="text-primary" />
-              </button>
-              <button 
-                onClick={() => triggerPDFPrint('Overall Transformation Summary')}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-border bg-card/60 hover:bg-neutral-850 transition-colors text-xs font-bold text-foreground cursor-pointer"
-              >
-                <span>Lifetime Transformation Summary (PDF)</span>
-                <Download size={12} className="text-primary" />
-              </button>
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider">Download Transformation Report</h3>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                Compile your local check-in streaks, journal reflections, and symmetry score metrics into a printable PDF record sheet.
+              </p>
             </div>
           </div>
 
-          {/* CSV Database Logs Card */}
-          <div className="glassmorphism p-6 rounded-2xl border border-border space-y-4 flex flex-col justify-between">
-            <div className="space-y-2">
-              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                <Calendar size={16} className="text-blue-400" />
-                Raw Database Logs (CSV)
-              </h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Download comma-separated database records of your daily consistency metrics to import into Excel or Google Sheets.
-              </p>
-            </div>
-
-            <div className="space-y-2.5 pt-4">
-              <button 
-                onClick={() => handleExportCSV('habits')}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-border bg-card/60 hover:bg-neutral-850 transition-colors text-xs font-bold text-foreground cursor-pointer"
-              >
-                <span>Habits & Checkins Log (CSV)</span>
-                <Download size={12} className="text-blue-450" />
-              </button>
-              <button 
-                onClick={() => handleExportCSV('sleep')}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-border bg-card/60 hover:bg-neutral-850 transition-colors text-xs font-bold text-foreground cursor-pointer"
-              >
-                <span>Sleep Consistency Log (CSV)</span>
-                <Download size={12} className="text-blue-450" />
-              </button>
-              <button 
-                onClick={() => handleExportCSV('water')}
-                className="w-full flex items-center justify-between p-3 rounded-xl border border-border bg-card/60 hover:bg-neutral-850 transition-colors text-xs font-bold text-foreground cursor-pointer"
-              >
-                <span>Water Hydration Log (CSV)</span>
-                <Download size={12} className="text-blue-450" />
-              </button>
-            </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(lifetimeStats, null, 2));
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                downloadAnchor.setAttribute("download", `ascend-insights-${new Date().toISOString().slice(0,10)}.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+              }}
+            >
+              Export JSON
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handlePrintPdf}
+            >
+              <Download size={12} className="mr-1 shrink-0" />
+              <span>Print PDF Summary</span>
+            </Button>
           </div>
-
-        </div>
+        </Card>
       )}
 
     </div>

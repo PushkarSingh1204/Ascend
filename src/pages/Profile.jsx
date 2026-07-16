@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
 import { useTheme } from '../context/ThemeContext';
+import { Card, Button, Input, Badge, Skeleton } from '../components/DesignSystem';
 import { 
   User, 
   Settings, 
@@ -38,6 +39,7 @@ export default function Profile() {
   const [nameInput, setNameInput] = useState('');
   const [isPlus, setIsPlus] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Upload States
   const [isUploading, setIsUploading] = useState(false);
@@ -117,12 +119,12 @@ export default function Profile() {
 
   useEffect(() => {
     if (user && user.profile) {
-      setIsPlus(user.profile.is_premium || false);
+      setIsPlus(!!user.profile.is_premium);
       setNameInput(user.profile.name || '');
       if (user.profile.preferences) {
-        setMorningReminder(user.profile.preferences.morningReminder);
-        setNightReminder(user.profile.preferences.nightReminder);
-        setWeeklyDigest(user.profile.preferences.weeklyDigest);
+        setMorningReminder(!!user.profile.preferences.morningReminder);
+        setNightReminder(!!user.profile.preferences.nightReminder);
+        setWeeklyDigest(!!user.profile.preferences.weeklyDigest);
       }
     }
   }, [user]);
@@ -135,30 +137,38 @@ export default function Profile() {
   }, [searchParams]);
 
   const handleSavePreferences = async (e) => {
-    e.preventDefault();
-    const updated = await updateProfile({
-      name: nameInput,
-      preferences: {
-        morningReminder,
-        nightReminder,
-        weeklyDigest
-      }
-    });
-    setUser(prev => ({ ...prev, profile: updated }));
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 3000);
+    if (e) e.preventDefault();
+    try {
+      setLoading(true);
+      const updated = await updateProfile({
+        name: nameInput,
+        preferences: {
+          morningReminder,
+          nightReminder,
+          weeklyDigest
+        }
+      });
+      setUser(prev => ({ ...prev, profile: updated }));
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 3000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="space-y-8 animate-fade-in text-foreground max-w-4xl mx-auto pb-10">
+    <div className="space-y-8 animate-fade-in text-foreground max-w-4xl mx-auto pb-16">
       
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">
+        <span className="text-[9px] font-black text-primary uppercase tracking-widest block mb-1">Account settings</span>
+        <h1 className="text-3xl font-black tracking-tight mb-2">
           Profile Settings
         </h1>
-        <p className="text-sm text-muted-foreground">
-          Manage your daily reminders, preferences, and Ascend Plus membership.
+        <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
+          Manage your daily reminders, preferences, and Ascend Plus membership status.
         </p>
       </div>
 
@@ -169,16 +179,16 @@ export default function Profile() {
         <div className="lg:col-span-1 space-y-6">
           
           {/* Avatar Profile Box */}
-          <div className="glassmorphism border border-border p-6 rounded-2xl text-center flex flex-col items-center shadow-xl bg-card">
+          <Card className="p-6 text-center flex flex-col items-center">
             <div className="relative group w-20 h-20 mb-4">
               {user?.profile?.profile_photo_url ? (
                 <img 
                   src={getOptimizedUrl(user.profile.profile_photo_url, 160, 160)} 
                   alt="Profile" 
-                  className="w-20 h-20 rounded-full object-cover border-2 border-white/10 shadow-lg shadow-blue-500/25"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-white/10 shadow-lg shadow-primary/10"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-650 flex items-center justify-center text-white font-black text-3xl shadow-lg shadow-blue-500/25 border-2 border-white/10">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-primary to-purple-650 flex items-center justify-center text-white font-black text-3xl shadow-lg border-2 border-white/10">
                   {user?.profile?.name?.substring(0, 2).toUpperCase() || 'TR'}
                 </div>
               )}
@@ -228,8 +238,8 @@ export default function Profile() {
             {/* Premium tag status */}
             <div className="mt-4 w-full">
               {isPlus ? (
-                <div className="py-2.5 px-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold flex items-center justify-center gap-2">
-                  <ShieldCheck size={14} className="fill-indigo-400/20" />
+                <div className="py-2.5 px-4 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-bold flex items-center justify-center gap-2">
+                  <ShieldCheck size={14} className="fill-primary/20" />
                   Ascend Plus Active
                 </div>
               ) : (
@@ -238,11 +248,11 @@ export default function Profile() {
                 </div>
               )}
             </div>
-          </div>
+          </Card>
 
           {/* Core Stats Shelf */}
-          <div className="glassmorphism border border-border p-5 rounded-2xl shadow-xl space-y-4 bg-card">
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest border-b border-border pb-2">
+          <Card className="p-5 space-y-4">
+            <h3 className="text-[9px] font-black text-muted-foreground uppercase tracking-widest border-b border-border pb-2">
               Lifetime stats
             </h3>
 
@@ -268,7 +278,7 @@ export default function Profile() {
                 <strong className="text-foreground">{daysToAscend} days</strong>
               </div>
             </div>
-          </div>
+          </Card>
 
         </div>
 
@@ -277,34 +287,34 @@ export default function Profile() {
           
           {/* Ascend Plus Subscription Promo Card */}
           {!isPlus && (
-            <div className="glassmorphism p-6 rounded-2xl border border-primary bg-card shadow-xl relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6">
+            <Card className="p-6 relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6 border-primary/25 bg-gradient-to-br from-primary/5 via-transparent to-transparent">
               <div className="absolute -top-16 -right-16 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none"></div>
               
               <div className="space-y-2 text-center sm:text-left">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[9px] font-black uppercase tracking-wider">
                   <Sparkles size={10} />
                   <span>Ascend Plus Subscription</span>
                 </div>
-                <h3 className="text-lg font-black text-foreground">Unlock Unlimited Facial Scans</h3>
+                <h3 className="text-lg font-black text-foreground tracking-tight">Unlock Unlimited Facial Scans</h3>
                 <p className="text-xs text-muted-foreground max-w-md">
-                  Upgrade to Ascend Plus for $4.99/mo to unlock unlimited face scans, advanced analytics charts, and premium skincare posture templates.
+                  Upgrade to Ascend Plus for $9.99/mo to unlock unlimited face scans, advanced analytics charts, and premium skincare posture templates.
                 </p>
               </div>
 
-              <button
-                onClick={() => navigate('/payments?analysisId=upgrade_profile')}
-                className="px-6 py-3 rounded-xl font-bold text-xs text-primary-foreground bg-primary hover:opacity-90 transition-colors shadow-lg flex items-center gap-1.5 shrink-0 cursor-pointer"
+              <Button
+                variant="primary"
+                onClick={() => navigate('/payments?ref=profile_banner')}
               >
-                <CreditCard size={14} />
-                Get Plus ($4.99)
-              </button>
-            </div>
+                <CreditCard size={14} className="mr-1 shrink-0" />
+                <span>Get Plus ($9.99)</span>
+              </Button>
+            </Card>
           )}
 
           {/* Preferences forms */}
-          <div className="glassmorphism border border-border p-6 rounded-2xl shadow-xl bg-card">
-            <h3 className="text-base font-bold text-foreground mb-6 flex items-center gap-2 border-b border-border pb-3">
-              <Settings size={18} className="text-primary" />
+          <Card className="p-6">
+            <h3 className="text-xs font-bold text-foreground mb-6 flex items-center gap-2 border-b border-border pb-3 uppercase tracking-wider">
+              <Settings size={14} className="text-primary" />
               General Preferences
             </h3>
 
@@ -317,18 +327,18 @@ export default function Profile() {
             <form onSubmit={handleSavePreferences} className="space-y-6">
               {/* Profile Details */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Full Name</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Full Name</label>
                 <input
                   type="text"
                   value={nameInput}
                   onChange={(e) => setNameInput(e.target.value)}
-                  className="w-full bg-background border border-border rounded-xl py-3 px-4 text-xs text-foreground focus:outline-none focus:border-primary"
+                  className="w-full bg-secondary/20 border border-border rounded-xl py-3 px-4 text-xs text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
                 />
               </div>
 
               {/* Interface Theme preferences */}
               <div className="space-y-2.5 pt-4 border-t border-border">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Interface Theme</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Interface Theme</label>
                 <div className="grid grid-cols-3 gap-3">
                   {[
                     { id: 'dark', label: '🌙 Dark' },
@@ -339,7 +349,7 @@ export default function Profile() {
                       key={t.id}
                       type="button"
                       onClick={() => setTheme(t.id)}
-                      className={`py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${theme === t.id ? 'bg-primary/10 border-primary text-primary' : 'bg-background border-border text-muted-foreground hover:text-foreground'}`}
+                      className={`py-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${theme === t.id ? 'bg-primary/10 border-primary text-primary shadow-[0_4px_12px_rgba(134,59,255,0.15)]' : 'bg-secondary/40 border-border text-muted-foreground hover:text-foreground'}`}
                     >
                       {t.label}
                     </button>
@@ -349,15 +359,15 @@ export default function Profile() {
 
               {/* Notification preferences */}
               <div className="space-y-3.5 pt-4 border-t border-border">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block flex items-center gap-1.5">
-                  <Bell size={14} className="text-muted-foreground" /> Reminders & Digest Toggles
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block flex items-center gap-1.5">
+                  <Bell size={12} className="text-muted-foreground" /> Reminders & Digest Toggles
                 </label>
                 
                 <div className="space-y-3">
                   <button
                     type="button"
                     onClick={() => setMorningReminder(!morningReminder)}
-                    className="w-full flex items-center justify-between p-3 rounded-xl bg-background border border-border text-xs text-left cursor-pointer"
+                    className="w-full flex items-center justify-between p-3 rounded-xl bg-[#0c0c14] border border-border text-xs text-left cursor-pointer"
                   >
                     <div>
                       <span className="font-bold text-foreground block">Morning Routine Alert</span>
@@ -371,7 +381,7 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => setNightReminder(!nightReminder)}
-                    className="w-full flex items-center justify-between p-3 rounded-xl bg-background border border-border text-xs text-left cursor-pointer"
+                    className="w-full flex items-center justify-between p-3 rounded-xl bg-[#0c0c14] border border-border text-xs text-left cursor-pointer"
                   >
                     <div>
                       <span className="font-bold text-foreground block">Night Routine Alert</span>
@@ -385,7 +395,7 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => setWeeklyDigest(!weeklyDigest)}
-                    className="w-full flex items-center justify-between p-3 rounded-xl bg-background border border-border text-xs text-left cursor-pointer"
+                    className="w-full flex items-center justify-between p-3 rounded-xl bg-[#0c0c14] border border-border text-xs text-left cursor-pointer"
                   >
                     <div>
                       <span className="font-bold text-foreground block">Weekly Digest Email</span>
@@ -400,31 +410,34 @@ export default function Profile() {
 
               {/* Reset/Re-onboard actions */}
               <div className="space-y-3 pt-4 border-t border-border">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Account Actions</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Account Actions</span>
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <button
+                  <Button
+                    variant="secondary"
                     type="button"
                     onClick={() => navigate('/profile?action=reonboard')}
-                    className="flex-1 py-3 rounded-xl border border-border bg-background hover:bg-secondary/40 text-xs font-bold text-foreground flex items-center justify-center gap-1.5 cursor-pointer"
+                    fullWidth
                   >
-                    <RefreshCw size={12} />
-                    Reset Focus Area (Re-onboard)
-                  </button>
+                    <RefreshCw size={12} className="mr-1 shrink-0" />
+                    <span>Reset Focus Area (Re-onboard)</span>
+                  </Button>
                 </div>
               </div>
 
               {/* Save changes CTA */}
               <div className="pt-4 border-t border-border">
-                <button
+                <Button
+                  variant="primary"
                   type="submit"
-                  className="w-full py-3 rounded-xl font-bold text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity shadow-lg flex items-center justify-center gap-1.5 cursor-pointer"
+                  fullWidth
+                  disabled={loading}
                 >
-                  Save Settings Preferences
-                </button>
+                  {loading ? 'Saving...' : 'Save Settings Preferences'}
+                </Button>
               </div>
 
             </form>
-          </div>
+          </Card>
 
         </div>
 
