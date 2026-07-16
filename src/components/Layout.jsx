@@ -66,7 +66,7 @@ export default function Layout({ children }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-mesh text-foreground flex flex-col md:flex-row transition-colors duration-350">
+    <div className="min-h-screen bg-background bg-mesh text-foreground flex flex-col md:flex-row transition-colors duration-350">
       {/* Sidebar Navigation (with collapsible state control) */}
       <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       
