@@ -36,6 +36,22 @@ export default function Layout({ children }) {
   
   // Notification menu dropdown open state
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+  // Network state
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
   
   // Keyboard shortcut listener for Ctrl+K
   useEffect(() => {
@@ -58,6 +74,12 @@ export default function Layout({ children }) {
       <div 
         className={`flex-1 min-h-screen overflow-x-hidden pt-14 pb-20 md:pt-0 md:pb-0 transition-all duration-300 flex flex-col ${isCollapsed ? 'md:pl-[76px]' : 'md:pl-64'}`}
       >
+        {!isOnline && (
+          <div className="bg-red-500/10 border-b border-red-500/20 px-8 py-2.5 text-center text-xs font-bold text-red-400 flex items-center justify-center gap-2 animate-pulse shrink-0">
+            <span className="w-2 h-2 rounded-full bg-red-400"></span>
+            <span>You are currently offline. Cloud uploads and sync features are temporarily suspended.</span>
+          </div>
+        )}
         
         {/* Top Header Bar (Desktop Only) */}
         <header className="hidden md:flex items-center justify-between px-8 py-4 border-b border-border bg-card/10 backdrop-blur-md">
