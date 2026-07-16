@@ -5,11 +5,13 @@ import { useAuth } from '../context/AuthContext';
 import { getProgressPhotos, addProgressPhoto, deleteProgressPhoto, getJournals, getProfile, BADGES } from '../services/db';
 import { uploadProgressPhoto, getOptimizedUrl, validateImageFile } from '../services/cloudinary';
 import ImageSlider from '../components/ImageSlider';
-import { Camera, Calendar, PlusCircle, Trash, Sliders, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { Card, Button, ProgressRing, Badge, Skeleton } from '../components/DesignSystem';
+import { Camera, Calendar, PlusCircle, Trash, Sliders, RefreshCw, CheckCircle2, X } from 'lucide-react';
 import EmptyState from '../components/EmptyState';
 
 export default function Progress() {
   const { addXP } = useGame();
+  const { user } = useAuth();
   
   // Gallery, slider, and timeline states
   const [photos, setPhotos] = useState([]);
@@ -48,19 +50,22 @@ export default function Progress() {
   const loadProgressData = async () => {
     try {
       setLoading(true);
-      const list = await getProgressPhotos() || [];
-      setPhotos(list);
-      if (list.length > 0) {
+      const list = await getProgressPhotos();
+      const safeList = Array.isArray(list) ? list : [];
+      setPhotos(safeList);
+      if (safeList.length > 0) {
         setBeforePhotoIdx(0);
-        setAfterPhotoIdx(list.length - 1);
+        setAfterPhotoIdx(safeList.length - 1);
       }
 
-      const journals = await getJournals() || [];
+      const journals = await getJournals();
+      const safeJournals = Array.isArray(journals) ? journals : [];
       const profile = await getProfile();
       const unlocked = profile?.unlocked_badges || [];
+      const safeUnlocked = Array.isArray(unlocked) ? unlocked : [];
       const joinDate = profile?.join_date || '2026-05-25';
 
-      const photoItems = list.map(p => ({
+      const photoItems = safeList.map(p => ({
         id: p.id,
         date: p.date,
         type: 'photo',
@@ -70,7 +75,7 @@ export default function Progress() {
         publicId: p.publicId
       }));
 
-      const journalItems = journals.map(j => ({
+      const journalItems = safeJournals.map(j => ({
         id: j.id,
         date: j.date,
         type: 'journal',
@@ -80,12 +85,12 @@ export default function Progress() {
         mood: j.mood
       }));
 
-      const badgeItems = unlocked.map((badgeId) => {
+      const badgeItems = safeUnlocked.map((badgeId) => {
         const badge = BADGES.find(b => b.id === badgeId);
         if (!badge) return null;
         let bDate = joinDate;
-        if (badgeId === 'journal_entry' && journals.length > 0) {
-          bDate = journals[journals.length - 1].date;
+        if (badgeId === 'journal_entry' && safeJournals.length > 0) {
+          bDate = safeJournals[safeJournals.length - 1].date;
         } else if (badgeId === 'routine_pioneer') {
           bDate = '2026-06-01';
         } else if (badgeId === 'premium_unlocked') {
@@ -180,15 +185,14 @@ export default function Progress() {
         setPreviewUrl(null);
       }
 
-      setPhotos(updated);
       setSuccessAnimation(true);
-
-      // Keep modal open for success animation, then close
+      setSelectedPhoto(null);
+      setNotes('');
+      
       setTimeout(() => {
         setIsUploading(false);
+        setUploadingState(false);
         setSuccessAnimation(false);
-        setSelectedPhoto(null);
-        setNotes('');
         loadProgressData();
       }, 1500);
 
@@ -197,428 +201,386 @@ export default function Progress() {
       if (err.message === "Upload cancelled by user.") {
         setError("Upload was cancelled.");
       } else {
-        setError(err.message || 'Photo upload failed. Please verify your connection.');
+        setError(err.message || 'Image upload failed. Please try again.');
       }
-    } finally {
       setUploadingState(false);
+    } finally {
       setCancelUpload(null);
     }
   };
 
-  const handleCloseModal = () => {
-    setIsUploading(false);
-    setError('');
-    setSelectedPhoto(null);
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
-    }
-    if (cancelUpload) {
-      cancelUpload();
-      setCancelUpload(null);
-    }
+  const handleCancelClick = () => {
+    if (cancelUpload) cancelUpload();
+    setUploadingState(false);
+    setError("Upload cancelled by user.");
   };
 
-  const handleDeletePhoto = async (id, publicId) => {
+  const handleDeletePhoto = async (photoId, publicId) => {
+    if (!window.confirm("Are you sure you want to delete this progress photo?")) return;
+
     try {
       setLoading(true);
-      const updated = await deleteProgressPhoto(id, publicId);
-      setPhotos(updated);
+      await deleteProgressPhoto(photoId, publicId);
       await loadProgressData();
     } catch (err) {
-      console.error("Delete photo error:", err);
-    } finally {
+      console.error(err);
+      alert("Failed to delete progress photo.");
       setLoading(false);
     }
   };
 
-  const beforePhoto = photos[beforePhotoIdx];
-  const afterPhoto = photos[afterPhotoIdx];
+  if (loading) {
+    return (
+      <div className="space-y-6 py-6">
+        <Skeleton variant="rect" height="340px" />
+        <Skeleton variant="rect" height="400px" />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8 animate-fade-in text-foreground pb-12 max-w-4xl mx-auto">
+    <div className="space-y-8 animate-fade-in text-foreground max-w-4xl mx-auto pb-16">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-2">
-            Progress Monitor
+          <span className="text-[9px] font-black text-primary uppercase tracking-widest block mb-1">Visual Tracker</span>
+          <h1 className="text-3xl font-black tracking-tight mb-2">
+            Progress Slider & Log
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Document visual transformations, slide side-by-side matches, and track your consistency milestones.
+          <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
+            Document your physical alignment and log structural checkins. Compare past records using the crossfade slider interface.
           </p>
         </div>
-        <button
+
+        <Button
+          variant="primary"
           onClick={() => setIsUploading(true)}
-          className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-xs text-primary-foreground bg-primary hover:opacity-90 transition-colors shadow-lg cursor-pointer"
         >
-          <Camera size={14} />
-          Upload Photo
-        </button>
+          <Camera size={14} className="mr-1 shrink-0" />
+          <span>Upload Progress Photo</span>
+        </Button>
       </div>
 
-      {loading ? (
-        <div className="py-20 text-center text-xs text-muted-foreground flex flex-col items-center gap-2">
-          <span className="w-8 h-8 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin"></span>
-          <span>Loading Progress logs...</span>
-        </div>
-      ) : (
-        <>
-          {/* DRAGGABLE BEFORE/AFTER IMAGE SLIDER SECTION */}
-          {photos.length >= 2 ? (
-            <section className="glassmorphism p-6 rounded-2xl border border-border bg-card shadow-xl space-y-6">
-              <div className="flex justify-between items-center border-b border-border pb-3">
-                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                  <Sliders size={16} className="text-primary" />
-                  Interactive Compare Slider
-                </h3>
-                <span className="text-[10px] font-bold text-muted-foreground">
-                  DRAG VERTICAL HANDLE
-                </span>
-              </div>
+      {/* BEFORE / AFTER PHOTO CROSSFADE COMPARISON SLIDER */}
+      <section className="space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+          <Sliders size={14} className="text-primary" />
+          Interactive Crossfade Slider
+        </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-center">
-                
-                {/* Draggable Slider Wrapper */}
-                <div className="md:col-span-3 flex justify-center">
-                  {beforePhoto && afterPhoto && (
-                    <div className="w-full max-w-[340px] aspect-[3/4] rounded-xl overflow-hidden border border-border shadow-2xl relative">
-                      <ImageSlider 
-                        beforeImage={getOptimizedUrl(beforePhoto.photo_url, 400, 533)} 
-                        afterImage={getOptimizedUrl(afterPhoto.photo_url, 400, 533)} 
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Selection Panel controls */}
-                <div className="md:col-span-2 space-y-4">
-                  {/* Select Before Image */}
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Select Baseline (Before)</span>
-                    <div className="space-y-1.5 max-h-[110px] overflow-y-auto pr-1 border border-border rounded-xl p-1 bg-background">
-                      {photos.map((p, idx) => (
-                        <button
-                          key={p.id}
-                          onClick={() => setBeforePhotoIdx(idx)}
-                          className={`w-full flex justify-between p-2 rounded-lg text-[10px] font-bold transition-colors cursor-pointer ${beforePhotoIdx === idx ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-transparent border border-transparent text-muted-foreground hover:text-foreground'}`}
-                        >
-                          <span>Week {p.week_number} Profile</span>
-                          <span className="text-[9px] text-muted-foreground">{p.date}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Select After Image */}
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">Select Current (After)</span>
-                    <div className="space-y-1.5 max-h-[110px] overflow-y-auto pr-1 border border-border rounded-xl p-1 bg-background">
-                      {photos.map((p, idx) => (
-                        <button
-                          key={p.id}
-                          onClick={() => setAfterPhotoIdx(idx)}
-                          className={`w-full flex justify-between p-2 rounded-lg text-[10px] font-bold transition-colors cursor-pointer ${afterPhotoIdx === idx ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-transparent border border-transparent text-muted-foreground hover:text-foreground'}`}
-                        >
-                          <span>Week {p.week_number} Profile</span>
-                          <span className="text-[9px] text-muted-foreground">{p.date}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-          ) : (
-            <section className="glassmorphism p-12 border border-border rounded-2xl text-center space-y-4 bg-card">
-              <span className="text-3xl block">📸</span>
-              <h3 className="text-lg font-bold text-foreground">Compare Slider Locked</h3>
-              <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                You need to upload at least **two** progress photos to unlock the side-by-side draggable comparison slider.
-              </p>
-              <div className="pt-2">
-                <button
-                  onClick={() => setIsUploading(true)}
-                  className="px-5 py-2.5 rounded-xl font-bold text-xs text-primary-foreground bg-primary hover:opacity-90 transition-colors shadow-lg cursor-pointer"
-                >
-                  Upload Your First Photo
-                </button>
-              </div>
-            </section>
-          )}
-
-          {/* Unified chronological timeline feed */}
-          <section className="space-y-6">
-            <div>
-              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                <Calendar size={18} className="text-primary" />
-                Transformation Timeline Feed
-              </h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                A chronological feed combining progress photos, reflection journals, and badge milestones.
-              </p>
-            </div>
-
-            {/* Filters Panel */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-card p-4 rounded-xl border border-border">
-              {/* Keyword Search */}
-              <div className="space-y-1">
-                <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Search Text</label>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Keyword..."
-                  className="w-full text-xs bg-background border border-border focus:border-primary rounded-lg px-3 py-1.5 outline-none text-foreground placeholder-muted-foreground"
-                />
-              </div>
-
-              {/* Type Selector */}
-              <div className="space-y-1">
-                <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Type</label>
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  className="w-full text-xs bg-background border border-border focus:border-primary rounded-lg px-2.5 py-1.5 outline-none text-foreground cursor-pointer"
-                >
-                  <option value="all">All Types</option>
-                  <option value="photo">Photos Only</option>
-                  <option value="journal">Journals Only</option>
-                  <option value="badge">Achievements Only</option>
-                </select>
-              </div>
-
-              {/* Date Selector */}
-              <div className="space-y-1">
-                <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Date</label>
-                <input
-                  type="date"
-                  value={filterDate}
-                  onChange={(e) => setFilterDate(e.target.value)}
-                  className="w-full text-xs bg-background border border-border focus:border-primary rounded-lg px-2.5 py-1.5 outline-none text-foreground"
-                />
-              </div>
-            </div>
-
-            {filteredTimelineItems.length > 0 ? (
-              <div className="relative border-l border-border ml-4 pl-6 space-y-8 py-2">
-                {filteredTimelineItems.map((item) => {
-                  return (
-                    <div key={item.id} className="relative group">
-                      <span className="absolute -left-10 top-1.5 w-8 h-8 rounded-xl bg-background border border-border flex items-center justify-center text-xs group-hover:border-neutral-500 transition-colors z-10">
-                        {item.type === 'photo' ? '📸' : item.type === 'journal' ? '📝' : '🏆'}
-                      </span>
-                      
-                      <div className="glassmorphism p-5 rounded-2xl border border-border shadow-md space-y-4 max-w-2xl bg-card hover:bg-card/85 transition-colors animate-fade-in">
-                        
-                        <div className="flex justify-between items-center text-xs">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-foreground text-sm">{item.title}</span>
-                            <span className="text-[10px] uppercase font-extrabold tracking-widest text-muted-foreground bg-background px-2.5 py-0.5 rounded border border-border">
-                              {item.type}
-                            </span>
-                          </div>
-                          <span className="text-muted-foreground">{item.date}</span>
-                        </div>
-
-                        {item.type === 'photo' && (
-                          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                            <img 
-                              src={getOptimizedUrl(item.photoUrl, 160, 160)} 
-                              alt="Progress photo" 
-                              className="w-24 h-24 rounded-xl object-cover border border-border shrink-0"
-                              loading="lazy"
-                            />
-                            <div className="flex-1 flex justify-between items-start">
-                              <p className="text-xs text-muted-foreground leading-normal italic">
-                                "{item.notes || 'No description logged.'}"
-                              </p>
-                              <button
-                                onClick={() => handleDeletePhoto(item.id, item.publicId)}
-                                className="text-[9px] text-red-400 hover:underline flex items-center gap-1 shrink-0 p-1 cursor-pointer"
-                              >
-                                <Trash size={10} />
-                                Delete
-                              </button>
-                            </div>
-                          </div>
-                        )}
-
-                        {item.type === 'journal' && (
-                          <div className="space-y-3 text-xs">
-                            <div className="flex items-center gap-2">
-                              <span className="text-muted-foreground font-bold uppercase tracking-wider text-[10px]">Mood:</span>
-                              <span className="px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold text-[10px]">
-                                {item.mood === 1 ? '😫 Stressed' : item.mood === 2 ? '😒 Low' : item.mood === 3 ? '😐 Neutral' : item.mood === 4 ? '🙂 Good' : '⚡ Focused'}
-                              </span>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              <div className="space-y-1">
-                                <span className="text-[9px] font-bold text-muted-foreground uppercase">Notes</span>
-                                <p className="text-foreground bg-background border border-border p-2.5 rounded-lg leading-relaxed">{item.notes}</p>
-                              </div>
-                              {item.reflections && (
-                                <div className="space-y-1">
-                                  <span className="text-[9px] font-bold text-muted-foreground uppercase">Reflections</span>
-                                  <p className="text-muted-foreground bg-background border border-border p-2.5 rounded-lg italic">"{item.reflections}"</p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {item.type === 'badge' && (
-                          <div className="flex items-center gap-4">
-                            <span className="text-3xl">{item.badge.icon}</span>
-                            <div>
-                              <p className="text-xs font-bold text-yellow-500">"{item.badge.description}"</p>
-                              <span className="text-[9px] font-extrabold text-muted-foreground uppercase tracking-widest mt-1 block">
-                                +{item.badge.xp} XP Bonus Awarded
-                              </span>
-                            </div>
-                          </div>
-                        )}
-
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="py-8">
-                <EmptyState
-                  icon={Calendar}
-                  title="Empty Timeline Log"
-                  description="Establish your visual baseline: complete an analysis scan, log a progress photo, or write in your journal."
-                  actionText="Upload First Photo"
-                  onAction={() => setIsUploading(true)}
-                />
-              </div>
-            )}
-          </section>
-        </>
-      )}
-
-      {/* UPLOAD PROGRESS PHOTO MODAL */}
-      {isUploading && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
-          onClick={(e) => { if (e.target === e.currentTarget) handleCloseModal(); }}
-        >
-          <div className="w-full max-w-md glassmorphism p-6 rounded-2xl border border-border relative bg-card text-foreground shadow-2xl">
-            {/* Close trigger button */}
-            <button
-              onClick={handleCloseModal}
-              disabled={uploadingState}
-              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground text-sm font-bold disabled:opacity-50 cursor-pointer"
-            >
-              ✕
-            </button>
-
-            <h3 className="text-lg font-bold text-foreground mb-2">Log Progress Photo</h3>
-            <p className="text-xs text-muted-foreground mb-6">
-              For accurate comparison, try to match the same lighting, angle, and camera position as your baseline photo.
-            </p>
-
-            {error && (
-              <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold leading-normal">
-                {error}
-              </div>
-            )}
-
-            {successAnimation ? (
-              <div className="py-8 text-center space-y-4 animate-fade-in">
-                <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto text-2xl animate-bounce shadow-lg">
-                  ✓
-                </div>
-                <h4 className="text-sm font-bold text-foreground">Upload Successful!</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed">Your progress photo has been logged (+100 XP)</p>
-              </div>
-            ) : (
-              <form onSubmit={handleUploadSubmit} className="space-y-4">
-                
-                <div className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-xl p-4 min-h-[160px] text-center bg-background">
-                  {selectedPhoto ? (
-                    <div className="relative">
-                      <img 
-                        src={selectedPhoto} 
-                        alt="Uploaded preview" 
-                        className="max-h-[140px] rounded-lg object-contain"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setSelectedPhoto(null)}
-                        disabled={uploadingState}
-                        className="mt-2 text-xs font-semibold text-red-400 hover:underline block mx-auto cursor-pointer disabled:opacity-50"
-                      >
-                        Clear Selection
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="cursor-pointer flex flex-col items-center gap-2">
-                      <PlusCircle size={32} className="text-primary" />
-                      <span className="text-xs font-bold text-foreground block">Select Photo File</span>
-                      <span className="text-[10px] text-muted-foreground">PNG, JPG, or WEBP up to 10MB</span>
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp"
-                        onChange={handleFileChange}
-                        disabled={uploadingState}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
+        {photos.length >= 2 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">
+            
+            {/* Left selectors */}
+            <Card className="p-5 flex flex-col justify-between space-y-4 lg:col-span-1">
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Before Baseline (Left)</label>
+                  <select 
+                    value={beforePhotoIdx} 
+                    onChange={(e) => setBeforePhotoIdx(Number(e.target.value))}
+                    className="w-full text-[10px] font-bold bg-secondary/60 border border-border rounded-lg px-2.5 py-2.5 outline-none text-muted-foreground cursor-pointer focus:border-primary"
+                  >
+                    {photos.map((p, idx) => (
+                      <option key={p.id} value={idx}>Week {p.week_number} ({p.date})</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Description / Notes</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Skin texture is clearer, cheek definition improving."
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    disabled={uploadingState}
-                    className="w-full bg-background border border-border rounded-xl py-3 px-4 text-xs text-foreground focus:outline-none focus:border-primary placeholder-muted-foreground disabled:opacity-50"
-                  />
+                  <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">After Progress (Right)</label>
+                  <select 
+                    value={afterPhotoIdx} 
+                    onChange={(e) => setAfterPhotoIdx(Number(e.target.value))}
+                    className="w-full text-[10px] font-bold bg-secondary/60 border border-border rounded-lg px-2.5 py-2.5 outline-none text-muted-foreground cursor-pointer focus:border-primary"
+                  >
+                    {photos.map((p, idx) => (
+                      <option key={p.id} value={idx}>Week {p.week_number} ({p.date})</option>
+                    ))}
+                  </select>
                 </div>
+              </div>
 
-                {uploadingState && (
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between text-xs font-semibold text-muted-foreground">
-                      <span>Uploading to Cloudinary...</span>
-                      <span>{uploadProgress}%</span>
-                    </div>
-                    <div className="w-full bg-secondary h-2 rounded-full overflow-hidden border border-border">
-                      <div 
-                        className="bg-primary h-full rounded-full transition-all duration-200"
-                        style={{ width: `${uploadProgress}%` }}
-                      ></div>
+              <div className="text-[10px] text-muted-foreground leading-relaxed bg-[#0c0c14] border border-border p-3.5 rounded-xl italic">
+                * Drag the center handle left and right to transition between selected dates.
+              </div>
+            </Card>
+
+            {/* Image Slider Wrapper */}
+            <div className="lg:col-span-3">
+              <ImageSlider 
+                beforeImage={getOptimizedUrl(photos[beforePhotoIdx].photo_url)} 
+                afterImage={getOptimizedUrl(photos[afterPhotoIdx].photo_url)}
+                beforeLabel={`Week ${photos[beforePhotoIdx].week_number}`}
+                afterLabel={`Week ${photos[afterPhotoIdx].week_number}`}
+              />
+            </div>
+          </div>
+        ) : (
+          <EmptyState
+            icon={Camera}
+            title="Comparison Slider Locked"
+            description="You need to upload at least two progress photos over separate days to unlock the crossfade comparison slider."
+            actionText="Upload First Photo"
+            onAction={() => setIsUploading(true)}
+          />
+        )}
+      </section>
+
+      {/* UNIFIED TIMELINE PROGRESS log */}
+      <section className="space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+          <Calendar size={14} className="text-primary" />
+          Unified Transformation Timeline
+        </h3>
+
+        <Card className="p-6">
+          {/* Filters Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-b border-border pb-4 mb-6 text-xs">
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Search notes</label>
+              <input
+                type="text"
+                placeholder="Type search queries..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full text-xs bg-secondary/40 border border-border focus:border-primary rounded-lg px-2.5 py-1.5 outline-none text-foreground"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Filter Type</label>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="w-full text-xs bg-secondary/40 border border-border focus:border-primary rounded-lg px-2.5 py-1.5 outline-none text-foreground cursor-pointer"
+              >
+                <option value="all">All Types</option>
+                <option value="photo">Photos Only</option>
+                <option value="journal">Journals Only</option>
+                <option value="badge">Achievements Only</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block">Date</label>
+              <input
+                type="date"
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className="w-full text-xs bg-secondary/40 border border-border focus:border-primary rounded-lg px-2.5 py-1.5 outline-none text-foreground cursor-pointer"
+              />
+            </div>
+          </div>
+
+          {filteredTimelineItems.length > 0 ? (
+            <div className="relative border-l border-border ml-4 pl-6 space-y-6 py-2">
+              {filteredTimelineItems.map((item) => {
+                return (
+                  <div key={item.id} className="relative group">
+                    <span className="absolute -left-10 top-1.5 w-8 h-8 rounded-xl bg-[#0c0c14] border border-border flex items-center justify-center text-xs group-hover:border-primary/30 transition-colors z-10">
+                      {item.type === 'photo' ? '📸' : item.type === 'journal' ? '📝' : '🏆'}
+                    </span>
+                    
+                    <div className="bg-secondary/15 p-5 rounded-2xl border border-border shadow-md space-y-4 hover:bg-secondary/20 transition-all animate-fade-in">
+                      
+                      <div className="flex justify-between items-center text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-foreground text-sm">{item.title}</span>
+                          <span className="text-[9px] uppercase font-extrabold tracking-widest text-muted-foreground bg-[#0c0c14] px-2.5 py-0.5 rounded border border-border">
+                            {item.type}
+                          </span>
+                        </div>
+                        <span className="text-muted-foreground text-[10px] font-semibold">{item.date}</span>
+                      </div>
+
+                      {item.type === 'photo' && (
+                        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                          <img 
+                            src={getOptimizedUrl(item.photoUrl, 160, 160)} 
+                            alt="Progress photo" 
+                            className="w-24 h-24 rounded-xl object-cover border border-border shrink-0"
+                            loading="lazy"
+                          />
+                          <div className="flex-1 flex justify-between items-start">
+                            <p className="text-xs text-muted-foreground leading-relaxed italic">
+                              "{item.notes || 'No description logged.'}"
+                            </p>
+                            <button
+                              onClick={() => handleDeletePhoto(item.id, item.publicId)}
+                              className="text-[9px] text-red-400 hover:underline flex items-center gap-1 shrink-0 p-1 cursor-pointer font-bold"
+                            >
+                              <Trash size={10} />
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {item.type === 'journal' && (
+                        <div className="space-y-3 text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground font-bold uppercase tracking-wider text-[9px]">Mood state:</span>
+                            <span className="px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold text-[9px]">
+                              {item.mood === 1 ? '😫 Stressed' : item.mood === 2 ? '😒 Low' : item.mood === 3 ? '😐 Neutral' : item.mood === 4 ? '🙂 Good' : '⚡ Focused'}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">Notes</span>
+                              <p className="text-foreground bg-[#0c0c14] border border-border p-3 rounded-xl leading-relaxed">{item.notes}</p>
+                            </div>
+                            {item.reflections && (
+                              <div className="space-y-1">
+                                <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">Reflections</span>
+                                <p className="text-muted-foreground bg-[#0c0c14] border border-border p-3 rounded-xl italic">"{item.reflections}"</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {item.type === 'badge' && (
+                        <div className="flex items-center gap-4">
+                          <span className="text-3xl bg-secondary/50 p-2.5 rounded-2xl border border-border">{item.badge.icon}</span>
+                          <div>
+                            <p className="text-xs font-black text-foreground">"{item.badge.description}"</p>
+                            <span className="text-[8px] font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full mt-1.5 inline-block uppercase tracking-wider">
+                              +{item.badge.xp} XP Bonus Awarded
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                )}
+                );
+              })}
+            </div>
+          ) : (
+            <div className="py-12 text-center text-xs text-muted-foreground italic">
+              No matching progress timeline entries found. Clear filters or add logs.
+            </div>
+          )}
+        </Card>
+      </section>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                  <button
-                    type="button"
-                    onClick={handleCloseModal}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer disabled:opacity-50"
-                  >
-                    {uploadingState ? 'Cancel Upload' : 'Close'}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={uploadingState || !selectedPhoto}
-                    className="px-5 py-2.5 rounded-xl font-bold text-xs text-primary-foreground bg-primary hover:opacity-90 transition-colors shadow-lg cursor-pointer disabled:opacity-50"
-                  >
-                    {error ? 'Retry Upload' : (uploadingState ? `Uploading (${uploadProgress}%)` : 'Upload & Log (+100 XP)')}
-                  </button>
+      {/* UPLOAD PROGRESS PHOTO MODAL */}
+      <AnimatePresence>
+        {isUploading && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => !uploadingState && setIsUploading(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            
+            {/* Dialog Container */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="w-full max-w-md glassmorphism p-6 rounded-2xl relative z-10 bg-[#0d0d16] border border-border shadow-2xl flex flex-col space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-border pb-3">
+                <h3 className="text-sm font-bold uppercase tracking-wider">Log progress photo</h3>
+                <button 
+                  onClick={() => !uploadingState && setIsUploading(false)}
+                  disabled={uploadingState}
+                  className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold rounded-xl">
+                  {error}
                 </div>
+              )}
 
-              </form>
-            )}
+              {successAnimation ? (
+                <div className="py-12 flex flex-col items-center justify-center text-center space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/10">
+                    <CheckCircle2 size={24} className="stroke-[1.5]" />
+                  </div>
+                  <h4 className="text-sm font-bold text-foreground">Upload Complete!</h4>
+                  <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full inline-block">+100 XP Credited</span>
+                </div>
+              ) : uploadingState ? (
+                <div className="py-8 text-center space-y-4">
+                  <span className="text-xs text-muted-foreground block">Uploading to secure Cloudinary storage...</span>
+                  <div className="max-w-xs mx-auto space-y-2">
+                    <div className="flex justify-between text-[9px] text-muted-foreground font-black">
+                      <span>Progress</span>
+                      <span>{uploadProgress}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-secondary rounded-full overflow-hidden border border-border">
+                      <div className="h-full bg-primary" style={{ width: `${uploadProgress}%` }}></div>
+                    </div>
+                  </div>
+                  <Button variant="secondary" onClick={handleCancelClick} className="mx-auto">
+                    Cancel Upload
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleUploadSubmit} className="space-y-4">
+                  
+                  {/* Photo selection input container */}
+                  <div className="flex flex-col items-center justify-center p-6 border border-dashed border-border rounded-xl bg-secondary/15 hover:bg-secondary/25 transition-all text-center">
+                    {previewUrl ? (
+                      <div className="relative max-h-[140px] rounded-lg overflow-hidden border border-border">
+                        <img src={previewUrl} alt="Upload preview" className="max-h-[140px] object-contain" />
+                        <button
+                          type="button"
+                          onClick={() => { setSelectedPhoto(null); setPreviewUrl(null); }}
+                          className="absolute top-1.5 right-1.5 p-1 rounded-lg bg-black/60 text-white hover:bg-black/80 transition-colors"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="cursor-pointer py-4 flex flex-col items-center space-y-2 w-full">
+                        <Camera size={20} className="text-primary" />
+                        <div>
+                          <span className="text-xs font-bold text-foreground block">Select Image File</span>
+                          <span className="text-[9px] text-muted-foreground mt-0.5 block">JPG, PNG, WEBP limit 10MB</span>
+                        </div>
+                        <input 
+                          type="file" 
+                          accept="image/jpeg,image/png,image/webp" 
+                          onChange={handleFileChange} 
+                          className="hidden" 
+                        />
+                      </label>
+                    )}
+                  </div>
+
+                  {/* Notes description input */}
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest block ml-1">Timeline Notes</label>
+                    <textarea
+                      placeholder="Add brief details (e.g. skin routine day 4, haircut posture offsets...)"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      rows={2}
+                      maxLength={180}
+                      className="w-full px-4 py-3 bg-secondary/40 border border-border text-xs rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all resize-none"
+                    />
+                  </div>
+
+                  <Button variant="primary" type="submit" fullWidth disabled={!selectedPhoto}>
+                    <span>Complete Upload & Log</span>
+                  </Button>
+                </form>
+              )}
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
     </div>
   );
