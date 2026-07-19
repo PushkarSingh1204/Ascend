@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "category": "glasses",
+  "faceShapeFrames": {
+    "Round": "Structured rectangular frames with defined angles to bring geometry to soft features.",
+    "Square": "Rounder, thinner wireframes or soft aviators to soften heavy jaw lines."
+  },
+  "lensStyles": [
+    "Prefer anti-reflective coating for photos",
+    "Choose blue-light blocking lenses if screen time exceeds 6 hours"
+  ]
+}

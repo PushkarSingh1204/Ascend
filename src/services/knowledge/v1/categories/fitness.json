@@ -1,0 +1,25 @@
+{
+  "version": "1.0",
+  "category": "fitness",
+  "workouts": {
+    "Strength": {
+      "focus": "Resistance and compound muscle building",
+      "exercises": ["Squats", "Bench Press", "Deadlifts", "Overhead Press"],
+      "schedule": "3-4 times/week"
+    },
+    "Posture": {
+      "focus": "Neck, shoulder, and spinal alignment strength",
+      "exercises": ["Chin Tucks", "Wall Angels", "Face Pulls", "Y-T-W Raises"],
+      "schedule": "Daily (10-15 mins)"
+    },
+    "Cardio": {
+      "focus": "Heart rate elevation and vascular health",
+      "exercises": ["Running", "Jump Rope", "HIIT Circuits", "Rowing"],
+      "schedule": "2-3 times/week"
+    }
+  },
+  "recoveryRules": {
+    "soreness": "Light stretching, active walks, and 8+ hours sleep",
+    "frequency": "Minimum 1 full rest day per week for muscle fiber repair"
+  }
+}

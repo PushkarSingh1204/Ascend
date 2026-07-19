@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "category": "workout",
+  "defaultTasks": [
+    { "id": "w1", "text": "Posture correction exercises (10 min)", "estimatedTime": "10 mins" },
+    { "id": "w2", "text": "Neck stretches & chin tucks", "estimatedTime": "5 mins" },
+    { "id": "w3", "text": "Cardio / High intensity workout (20 min)", "estimatedTime": "20 mins" },
+    { "id": "w4", "text": "Jaw muscle alignment exercise", "estimatedTime": "3 mins" }
+  ]
+}

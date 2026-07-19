@@ -1,0 +1,57 @@
+{
+  "version": "1.0",
+  "category": "skincare",
+  "skinTypes": {
+    "Oily": {
+      "cleanser": "Salicylic Acid Cleanser",
+      "toner": "Niacinamide Toner",
+      "moisturizer": "Lightweight Gel Hydrator",
+      "avoid": ["Heavy oil-based creams", "Shea butter"]
+    },
+    "Dry": {
+      "cleanser": "Gentle Milky Cleanser",
+      "toner": "Hyaluronic Acid Mist",
+      "moisturizer": "Ceramide Deep Cream",
+      "avoid": ["High-concentration Alcohol", "Clay masks daily"]
+    },
+    "Normal": {
+      "cleanser": "Hydrating Cleanser",
+      "toner": "Exfoliating Liquid",
+      "moisturizer": "Daily Lotion",
+      "avoid": []
+    }
+  },
+  "climateAdjustments": {
+    "Humid": {
+      "spf": "Matte Gel SPF 50",
+      "moisturizerOverride": "Lightweight Gel Hydrator"
+    },
+    "Dry": {
+      "spf": "Cream-based SPF 30",
+      "moisturizerOverride": "Ceramide Deep Cream"
+    }
+  },
+  "ingredients": [
+    {
+      "name": "Niacinamide",
+      "benefits": "Reduces sebum production, even skin tone, barrier support",
+      "whoShouldUse": "Oily, Acne-prone, Hyper-pigmentation",
+      "evidenceLevel": "High",
+      "priority": "Medium"
+    },
+    {
+      "name": "Hyaluronic Acid",
+      "benefits": "Deep cellular hydration, plumpness",
+      "whoShouldUse": "Dry, Dehydrated skin",
+      "evidenceLevel": "High",
+      "priority": "High"
+    },
+    {
+      "name": "Salicylic Acid (BHA)",
+      "benefits": "Unclogs pores, exfoliates inside follicle, reduces acne",
+      "whoShouldUse": "Oily skin, blackheads",
+      "evidenceLevel": "High",
+      "priority": "Medium"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "category": "hair",
+  "faceShapeMatches": {
+    "Round": "Textured quiff or high-volume top cut with short sides to elongate vertical proportions.",
+    "Square": "Soft side-swept bangs or textured crops to soften the hard jaw corners.",
+    "Oval": "Versatile compatibility. A medium-length pompadour or layered flow works best."
+  },
+  "washRules": {
+    "Dry": "Wash 1-2 times per week with sulfate-free hydrating shampoo.",
+    "Oily": "Wash 3-4 times per week with clarifying shampoo."
+  }
+}

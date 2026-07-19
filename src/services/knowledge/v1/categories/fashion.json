@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "category": "fashion",
+  "styleArchetypes": {
+    "Classic": ["Oxford shirts", "Harrington jackets", "Slim chinos", "Loafers"],
+    "Casual": ["Structured t-shirts", "Raw denim", "Minimal sneakers", "Crewneck sweaters"]
+  },
+  "colorContrastRules": {
+    "High": "Wear deep, rich jewel tones, dark navy, and charcoal contrast combinations.",
+    "Soft": "Wear muted earth tones, olive greens, sand, and heather grey."
+  }
+}

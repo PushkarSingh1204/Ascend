@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "category": "nutrition",
+  "proteinMultiplier": {
+    "Gym": 1.8,
+    "Sedentary": 1.0,
+    "HomeWorkouts": 1.4
+  },
+  "hydrationTarget": {
+    "baseMl": 2000,
+    "gymAdditionMl": 750
+  },
+  "generalHabits": [
+    "Prioritize whole single-ingredient foods",
+    "Limit ultra-processed sugary snacks to avoid insulin spikes",
+    "Eat raw or lightly cooked fibrous vegetables with main meals"
+  ]
+}

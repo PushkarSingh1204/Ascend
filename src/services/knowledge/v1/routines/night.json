@@ -1,0 +1,9 @@
+{
+  "version": "1.0",
+  "category": "night",
+  "defaultTasks": [
+    { "id": "n1", "text": "Cleanse and apply moisturizer", "estimatedTime": "3 mins" },
+    { "id": "n2", "text": "Tongue posture / neck alignment check", "estimatedTime": "2 mins" },
+    { "id": "n3", "text": "Read for 15 mins (wind down)", "estimatedTime": "15 mins" }
+  ]
+}

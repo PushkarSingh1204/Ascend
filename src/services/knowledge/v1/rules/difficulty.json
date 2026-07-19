@@ -1,0 +1,8 @@
+{
+  "version": "1.0",
+  "difficultyPenalties": {
+    "easy": 0,
+    "medium": 10,
+    "hard": 25
+  }
+}

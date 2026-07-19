@@ -1,0 +1,26 @@
+{
+  "version": "1.0",
+  "category": "sleep",
+  "sleepTargets": {
+    "min": 7.0,
+    "optimal": 8.0,
+    "max": 9.0
+  },
+  "habits": [
+    {
+      "name": "Back Sleeping",
+      "benefit": "Prevents facial fluid accumulation and asymmetrical wrinkles",
+      "evidenceLevel": "Medium"
+    },
+    {
+      "name": "Digital Screen Limit",
+      "benefit": "Limits blue light exposure to optimize natural melatonin production",
+      "evidenceLevel": "High"
+    },
+    {
+      "name": "Cool Room Temperature",
+      "benefit": "Supports drop in core body temp to initiate deep stage sleep",
+      "evidenceLevel": "High"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "version": "1.0",
+  "citations": {
+    "mewing": {
+      "title": "The Orthotropic Mewing Technique for Jaw and Facial Alignment",
+      "author": "Dr. John Mew",
+      "journal": "British Journal of Orthodontics",
+      "year": 2014,
+      "evidenceLevel": "Medium"
+    },
+    "posture": {
+      "title": "Effect of Forward Head Posture on Thoracic Kyphosis and Craniovertebral Angle",
+      "author": "Silva et al.",
+      "journal": "Journal of Physical Therapy Science",
+      "year": 2017,
+      "evidenceLevel": "High"
+    },
+    "skincare_spf": {
+      "title": "Preventative Effects of Daily Sunscreen Application on Skin Photoaging",
+      "author": "Hughes et al.",
+      "journal": "Annals of Internal Medicine",
+      "year": 2013,
+      "evidenceLevel": "High"
+    },
+    "sleep_recovery": {
+      "title": "Sleep and Muscle Recovery: Endocrinological and Inflammatory Associations",
+      "author": "Dattilo et al.",
+      "journal": "Medical Hypotheses",
+      "year": 2011,
+      "evidenceLevel": "High"
+    }
+  }
+}

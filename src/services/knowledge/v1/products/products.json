@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "products": [
+    {
+      "id": "prod_sunscreen_budget",
+      "category": "skincare",
+      "name": "Minimalist Matte Sunscreen SPF 50",
+      "priceTier": "Low",
+      "cost": "₹399",
+      "benefits": "Non-greasy, matte finish UV protection",
+      "reason": "Affordable daily sunscreen suitable for high-humidity climates.",
+      "priority": "High"
+    },
+    {
+      "id": "prod_sunscreen_premium",
+      "category": "skincare",
+      "name": "La Roche-Posay Anthelios SPF 60",
+      "priceTier": "High",
+      "cost": "₹2200",
+      "benefits": "Ultra-light fluid, advanced water-resistant protection",
+      "reason": "Premium non-comedogenic UV protection with high cosmetic elegance.",
+      "priority": "High"
+    },
+    {
+      "id": "prod_moisturizer_budget",
+      "category": "skincare",
+      "name": "Pond's Super Light Gel Moisturizer",
+      "priceTier": "Low",
+      "cost": "₹150",
+      "benefits": "Hyaluronic acid gel hydration without oiliness",
+      "reason": "Budget-friendly hydrating gel for daily moisture balancing.",
+      "priority": "Medium"
+    },
+    {
+      "id": "prod_moisturizer_premium",
+      "category": "skincare",
+      "name": "Clinique Moisture Surge 100H",
+      "priceTier": "High",
+      "cost": "₹3100",
+      "benefits": "Auto-replenishing lipid-rich deep hydration",
+      "reason": "Top-tier gel-cream that locks moisture for long-term skin barrier reinforcement.",
+      "priority": "Medium"
+    }
+  ]
+}

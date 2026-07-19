@@ -1,0 +1,20 @@
+{
+  "version": "1.0",
+  "category": "posture",
+  "guides": {
+    "ForwardNeck": {
+      "exercises": [
+        "Chin tucks (3 sets of 10 reps)",
+        "Deep neck flexor stretches"
+      ],
+      "ergonomics": "Elevate screens to eye level. Adjust keyboard height to 90-degree arm rest."
+    },
+    "RoundedShoulders": {
+      "exercises": [
+        "Doorway chest stretch (hold for 30s)",
+        "Scapular retractions (2 sets of 15 reps)"
+      ],
+      "ergonomics": "Use an ergonomic chair with lumbar support. Do not slouch."
+    }
+  }
+}

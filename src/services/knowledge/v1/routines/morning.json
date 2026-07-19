@@ -1,0 +1,9 @@
+{
+  "version": "1.0",
+  "category": "morning",
+  "defaultTasks": [
+    { "id": "m1", "text": "Tongue posture check (mewing)", "estimatedTime": "1 min" },
+    { "id": "m2", "text": "Face cleanse with cold water", "estimatedTime": "2 mins" },
+    { "id": "m3", "text": "Drink 500ml water", "estimatedTime": "1 min" }
+  ]
+}
