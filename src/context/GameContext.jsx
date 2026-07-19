@@ -11,6 +11,8 @@ import {
   updateRoadmapMilestone
 } from '../services/db';
 import { useAuth } from './AuthContext';
+import { missionEngine } from '../services/engines/missionEngine.js';
+import { roadmapEngine } from '../services/engines/roadmapEngine.js';
 
 const GameContext = createContext();
 
@@ -80,15 +82,22 @@ export const GameProvider = ({ children }) => {
         setDaysToAscend(profile.days_to_ascend || 0);
         setUnlockedBadges(profile.unlocked_badges || []);
         
-        const missions = await getDailyMissions();
-        setDailyMissions(missions);
+        // Compile daily missions using missionEngine
+        const compiledMissionsList = await missionEngine.run({ profile });
+        const missionsObj = {};
+        compiledMissionsList.forEach(m => {
+          const key = m.id.replace('mission_', '');
+          missionsObj[key] = m.completed;
+        });
+        setDailyMissions(missionsObj);
 
-        const milestones = await getRoadmapMilestones();
-        setRoadmapMilestones(Array.isArray(milestones) ? milestones : []);
+        // Compile roadmap milestones using roadmapEngine
+        const compiledMilestones = await roadmapEngine.run({ profile });
+        setRoadmapMilestones(compiledMilestones || []);
         
-        if (Array.isArray(milestones) && milestones.length > 0) {
-          const completed = milestones.filter(m => m.completed).length;
-          setRoadmapPercent(Math.round((completed / milestones.length) * 100));
+        if (Array.isArray(compiledMilestones) && compiledMilestones.length > 0) {
+          const completed = compiledMilestones.filter(m => m.completed).length;
+          setRoadmapPercent(Math.round((completed / compiledMilestones.length) * 100));
         } else {
           setRoadmapPercent(0);
         }

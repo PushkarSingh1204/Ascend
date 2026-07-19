@@ -1,4 +1,3 @@
-// C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\pages\Dashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +6,8 @@ import { useGame } from '../context/GameContext';
 import { getAnalyses, getWaterLog, getSleepLog, getJournals, getCheckins } from '../services/db';
 import { getOptimizedUrl } from '../services/cloudinary';
 import { Card, Button, ProgressRing, Badge, Skeleton } from '../components/DesignSystem';
+import { recommendationEngine } from '../services/engines/recommendationEngine.js';
+
 import { 
   Flame, 
   Award, 
@@ -49,6 +50,7 @@ export default function Dashboard() {
 
   // Activity Timeline State
   const [timelineItems, setTimelineItems] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchDashboardData = async () => {
@@ -59,13 +61,30 @@ export default function Dashboard() {
       
       // Fetch latest scan
       const analyses = await getAnalyses();
+      let latestScan = null;
       if (Array.isArray(analyses) && analyses.length > 0) {
         setLatestAnalysis(analyses[0]);
+        latestScan = analyses[0];
       }
 
       // Calculate dynamic averages based on DB logs
       const waterLog = await getWaterLog();
       const sleepLog = await getSleepLog();
+
+      // Fetch dynamic recommendations from the engine
+      if (user && user.profile) {
+        const checkinDates = await getCheckins();
+        const recs = await recommendationEngine.run({
+          profile: user.profile,
+          latestAnalysis: latestScan,
+          waterLogs: waterLog ? [waterLog] : [],
+          sleepLogs: sleepLog ? [sleepLog] : [],
+          checkins: checkinDates || [],
+          progressPhotos: []
+        });
+        setRecommendations(recs || []);
+      }
+
       setWaterAvg(waterLog?.current > 0 ? Math.round((waterLog.current + 1850 * 6) / 7) : 1800);
       setSleepAvg(sleepLog?.current > 0 ? Math.round(((sleepLog.current + 7.4 * 6) / 7) * 10) / 10 : 7.2);
 
@@ -206,7 +225,7 @@ export default function Dashboard() {
     return 'Good Evening';
   };
 
-  // Determine Next Recommended Action based on uncompleted items
+  // Determine Next Recommended Action based on uncompleted items or Engine Recommendations
   const getNextRecommendedAction = () => {
     if (!isCheckedIn) {
       return {
@@ -224,6 +243,24 @@ export default function Dashboard() {
         onClick: () => navigate('/analysis')
       };
     }
+    
+    // Pull the top recommendation from the intelligence pipeline
+    if (recommendations && recommendations.length > 0) {
+      const topRec = recommendations[0];
+      return {
+        title: topRec.title,
+        desc: `${topRec.description} | Reason: ${topRec.reason}`,
+        actionText: `Focus on ${topRec.category.toUpperCase()}`,
+        onClick: () => {
+          if (['skincare', 'sleep', 'posture', 'fitness'].includes(topRec.category)) {
+            navigate('/routine');
+          } else {
+            navigate('/roadmap');
+          }
+        }
+      };
+    }
+
     if (!dailyMissions.journal) {
       return {
         title: "Log Reflection Journal",
@@ -473,7 +510,43 @@ export default function Dashboard() {
         </Card>
       </section>
 
-      {/* 4. ACTIVITY TIMELINE */}
+      {/* 4. COGNITIVE PIPELINE RECOMMENDATIONS */}
+      {recommendations.length > 0 && (
+        <section className="space-y-4">
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider border-b border-border pb-3 flex items-center gap-2">
+            <Sparkles size={14} className="text-primary" />
+            Central Intelligence Layer Recommendations
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {recommendations.slice(0, 4).map((rec) => (
+              <Card key={rec.id} className="p-5 flex flex-col justify-between border-primary/10 bg-secondary/10 hover:bg-secondary/20 transition-all duration-300">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-start">
+                    <Badge variant="indigo" className="text-[8px] font-black tracking-widest">{rec.category.toUpperCase()}</Badge>
+                    <span className="text-[10px] font-bold text-neutral-400">Score: {rec.score}</span>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black text-foreground">{rec.title}</h4>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">{rec.description}</p>
+                  </div>
+                  <div className="border-t border-border/40 pt-2.5 space-y-1.5">
+                    <p className="text-[9px] text-muted-foreground italic">
+                      <strong className="text-primary not-italic font-bold">Because:</strong> {rec.reason}
+                    </p>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-[8px] font-bold text-neutral-400">
+                      <span>Impact: {Array(rec.impact || 3).fill('★').join('')}</span>
+                      <span>Confidence: {Math.round((rec.confidence || 0.8) * 100)}%</span>
+                      <span>Est: {rec.estimatedTime || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 5. ACTIVITY TIMELINE */}
       <section className="space-y-4">
         <h3 className="text-xs font-bold text-foreground uppercase tracking-wider border-b border-border pb-3 flex items-center gap-2">
           <Activity size={14} className="text-primary" />

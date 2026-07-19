@@ -1,4 +1,6 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\services\aiCoach.js
+import { aiCoachEngine } from './engines/aiCoachEngine.js';
+import { recommendationEngine } from './engines/recommendationEngine.js';
 
 /**
  * AI Coach Service Layer
@@ -60,27 +62,44 @@ const generateMockResponse = (query, currentData = {}) => {
  * @returns {Promise<string>}
  */
 export const askCoach = async (query, currentData = {}) => {
-  // Simulate network latency for premium SaaS feel
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const response = generateMockResponse(query, currentData);
-      resolve(response);
-    }, 1200);
-  });
-
-  /* 
-  // FUTURE INTEGRATION: Switching to an API endpoint is simple:
-  try {
-    const response = await fetch('https://api.ascend.app/v1/coach', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, userData: currentData })
-    });
-    const data = await response.json();
-    return data.choices[0].message.content;
-  } catch (error) {
-    console.error("AI Coach API error, falling back to heuristics...", error);
-    return generateMockResponse(query, currentData);
+  // Safety guardrail for medical keywords:
+  const q = query.toLowerCase();
+  const medicalKeywords = [
+    'pain', 'hurt', 'acne', 'disease', 'medicine', 'doctor', 'dermatologist', 
+    'pimple', 'scars', 'swelling', 'bleed', 'infect', 'diagnose', 'surgery'
+  ];
+  if (medicalKeywords.some(keyword => q.includes(keyword))) {
+    return "Disclaimer: I am your AI self-improvement coach. For medical concerns, skin diagnostics, or persistent discomfort, always consult a qualified physician or dermatologist. Let's focus on healthy, non-invasive daily habits to support your goals: maintaining a gentle cleansing cycle, broad-spectrum sunscreen protection, and optimal hydration to support skin vitality.";
   }
-  */
+
+  try {
+    // Lazy load/run orchestrator to get matching recommendations
+    const recommendations = await recommendationEngine.run({
+      profile: currentData.profile || {},
+      latestAnalysis: currentData.latestAnalysis || null,
+      waterLogs: [],
+      sleepLogs: [],
+      checkins: [],
+      progressPhotos: []
+    });
+
+    const response = await aiCoachEngine.run({
+      query,
+      recommendations,
+      profile: currentData.profile || {}
+    });
+
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(response);
+      }, 1000);
+    });
+  } catch (err) {
+    console.warn("AI Coach engine execution failed, using static fallback", err);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(generateMockResponse(query, currentData));
+      }, 1000);
+    });
+  }
 };

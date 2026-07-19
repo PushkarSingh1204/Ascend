@@ -2,12 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
+import { useAuth } from '../context/AuthContext';
 import { getRoutines, updateRoutineTask, getWaterLog, updateWaterLog, getSleepLog, updateSleepLog } from '../services/db';
 import { Card, Button, Input, Badge, Skeleton } from '../components/DesignSystem';
 import { Sun, Moon, Sparkles, Smile, ShieldCheck, HeartPulse, Trash2, CheckCircle2 } from 'lucide-react';
+import { routineEngine } from '../services/engines/routineEngine.js';
 
 export default function Routine() {
   const { addXP, syncGameState } = useGame();
+  const { user } = useAuth();
   
   // Routines and logs states
   const [routines, setRoutines] = useState({ morning: [], night: [], skincare: [], workout: [] });
@@ -21,14 +24,20 @@ export default function Routine() {
   const fetchRoutinesData = async () => {
     try {
       setLoading(true);
-      const routinesData = await getRoutines();
-      setRoutines(routinesData || { morning: [], night: [], skincare: [], workout: [] });
       
       const waterData = await getWaterLog();
       setWater(waterData || { current: 0, target: 2000 });
       
       const sleepData = await getSleepLog();
       setSleep(sleepData || { current: 0, target: 8.0 });
+
+      if (user && user.profile) {
+        const compiled = await routineEngine.run({ profile: user.profile });
+        setRoutines(compiled || { morning: [], night: [], skincare: [], workout: [] });
+      } else {
+        const routinesData = await getRoutines();
+        setRoutines(routinesData || { morning: [], night: [], skincare: [], workout: [] });
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -38,7 +47,7 @@ export default function Routine() {
 
   useEffect(() => {
     fetchRoutinesData();
-  }, []);
+  }, [user]);
 
   const handleToggleTask = async (category, taskId, completedStatus) => {
     try {
