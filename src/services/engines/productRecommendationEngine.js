@@ -13,7 +13,7 @@ class ProductRecommendationEngine extends BaseEngine {
 
   async initialize() {
     try {
-      const module = await import('../knowledge/v1/products/products.json');
+      const module = await import('../knowledge/v1/products/products.json', { with: { type: 'json' } });
       this.knowledge = module.default;
     } catch (err) {
       console.warn('[Product Engine] Failed to load products knowledge base.', err);

@@ -13,7 +13,7 @@ class SleepEngine extends BaseEngine {
 
   async initialize() {
     try {
-      const module = await import('../knowledge/v1/categories/sleep.json');
+      const module = await import('../knowledge/v1/categories/sleep.json', { with: { type: 'json' } });
       this.knowledge = module.default;
     } catch (err) {
       console.warn('[Sleep Engine] Failed to load sleep knowledge base.', err);

@@ -15,9 +15,9 @@ class RoutineEngine extends BaseEngine {
 
   async initialize() {
     try {
-      this.morningData = (await import('../knowledge/v1/routines/morning.json')).default;
-      this.nightData = (await import('../knowledge/v1/routines/night.json')).default;
-      this.workoutData = (await import('../knowledge/v1/routines/workout.json')).default;
+      this.morningData = (await import('../knowledge/v1/routines/morning.json', { with: { type: 'json' } })).default;
+      this.nightData = (await import('../knowledge/v1/routines/night.json', { with: { type: 'json' } })).default;
+      this.workoutData = (await import('../knowledge/v1/routines/workout.json', { with: { type: 'json' } })).default;
     } catch (err) {
       console.warn('[Routine Engine] Failed to load routine knowledge base files.', err);
     }

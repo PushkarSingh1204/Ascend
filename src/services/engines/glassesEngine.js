@@ -13,7 +13,7 @@ class GlassesEngine extends BaseEngine {
 
   async initialize() {
     try {
-      const module = await import('../knowledge/v1/categories/glasses.json');
+      const module = await import('../knowledge/v1/categories/glasses.json', { with: { type: 'json' } });
       this.knowledge = module.default;
     } catch (err) {
       console.warn('[Glasses Engine] Failed to load glasses knowledge base.', err);

@@ -14,7 +14,7 @@ class SkincareEngine extends BaseEngine {
 
   async initialize() {
     try {
-      const module = await import('../knowledge/v1/categories/skincare.json');
+      const module = await import('../knowledge/v1/categories/skincare.json', { with: { type: 'json' } });
       this.knowledge = module.default;
     } catch (err) {
       console.warn('[Skincare Engine] Failed to load skincare knowledge base.', err);

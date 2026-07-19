@@ -25,8 +25,8 @@ class RecommendationScoringEngine extends BaseEngine {
   async initialize() {
     try {
       // Lazy load rules to separate data from logic
-      const priorityModule = await import('../knowledge/v1/rules/priority.json');
-      const difficultyModule = await import('../knowledge/v1/rules/difficulty.json');
+      const priorityModule = await import('../knowledge/v1/rules/priority.json', { with: { type: 'json' } });
+      const difficultyModule = await import('../knowledge/v1/rules/difficulty.json', { with: { type: 'json' } });
       
       this.priorityWeights = priorityModule.default?.priorityWeights || DEFAULT_PRIORITY_WEIGHTS;
       this.categoryWeights = priorityModule.default?.categoryWeights || DEFAULT_CATEGORY_WEIGHTS;

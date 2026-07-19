@@ -13,7 +13,7 @@ class FashionEngine extends BaseEngine {
 
   async initialize() {
     try {
-      const module = await import('../knowledge/v1/categories/fashion.json');
+      const module = await import('../knowledge/v1/categories/fashion.json', { with: { type: 'json' } });
       this.knowledge = module.default;
     } catch (err) {
       console.warn('[Fashion Engine] Failed to load fashion knowledge base.', err);

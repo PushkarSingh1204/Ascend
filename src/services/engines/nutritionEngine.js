@@ -13,7 +13,7 @@ class NutritionEngine extends BaseEngine {
 
   async initialize() {
     try {
-      const module = await import('../knowledge/v1/categories/nutrition.json');
+      const module = await import('../knowledge/v1/categories/nutrition.json', { with: { type: 'json' } });
       this.knowledge = module.default;
     } catch (err) {
       console.warn('[Nutrition Engine] Failed to load nutrition knowledge base.', err);

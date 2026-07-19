@@ -14,7 +14,7 @@ class BeardEngine extends BaseEngine {
 
   async initialize() {
     try {
-      const module = await import('../knowledge/v1/categories/beard.json');
+      const module = await import('../knowledge/v1/categories/beard.json', { with: { type: 'json' } });
       this.knowledge = module.default;
     } catch (err) {
       console.warn('[Beard Engine] Failed to load beard knowledge base.', err);
