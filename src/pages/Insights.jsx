@@ -167,9 +167,9 @@ export default function Insights() {
             </div>
           </div>
           
-          <h2>Data Guidelines Disclaimer</h2>
+          <h2>Privacy & Wellness Guidelines</h2>
           <p style="font-size: 11px; color: #718096; margin-top: 40px; border-t: 1px solid #edf2f7; padding-top: 15px;">
-            All metrics represent automated geometric estimates computed client-side. Ascend is a habit tracking tool and does not provide medical or scientific diagnosis.
+            Symmetry and proportion scores are computed 100% locally on-device. Ascend is designed as a personal habit & wellness guide to support your daily consistency goals.
           </p>
         </body>
       </html>
@@ -247,22 +247,20 @@ export default function Insights() {
             <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
               <TrendingUp size={14} className="text-blue-400" />
               Symmetry & Harmony Trends
-            </h3>
-
-            {analysisData.length > 0 ? (
+            </h3>             {analysisData.length > 0 ? (
               <div className="w-full h-72 pt-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={analysisData} margin={{ left: -20, right: 10, top: 10, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                    <XAxis dataKey="name" stroke="#6b7280" style={{ fontSize: 10 }} />
-                    <YAxis domain={[40, 100]} stroke="#6b7280" style={{ fontSize: 10 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" />
+                    <XAxis dataKey="name" stroke="rgba(255,255,255,0.2)" style={{ fontSize: 10, fontWeight: 'bold' }} />
+                    <YAxis domain={[40, 100]} stroke="rgba(255,255,255,0.2)" style={{ fontSize: 10, fontWeight: 'bold' }} />
                     <Tooltip 
-                      contentStyle={{ background: '#0a0a0f', border: '1px solid #1f1f2e', borderRadius: '12px' }}
-                      labelStyle={{ color: '#ffffff', fontSize: 11, fontWeight: 'bold' }}
+                      contentStyle={{ background: 'rgba(8, 8, 14, 0.85)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', backdropFilter: 'blur(12px)', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}
+                      labelStyle={{ color: '#ffffff', fontSize: 11, fontWeight: 'black' }}
                     />
-                    <Line type="monotone" dataKey="harmony" name="Harmony" stroke="#863bff" strokeWidth={2.5} activeDot={{ r: 6 }} />
-                    <Line type="monotone" dataKey="symmetry" name="Symmetry" stroke="#2563eb" strokeWidth={2} />
-                    <Line type="monotone" dataKey="proportion" name="Proportion" stroke="#06b6d4" strokeWidth={2} />
+                    <Line type="monotone" dataKey="harmony" name="Harmony" stroke="#863bff" strokeWidth={3} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="symmetry" name="Symmetry" stroke="#38bdf8" strokeWidth={2} />
+                    <Line type="monotone" dataKey="proportion" name="Proportion" stroke="#a855f7" strokeWidth={2} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -278,7 +276,7 @@ export default function Insights() {
               </div>
             )}
           </Card>
-
+ 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Sleep Bar Chart */}
             <Card className="p-6 space-y-4">
@@ -289,16 +287,25 @@ export default function Insights() {
               <div className="w-full h-56 pt-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartMockData} margin={{ left: -20, right: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                    <XAxis dataKey="name" stroke="#6b7280" style={{ fontSize: 10 }} />
-                    <YAxis domain={[0, 10]} stroke="#6b7280" style={{ fontSize: 10 }} />
-                    <Tooltip contentStyle={{ background: '#0a0a0f', border: '1px solid #1f1f2e', borderRadius: '12px' }} />
-                    <Bar dataKey="sleep" name="Sleep Hours" fill="#863bff" radius={[4, 4, 0, 0]} />
+                    <defs>
+                      <linearGradient id="sleepGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#863bff" stopOpacity={0.8}/>
+                        <stop offset="100%" stopColor="#863bff" stopOpacity={0.15}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" />
+                    <XAxis dataKey="name" stroke="rgba(255,255,255,0.2)" style={{ fontSize: 10, fontWeight: 'bold' }} />
+                    <YAxis domain={[0, 10]} stroke="rgba(255,255,255,0.2)" style={{ fontSize: 10, fontWeight: 'bold' }} />
+                    <Tooltip 
+                      contentStyle={{ background: 'rgba(8, 8, 14, 0.85)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', backdropFilter: 'blur(12px)' }}
+                      labelStyle={{ color: '#ffffff', fontSize: 11, fontWeight: 'black' }}
+                    />
+                    <Bar dataKey="sleep" name="Sleep Hours" fill="url(#sleepGrad)" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </Card>
-
+ 
             {/* Water Bar Chart */}
             <Card className="p-6 space-y-4">
               <h3 className="text-xs font-bold uppercase tracking-wider flex items-center gap-2">
@@ -308,11 +315,20 @@ export default function Insights() {
               <div className="w-full h-56 pt-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartMockData} margin={{ left: -20, right: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                    <XAxis dataKey="name" stroke="#6b7280" style={{ fontSize: 10 }} />
-                    <YAxis domain={[0, 3000]} stroke="#6b7280" style={{ fontSize: 10 }} />
-                    <Tooltip contentStyle={{ background: '#0a0a0f', border: '1px solid #1f1f2e', borderRadius: '12px' }} />
-                    <Bar dataKey="water" name="Water (ml)" fill="#863bff" radius={[4, 4, 0, 0]} />
+                    <defs>
+                      <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.8}/>
+                        <stop offset="100%" stopColor="#38bdf8" stopOpacity={0.15}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" />
+                    <XAxis dataKey="name" stroke="rgba(255,255,255,0.2)" style={{ fontSize: 10, fontWeight: 'bold' }} />
+                    <YAxis domain={[0, 3000]} stroke="rgba(255,255,255,0.2)" style={{ fontSize: 10, fontWeight: 'bold' }} />
+                    <Tooltip 
+                      contentStyle={{ background: 'rgba(8, 8, 14, 0.85)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', backdropFilter: 'blur(12px)' }}
+                      labelStyle={{ color: '#ffffff', fontSize: 11, fontWeight: 'black' }}
+                    />
+                    <Bar dataKey="water" name="Water (ml)" fill="url(#waterGrad)" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

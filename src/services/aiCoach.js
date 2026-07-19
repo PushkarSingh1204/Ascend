@@ -16,7 +16,7 @@ const generateMockResponse = (query, currentData = {}) => {
     'pimple', 'scars', 'swelling', 'bleed', 'infect', 'diagnose', 'surgery'
   ];
   if (medicalKeywords.some(keyword => q.includes(keyword))) {
-    return "Disclaimer: I am an AI self-improvement coach, not a medical professional. For any health concerns, skin diagnostics, or persistent discomfort, please consult a qualified dermatologist or physician. \n\nFrom a habit perspective, let's focus on non-invasive structural routines: maintaining a gentle cleansing cycle, broad-spectrum sunscreen protection, and optimal hydration to support skin elasticity.";
+    return "Disclaimer: I am your AI self-improvement coach. For medical concerns, skin diagnostics, or persistent discomfort, always consult a qualified physician or dermatologist. Let's focus on healthy, non-invasive daily habits to support your goals: maintaining a gentle cleansing cycle, broad-spectrum sunscreen protection, and optimal hydration to support skin vitality.";
   }
 
   // 2. Scan Analysis Explanations

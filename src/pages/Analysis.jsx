@@ -294,11 +294,11 @@ export default function Analysis() {
       {/* STEP 1: Upload Front Image */}
       {activeView === 'step1' && (
         <section className="space-y-6">
-          {/* Medical Disclaimer Box */}
+          {/* Privacy & Safe Guidance Box */}
           <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex items-start gap-3">
-            <AlertTriangle className="text-primary mt-0.5 shrink-0" size={16} />
+            <Sparkles className="text-primary mt-0.5 shrink-0" size={16} />
             <p className="text-[10px] text-muted-foreground leading-relaxed">
-              <strong>Estimate Disclaimer:</strong> All metrics, including Facial Harmony, Symmetry, and Proportion Scores, are automated AI estimates intended for general grooming and posture feedback, and are not medical, scientific, or diagnostic measurements. Photos are processed strictly on your device.
+              🔒 <strong>Privacy-First Safe Guidance:</strong> To protect your data, all biometric scans are processed 100% locally on your device—your photos are never sent to external servers. These proportion insights are designed to guide your daily grooming and posture consistency goals safely.
             </p>
           </div>
 
