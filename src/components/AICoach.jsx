@@ -91,20 +91,20 @@ export default function AICoach() {
 
       {/* 2. CHAT DRAWER PANEL */}
       {isOpen && (
-        <div className="fixed bottom-20 right-6 z-40 w-90 h-112 glassmorphism rounded-2xl border border-neutral-800 shadow-2xl overflow-hidden flex flex-col animate-scale-up">
+        <div className="fixed bottom-20 right-6 z-40 w-90 h-112 glassmorphism rounded-2xl border border-border shadow-2xl overflow-hidden flex flex-col animate-scale-up">
           
           {/* Header */}
-          <div className="p-4 border-b border-neutral-900 bg-neutral-950/20 flex items-center justify-between">
+          <div className="p-4 border-b border-border bg-secondary/20 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-ping"></div>
+              <div className="w-2.5 h-2.5 rounded-full bg-primary animate-ping"></div>
               <div>
-                <span className="text-xs font-bold text-white block">Ascend AI Coach</span>
-                <span className="text-[9px] text-neutral-550 block mt-0.5">Active habit guidance</span>
+                <span className="text-xs font-bold text-foreground block">Ascend AI Coach</span>
+                <span className="text-[9px] text-muted-foreground block mt-0.5">Active habit guidance</span>
               </div>
             </div>
             <button 
               onClick={() => setIsOpen(false)}
-              className="text-neutral-500 hover:text-white transition-colors cursor-pointer"
+              className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               <X size={14} />
             </button>
@@ -118,13 +118,13 @@ export default function AICoach() {
                 className={`flex flex-col max-w-[85%] ${msg.sender === 'user' ? 'ml-auto items-end' : 'mr-auto items-start'}`}
               >
                 <div 
-                  className={`p-3 rounded-2xl text-[11px] leading-relaxed ${msg.sender === 'user' ? 'bg-indigo-650 text-white rounded-tr-none' : 'bg-neutral-900 border border-neutral-850 text-neutral-300 rounded-tl-none'}`}
+                  className={`p-3 rounded-2xl text-[11px] leading-relaxed ${msg.sender === 'user' ? 'bg-primary text-white rounded-tr-none' : 'bg-secondary border border-border text-foreground rounded-tl-none'}`}
                 >
                   {msg.text.split('\n').map((line, idx) => (
                     <span key={idx} className="block mt-0.5">{line}</span>
                   ))}
                 </div>
-                <span className="text-[9px] text-neutral-550 mt-1 flex items-center gap-1">
+                <span className="text-[9px] text-muted-foreground mt-1 flex items-center gap-1">
                   <Clock size={8} />
                   {new Date(msg.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
@@ -133,10 +133,10 @@ export default function AICoach() {
 
             {isTyping && (
               <div className="flex flex-col max-w-[85%] mr-auto items-start">
-                <div className="p-3 rounded-2xl rounded-tl-none bg-neutral-900 border border-neutral-850 text-neutral-400 text-[11px] flex gap-1 items-center">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce"></span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce delay-100"></span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce delay-200"></span>
+                <div className="p-3 rounded-2xl rounded-tl-none bg-secondary border border-border text-muted-foreground text-[11px] flex gap-1 items-center">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce delay-100"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce delay-200"></span>
                 </div>
               </div>
             )}
@@ -147,19 +147,19 @@ export default function AICoach() {
           {/* Form message input */}
           <form 
             onSubmit={handleSendMessage}
-            className="p-3 border-t border-neutral-900 bg-neutral-950/40 flex items-center gap-2"
+            className="p-3 border-t border-border bg-secondary/35 flex items-center gap-2"
           >
             <input
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Ask about your posture, skin, or streak..."
-              className="flex-1 text-xs bg-neutral-900 border border-neutral-850 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 outline-none text-neutral-250 placeholder-neutral-550 focus:ring-1 focus:ring-indigo-500"
+              className="flex-1 text-xs bg-secondary/40 border border-border focus:border-primary rounded-xl px-3.5 py-2.5 outline-none text-foreground placeholder-muted-foreground focus:ring-1 focus:ring-primary focus:ring-offset-0"
             />
             <button
               type="submit"
               disabled={!inputValue.trim() || isTyping}
-              className="p-2.5 rounded-xl bg-indigo-650 hover:bg-indigo-500 text-white disabled:bg-neutral-900 disabled:text-neutral-600 transition-colors shrink-0 cursor-pointer"
+              className="p-2.5 rounded-xl bg-primary hover:opacity-90 text-white disabled:bg-secondary disabled:text-muted-foreground transition-colors shrink-0 cursor-pointer"
             >
               <Send size={12} />
             </button>
