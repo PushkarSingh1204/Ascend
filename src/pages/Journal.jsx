@@ -1,5 +1,6 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\pages\Journal.jsx
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 import { getJournals, addJournalEntry } from '../services/db';
 import { Card, Button, Input, Badge, Skeleton } from '../components/DesignSystem';
@@ -337,10 +338,17 @@ export default function Journal() {
             </div>
           ) : filteredLogs.length > 0 ? (
             <div className="space-y-4 max-h-[640px] overflow-y-auto pr-2 scrollbar-none">
-              {filteredLogs.map((log) => {
+              {filteredLogs.map((log, idx) => {
                 const currentMoodObj = moodEmojis.find(m => m.value === log.mood);
                 return (
-                  <Card key={log.id} className="p-5 space-y-4">
+                  <motion.div
+                    key={log.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, delay: idx * 0.06 }}
+                    whileHover={{ y: -2 }}
+                  >
+                  <Card className="p-5 space-y-4 hover:shadow-lg hover:border-primary/10 transition-all">
                     
                     {/* Header */}
                     <div className="flex justify-between items-center border-b border-border pb-3">
@@ -377,6 +385,7 @@ export default function Journal() {
                     </div>
 
                   </Card>
+                  </motion.div>
                 );
               })}
             </div>

@@ -1,5 +1,6 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\pages\Progress.jsx
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 import { useAuth } from '../context/AuthContext';
 import { getProgressPhotos, addProgressPhoto, deleteProgressPhoto, getJournals, getProfile, BADGES } from '../services/db';

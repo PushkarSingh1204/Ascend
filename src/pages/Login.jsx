@@ -1,5 +1,6 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\pages\Login.jsx
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Card, Button, Input } from '../components/DesignSystem';
@@ -76,15 +77,27 @@ export default function Login() {
       <div className="absolute bottom-1/4 left-1/3 w-[300px] h-[300px] bg-purple-500/5 rounded-full blur-[80px] pointer-events-none"></div>
 
       {/* Floating Logo */}
-      <div className="flex items-center gap-2.5 mb-8 cursor-pointer z-10 select-none" onClick={() => navigate('/')}>
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-purple-650 flex items-center justify-center font-bold text-white shadow-lg shadow-primary/20">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="flex items-center gap-2.5 mb-8 cursor-pointer z-10 select-none" 
+        onClick={() => navigate('/')}
+      >
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-purple-600 flex items-center justify-center font-bold text-white shadow-[0_0_20px_rgba(134,59,255,0.2)]">
           A
         </div>
         <span className="text-lg font-black tracking-widest text-foreground uppercase">ASCEND</span>
-      </div>
+      </motion.div>
 
       {/* Authentication Card */}
-      <Card className="w-full max-w-md p-8 shadow-2xl z-10">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.15 }}
+        className="w-full max-w-md z-10"
+      >
+      <Card className="w-full p-8 shadow-[0_16px_60px_rgba(134,59,255,0.06)]">
         
         {/* Toggle tabs */}
         <div className="flex bg-secondary/40 p-1.5 rounded-xl border border-border mb-8">
@@ -197,6 +210,7 @@ export default function Login() {
         </div>
 
       </Card>
+      </motion.div>
     </div>
   );
 }

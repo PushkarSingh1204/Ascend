@@ -163,12 +163,12 @@ export default function WeeklyReview() {
           {/* Summary Cards Shelf */}
           <section className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { label: 'Sleep Average', val: `${summary.avgSleep} hrs`, color: 'text-indigo-400', desc: 'Target: 8.0 hrs rest' },
-              { label: 'Water Consistency', val: `${summary.waterConsistency}%`, color: 'text-blue-400', desc: 'Days matching target' },
-              { label: 'Routines Completed', val: `${summary.routineCompletion}%`, color: 'text-emerald-400', desc: 'Tasks checkmarks index' },
-              { label: 'XP Unlocked', val: `+${summary.xpEarned} XP`, color: 'text-purple-400', desc: 'Experience points earned' }
+              { label: 'Sleep Average', val: `${summary.avgSleep} hrs`, color: 'text-indigo-400', desc: 'Target: 8.0 hrs rest', glow: 'shadow-[0_8px_30px_rgba(134,59,255,0.02)]' },
+              { label: 'Water Consistency', val: `${summary.waterConsistency}%`, color: 'text-blue-400', desc: 'Days matching target', glow: 'shadow-[0_8px_30px_rgba(56,189,248,0.02)]' },
+              { label: 'Routines Completed', val: `${summary.routineCompletion}%`, color: 'text-emerald-400', desc: 'Tasks checkmarks index', glow: 'shadow-[0_8px_30px_rgba(16,185,129,0.02)]' },
+              { label: 'XP Unlocked', val: `+${summary.xpEarned} XP`, color: 'text-purple-400', desc: 'Experience points earned', glow: 'shadow-[0_8px_30px_rgba(168,85,247,0.02)]' }
             ].map((card, idx) => (
-              <Card key={idx} className="p-5 flex flex-col justify-between h-32 bg-secondary/10">
+              <Card key={idx} interactive className={`p-5 flex flex-col justify-between h-32 border-border/60 hover:border-primary/10 ${card.glow}`}>
                 <div>
                   <span className="text-[9px] text-muted-foreground uppercase font-black tracking-wider block">
                     {card.label}
@@ -195,15 +195,18 @@ export default function WeeklyReview() {
                   <AreaChart data={sleepData} margin={{ left: -20, right: 10, top: 10 }}>
                     <defs>
                       <linearGradient id="sleepColor" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#863bff" stopOpacity={0.25}/>
+                        <stop offset="5%" stopColor="#863bff" stopOpacity={0.4}/>
                         <stop offset="95%" stopColor="#863bff" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                    <XAxis dataKey="day" stroke="#6b7280" style={{ fontSize: 10 }} />
-                    <YAxis domain={[4, 10]} stroke="#6b7280" style={{ fontSize: 10 }} />
-                    <Tooltip contentStyle={{ background: '#0a0a0f', border: '1px solid #1f1f2e', borderRadius: '12px' }} />
-                    <Area type="monotone" dataKey="hours" name="Rest Hours" stroke="#863bff" strokeWidth={2} fillOpacity={1} fill="url(#sleepColor)" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" />
+                    <XAxis dataKey="day" stroke="rgba(255,255,255,0.2)" style={{ fontSize: 10, fontWeight: 'bold' }} />
+                    <YAxis domain={[4, 10]} stroke="rgba(255,255,255,0.2)" style={{ fontSize: 10, fontWeight: 'bold' }} />
+                    <Tooltip 
+                      contentStyle={{ background: 'rgba(8, 8, 14, 0.85)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', backdropFilter: 'blur(12px)' }}
+                      labelStyle={{ color: '#ffffff', fontSize: 11, fontWeight: 'black' }}
+                    />
+                    <Area type="monotone" dataKey="hours" name="Rest Hours" stroke="#863bff" strokeWidth={2.5} fillOpacity={1} fill="url(#sleepColor)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -219,11 +222,20 @@ export default function WeeklyReview() {
               <div className="w-full h-64 pt-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={waterData} margin={{ left: -20, right: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" />
-                    <XAxis dataKey="day" stroke="#6b7280" style={{ fontSize: 10 }} />
-                    <YAxis domain={[0, 3000]} stroke="#6b7280" style={{ fontSize: 10 }} />
-                    <Tooltip contentStyle={{ background: '#0a0a0f', border: '1px solid #1f1f2e', borderRadius: '12px' }} />
-                    <Bar dataKey="amount" name="ml Intake" fill="#863bff" radius={[4, 4, 0, 0]} />
+                    <defs>
+                      <linearGradient id="reviewWaterGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.8}/>
+                        <stop offset="100%" stopColor="#38bdf8" stopOpacity={0.15}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.02)" />
+                    <XAxis dataKey="day" stroke="rgba(255,255,255,0.2)" style={{ fontSize: 10, fontWeight: 'bold' }} />
+                    <YAxis domain={[0, 3000]} stroke="rgba(255,255,255,0.2)" style={{ fontSize: 10, fontWeight: 'bold' }} />
+                    <Tooltip 
+                      contentStyle={{ background: 'rgba(8, 8, 14, 0.85)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', backdropFilter: 'blur(12px)' }}
+                      labelStyle={{ color: '#ffffff', fontSize: 11, fontWeight: 'black' }}
+                    />
+                    <Bar dataKey="amount" name="ml Intake" fill="url(#reviewWaterGrad)" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

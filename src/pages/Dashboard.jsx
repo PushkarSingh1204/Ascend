@@ -1,9 +1,11 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\pages\Dashboard.jsx
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
 import { getAnalyses, getWaterLog, getSleepLog, getJournals, getCheckins } from '../services/db';
+import { getOptimizedUrl } from '../services/cloudinary';
 import { Card, Button, ProgressRing, Badge, Skeleton } from '../components/DesignSystem';
 import { 
   Flame, 
@@ -159,6 +161,28 @@ export default function Dashboard() {
   const xpNeededForNext = nextLevelXp - prevLevelXp;
   const progressPercent = xpNeededForNext > 0 ? Math.min(100, Math.round((xpInCurrentLevel / xpNeededForNext) * 100)) : 0;
 
+  const [animatedXp, setAnimatedXp] = React.useState(0);
+
+  React.useEffect(() => {
+    if (xpInCurrentLevel > 0) {
+      let start = 0;
+      const end = xpInCurrentLevel;
+      const step = Math.ceil(end / 30);
+      const timer = setInterval(() => {
+        start += step;
+        if (start >= end) {
+          clearInterval(timer);
+          setAnimatedXp(end);
+        } else {
+          setAnimatedXp(start);
+        }
+      }, 25);
+      return () => clearInterval(timer);
+    } else {
+      setAnimatedXp(0);
+    }
+  }, [xpInCurrentLevel]);
+
   // Determine current roadmap stage details
   const safeMilestones = Array.isArray(roadmapMilestones) ? roadmapMilestones : [];
   const nextMilestone = safeMilestones.find(m => !m.completed);
@@ -243,24 +267,26 @@ export default function Dashboard() {
       <section className="flex flex-col lg:flex-row gap-6 justify-between items-stretch">
         
         {/* Profile Card with Circular XP Gauge */}
-        <Card className="flex-1 p-6 flex flex-col sm:flex-row items-center gap-6">
-          <ProgressRing percent={progressPercent} size={110} strokeWidth={8}>
-            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-violet-650 to-indigo-650 flex items-center justify-center text-white font-black text-xl shadow-lg relative border border-white/5">
-              {user?.profile?.name?.substring(0, 2).toUpperCase() || 'TR'}
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-secondary/40 border border-border flex items-center justify-center text-[10px] font-bold text-primary">
-                {level}
+        <Card className="flex-1 p-6 flex flex-col sm:flex-row items-center gap-6 border-primary/10 shadow-[0_8px_30px_rgba(134,59,255,0.04)] hover:shadow-[0_20px_40px_rgba(134,59,255,0.08)] transition-all duration-500">
+          <div className="relative group">
+            <ProgressRing percent={progressPercent} size={120} strokeWidth={6}>
+              <div className="w-22 h-22 rounded-full bg-gradient-to-tr from-violet-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white font-black text-2xl shadow-[0_4px_20px_rgba(134,59,255,0.25)] relative border border-white/10 group-hover:scale-102 transition-transform duration-500">
+                {user?.profile?.name?.substring(0, 2).toUpperCase() || 'TR'}
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-background border border-primary/20 flex items-center justify-center text-xs font-black text-primary shadow-md">
+                  {level}
+                </div>
               </div>
-            </div>
-          </ProgressRing>
+            </ProgressRing>
+          </div>
 
           <div className="flex-1 space-y-2.5 text-center sm:text-left">
             <div>
-              <h1 className="text-2xl font-black tracking-tight mb-0.5">
+              <h1 className="text-2xl font-black tracking-tight mb-0.5 bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">
                 {getGreeting()}, {user?.profile?.name || 'Transformer'}
               </h1>
               <p className="text-xs text-muted-foreground font-semibold flex items-center justify-center sm:justify-start gap-1">
                 <span>Active Stage:</span>
-                <span className="text-indigo-400">Week {currentWeek}</span>
+                <span className="text-primary font-black uppercase tracking-wider text-[10px]">Week {currentWeek}</span>
                 <span className="text-neutral-500">•</span>
                 <span className="text-neutral-400">
                   {currentWeek === 1 ? 'Posture Alignment' : currentWeek === 2 ? 'Muscle & Hydration' : currentWeek === 3 ? 'Rest & Skincare' : 'Peak Consistency'}
@@ -274,7 +300,7 @@ export default function Dashboard() {
                 <span className="text-[10px] font-black">{streak}d Streak</span>
               </div>
               <Badge variant="indigo">LVL {level}</Badge>
-              <span className="text-[10px] text-muted-foreground font-bold pl-1">{xpInCurrentLevel} / {xpNeededForNext} XP to next level</span>
+              <span className="text-[10px] text-muted-foreground font-bold pl-1">{animatedXp} / {xpNeededForNext} XP to next level</span>
             </div>
           </div>
         </Card>
@@ -306,19 +332,21 @@ export default function Dashboard() {
       {/* 2. DYNAMIC HABIT GAUGES */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Transformation Index', val: `${dailyTransformationScore}%`, desc: 'Today\'s habits ratio', icon: Activity, color: 'text-primary' },
-          { label: 'Weekly Consistency', val: `${weeklyConsistency}%`, desc: 'Weekly target completion', icon: TrendingUp, color: 'text-indigo-400' },
-          { label: 'Habit Streak', val: `${streak} Days`, desc: 'Consecutive active log', icon: Flame, color: 'text-orange-400' },
-          { label: 'Est. Days to Ascend', val: `${daysToAscend} Days`, desc: 'Overall horizon target', icon: Award, color: 'text-purple-400' }
+          { label: 'Transformation Index', val: `${dailyTransformationScore}%`, desc: "Today's habits ratio", icon: Activity, color: 'text-primary', glow: 'shadow-[0_8px_30px_rgba(134,59,255,0.02)]' },
+          { label: 'Weekly Consistency', val: `${weeklyConsistency}%`, desc: 'Weekly target completion', icon: TrendingUp, color: 'text-cyan-400', glow: 'shadow-[0_8px_30px_rgba(79,191,255,0.02)]' },
+          { label: 'Habit Streak', val: `${streak} Days`, desc: 'Consecutive active log', icon: Flame, color: 'text-orange-400', glow: 'shadow-[0_8px_30px_rgba(249,115,22,0.02)]' },
+          { label: 'Est. Days to Ascend', val: `${daysToAscend} Days`, desc: 'Overall horizon target', icon: Award, color: 'text-purple-400', glow: 'shadow-[0_8px_30px_rgba(168,85,247,0.02)]' }
         ].map((kpi, idx) => {
           const Icon = kpi.icon;
           return (
-            <Card key={idx} className="p-5 flex flex-col justify-between h-28">
+            <Card key={idx} interactive className={`p-5 flex flex-col justify-between h-28 border-border/60 hover:border-primary/10 ${kpi.glow}`}>
               <div className="flex justify-between items-start">
-                <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold">
+                <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-extrabold">
                   {kpi.label}
                 </span>
-                <Icon size={14} className={kpi.color} />
+                <div className={`p-1.5 rounded-lg bg-secondary/50 border border-border/20`}>
+                  <Icon size={12} className={kpi.color} />
+                </div>
               </div>
               <div>
                 <span className="text-xl font-black text-foreground block tracking-tight leading-none mb-1">{kpi.val}</span>
@@ -346,24 +374,28 @@ export default function Dashboard() {
 
           <div className="space-y-2">
             {[
-              { id: 'checkin', name: 'Log Daily Check-in', desc: 'Secure streak consistency bonus', xp: 50 },
-              { id: 'water', name: 'Hydration Target (2L+)', desc: 'Hydrate skin & balance fluid retention', xp: 50 },
-              { id: 'sleep', name: 'Log Sleep Hours', desc: 'Ensure recovery cellular regeneration', xp: 50 },
-              { id: 'skincare', name: 'Skincare routine completed', desc: 'Ensure daily double-cleanse complete', xp: 50 },
-              { id: 'journal', name: 'Write Reflection Journal', desc: 'Maintain mental clarity logging', xp: 100 }
+              { id: 'checkin', name: 'Log Daily Check-in', desc: 'Secure streak consistency bonus', xp: 50, path: () => handleCheckin() },
+              { id: 'water', name: 'Hydration Target (2L+)', desc: 'Hydrate skin & balance fluid retention', xp: 50, path: () => navigate('/routine') },
+              { id: 'sleep', name: 'Log Sleep Hours', desc: 'Ensure recovery cellular regeneration', xp: 50, path: () => navigate('/routine') },
+              { id: 'skincare', name: 'Skincare routine completed', desc: 'Ensure daily double-cleanse complete', xp: 50, path: () => navigate('/routine') },
+              { id: 'journal', name: 'Write Reflection Journal', desc: 'Maintain mental clarity logging', xp: 100, path: () => navigate('/journal') }
             ].map((mission) => {
               const done = !!dailyMissions[mission.id];
               return (
-                <div 
+                <motion.div 
+                  whileHover={{ x: done ? 0 : 4, borderColor: done ? 'rgba(255,255,255,0.05)' : 'rgba(134,59,255,0.2)' }}
+                  onClick={mission.path}
                   key={mission.id} 
-                  className={`p-3 rounded-xl border transition-all flex items-center justify-between ${done ? 'bg-secondary/25 border-border/60 text-muted-foreground' : 'bg-transparent border-border text-foreground hover:border-primary/20'}`}
+                  className={`p-3.5 rounded-xl border transition-all flex items-center justify-between cursor-pointer ${done ? 'bg-secondary/15 border-border/40 text-muted-foreground/80 opacity-75' : 'bg-secondary/40 border-border text-foreground'}`}
                 >
                   <div className="flex items-center gap-3">
-                    {done ? (
-                      <CheckCircle2 size={16} className="text-primary shrink-0" />
-                    ) : (
-                      <Circle size={16} className="text-muted-foreground shrink-0" />
-                    )}
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all ${done ? 'bg-primary border-primary text-white' : 'border-neutral-700 bg-black/25'}`}>
+                      {done ? (
+                        <CheckCircle2 size={12} className="text-white" />
+                      ) : (
+                        <span className="w-1.5 h-1.5 rounded-full bg-neutral-650"></span>
+                      )}
+                    </div>
                     <div>
                       <span className={`text-xs font-bold block ${done ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
                         {mission.name}
@@ -371,10 +403,10 @@ export default function Dashboard() {
                       <span className="text-[9px] text-muted-foreground block mt-0.5">{mission.desc}</span>
                     </div>
                   </div>
-                  <span className="text-[8px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded border border-primary/10 shrink-0">
+                  <span className={`text-[8px] font-black px-2 py-0.5 rounded border shrink-0 ${done ? 'text-muted-foreground/50 border-neutral-800' : 'text-primary bg-primary/5 border-primary/10'}`}>
                     +{mission.xp} XP
                   </span>
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -390,15 +422,29 @@ export default function Dashboard() {
             
             {latestAnalysis ? (
               <div className="space-y-4 pt-1">
-                <div className="flex justify-between items-center bg-secondary/35 border border-border p-3 rounded-xl">
-                  <div>
-                    <span className="text-[8px] font-bold text-muted-foreground uppercase block">Harmony Score</span>
-                    <span className="text-lg font-black text-foreground block mt-0.5">{latestAnalysis.facial_harmony_score}%</span>
+                <div className="flex gap-4 items-center">
+                  {latestAnalysis.front_photo_url && (
+                    <div className="w-16 h-20 rounded-xl overflow-hidden border border-border/60 shrink-0 relative bg-neutral-950">
+                      <img 
+                        src={getOptimizedUrl(latestAnalysis.front_photo_url)} 
+                        alt="Latest scan" 
+                        className="w-full h-full object-cover" 
+                      />
+                      <div className="absolute inset-0 bg-primary/5 mix-blend-overlay"></div>
+                    </div>
+                  )}
+                  <div className="flex-1 space-y-2">
+                    <div className="flex justify-between items-center bg-secondary/35 border border-border p-2.5 rounded-xl">
+                      <div>
+                        <span className="text-[8px] font-bold text-muted-foreground uppercase block">Harmony Score</span>
+                        <span className="text-base font-black text-foreground block">{latestAnalysis.facial_harmony_score}%</span>
+                      </div>
+                      <Badge variant="indigo">{latestAnalysis.potential_label || 'MTN'}</Badge>
+                    </div>
                   </div>
-                  <Badge variant="indigo">{latestAnalysis.potential_label || 'MTN'}</Badge>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 text-[10px] leading-relaxed">
+                <div className="grid grid-cols-2 gap-2 text-[10px] leading-relaxed">
                   <div className="bg-secondary/15 p-2 rounded-lg border border-border/30">
                     <strong className="text-muted-foreground block uppercase tracking-wider text-[8px] mb-0.5">Symmetry</strong>
                     <span className="text-foreground font-semibold">{latestAnalysis.symmetry_score}% balance</span>

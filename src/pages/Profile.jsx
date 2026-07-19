@@ -185,10 +185,10 @@ export default function Profile() {
                 <img 
                   src={getOptimizedUrl(user.profile.profile_photo_url, 160, 160)} 
                   alt="Profile" 
-                  className="w-20 h-20 rounded-full object-cover border-2 border-white/10 shadow-lg shadow-primary/10"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-primary/30 shadow-[0_0_20px_rgba(134,59,255,0.15)]"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-primary to-purple-650 flex items-center justify-center text-white font-black text-3xl shadow-lg border-2 border-white/10">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-primary to-purple-600 flex items-center justify-center text-white font-black text-3xl shadow-[0_0_20px_rgba(134,59,255,0.15)] border-2 border-primary/30">
                   {user?.profile?.name?.substring(0, 2).toUpperCase() || 'TR'}
                 </div>
               )}
@@ -257,23 +257,32 @@ export default function Profile() {
             </h3>
 
             <div className="space-y-3.5">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground flex items-center gap-1.5">
-                  <Flame size={14} className="text-orange-500" /> Current Streak
+              <div className="flex justify-between items-center text-xs p-2 rounded-lg hover:bg-secondary/30 transition-colors">
+                <span className="text-muted-foreground flex items-center gap-2">
+                  <div className="p-1 rounded-md bg-orange-500/10 border border-orange-500/15">
+                    <Flame size={12} className="text-orange-500" />
+                  </div>
+                  Current Streak
                 </span>
                 <strong className="text-foreground">{streak} days</strong>
               </div>
 
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground flex items-center gap-1.5">
-                  <Award size={14} className="text-yellow-500" /> Longest Streak
+              <div className="flex justify-between items-center text-xs p-2 rounded-lg hover:bg-secondary/30 transition-colors">
+                <span className="text-muted-foreground flex items-center gap-2">
+                  <div className="p-1 rounded-md bg-yellow-500/10 border border-yellow-500/15">
+                    <Award size={12} className="text-yellow-500" />
+                  </div>
+                  Longest Streak
                 </span>
                 <strong className="text-foreground">{longestStreak} days</strong>
               </div>
 
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted-foreground flex items-center gap-1.5">
-                  <Calendar size={14} className="text-blue-500" /> Days Logged
+              <div className="flex justify-between items-center text-xs p-2 rounded-lg hover:bg-secondary/30 transition-colors">
+                <span className="text-muted-foreground flex items-center gap-2">
+                  <div className="p-1 rounded-md bg-blue-500/10 border border-blue-500/15">
+                    <Calendar size={12} className="text-blue-500" />
+                  </div>
+                  Days Logged
                 </span>
                 <strong className="text-foreground">{daysToAscend} days</strong>
               </div>
@@ -287,7 +296,7 @@ export default function Profile() {
           
           {/* Ascend Plus Subscription Promo Card */}
           {!isPlus && (
-            <Card className="p-6 relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6 border-primary/25 bg-gradient-to-br from-primary/5 via-transparent to-transparent">
+            <Card className="p-6 relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6 border-primary/25 bg-gradient-to-br from-primary/5 via-transparent to-transparent shadow-[0_8px_30px_rgba(134,59,255,0.04)]">
               <div className="absolute -top-16 -right-16 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none"></div>
               
               <div className="space-y-2 text-center sm:text-left">

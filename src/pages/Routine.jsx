@@ -1,9 +1,10 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\pages\Routine.jsx
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 import { getRoutines, updateRoutineTask, getWaterLog, updateWaterLog, getSleepLog, updateSleepLog } from '../services/db';
 import { Card, Button, Input, Badge, Skeleton } from '../components/DesignSystem';
-import { Sun, Moon, Sparkles, Smile, ShieldCheck, HeartPulse, Trash2 } from 'lucide-react';
+import { Sun, Moon, Sparkles, Smile, ShieldCheck, HeartPulse, Trash2, CheckCircle2 } from 'lucide-react';
 
 export default function Routine() {
   const { addXP, syncGameState } = useGame();
@@ -135,17 +136,24 @@ export default function Routine() {
               
               <div className="space-y-2.5 text-xs">
                 {safeMorning.map((task) => (
-                  <label key={task.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-secondary/15 border border-border hover:border-primary/20 transition-all cursor-pointer select-none">
+                  <motion.label 
+                    key={task.id} 
+                    whileHover={{ x: task.completed ? 0 : 3 }}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-secondary/20 border border-border hover:border-primary/15 transition-all cursor-pointer select-none"
+                  >
                     <input
                       type="checkbox"
                       checked={task.completed}
                       onChange={(e) => handleToggleTask('morning', task.id, e.target.checked)}
-                      className="rounded border-border focus:ring-0 text-primary w-4 h-4 cursor-pointer"
+                      className="hidden"
                     />
-                    <span className={task.completed ? 'line-through text-muted-foreground' : 'text-foreground font-semibold'}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all shrink-0 ${task.completed ? 'bg-primary border-primary' : 'border-neutral-700 bg-black/25'}`}>
+                      {task.completed ? <CheckCircle2 size={12} className="text-white" /> : <span className="w-1.5 h-1.5 rounded-full bg-neutral-600"></span>}
+                    </div>
+                    <span className={task.completed ? 'line-through text-muted-foreground text-xs' : 'text-foreground font-semibold text-xs'}>
                       {task.text}
                     </span>
-                  </label>
+                  </motion.label>
                 ))}
               </div>
             </Card>
@@ -159,17 +167,24 @@ export default function Routine() {
               
               <div className="space-y-2.5 text-xs">
                 {safeNight.map((task) => (
-                  <label key={task.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-secondary/15 border border-border hover:border-primary/20 transition-all cursor-pointer select-none">
+                  <motion.label 
+                    key={task.id} 
+                    whileHover={{ x: task.completed ? 0 : 3 }}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-secondary/20 border border-border hover:border-primary/15 transition-all cursor-pointer select-none"
+                  >
                     <input
                       type="checkbox"
                       checked={task.completed}
                       onChange={(e) => handleToggleTask('night', task.id, e.target.checked)}
-                      className="rounded border-border focus:ring-0 text-primary w-4 h-4 cursor-pointer"
+                      className="hidden"
                     />
-                    <span className={task.completed ? 'line-through text-muted-foreground' : 'text-foreground font-semibold'}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all shrink-0 ${task.completed ? 'bg-primary border-primary' : 'border-neutral-700 bg-black/25'}`}>
+                      {task.completed ? <CheckCircle2 size={12} className="text-white" /> : <span className="w-1.5 h-1.5 rounded-full bg-neutral-600"></span>}
+                    </div>
+                    <span className={task.completed ? 'line-through text-muted-foreground text-xs' : 'text-foreground font-semibold text-xs'}>
                       {task.text}
                     </span>
-                  </label>
+                  </motion.label>
                 ))}
               </div>
             </Card>
@@ -188,17 +203,24 @@ export default function Routine() {
               
               <div className="space-y-2.5 text-xs">
                 {safeSkincare.map((task) => (
-                  <label key={task.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-secondary/15 border border-border hover:border-primary/20 transition-all cursor-pointer select-none">
+                  <motion.label 
+                    key={task.id} 
+                    whileHover={{ x: task.completed ? 0 : 3 }}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-secondary/20 border border-border hover:border-primary/15 transition-all cursor-pointer select-none"
+                  >
                     <input
                       type="checkbox"
                       checked={task.completed}
                       onChange={(e) => handleToggleTask('skincare', task.id, e.target.checked)}
-                      className="rounded border-border focus:ring-0 text-primary w-4 h-4 cursor-pointer"
+                      className="hidden"
                     />
-                    <span className={task.completed ? 'line-through text-muted-foreground' : 'text-foreground font-semibold'}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all shrink-0 ${task.completed ? 'bg-primary border-primary' : 'border-neutral-700 bg-black/25'}`}>
+                      {task.completed ? <CheckCircle2 size={12} className="text-white" /> : <span className="w-1.5 h-1.5 rounded-full bg-neutral-600"></span>}
+                    </div>
+                    <span className={task.completed ? 'line-through text-muted-foreground text-xs' : 'text-foreground font-semibold text-xs'}>
                       {task.text}
                     </span>
-                  </label>
+                  </motion.label>
                 ))}
               </div>
             </Card>
@@ -212,17 +234,24 @@ export default function Routine() {
               
               <div className="space-y-2.5 text-xs">
                 {safeWorkout.map((task) => (
-                  <label key={task.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-secondary/15 border border-border hover:border-primary/20 transition-all cursor-pointer select-none">
+                  <motion.label 
+                    key={task.id} 
+                    whileHover={{ x: task.completed ? 0 : 3 }}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-secondary/20 border border-border hover:border-primary/15 transition-all cursor-pointer select-none"
+                  >
                     <input
                       type="checkbox"
                       checked={task.completed}
                       onChange={(e) => handleToggleTask('workout', task.id, e.target.checked)}
-                      className="rounded border-border focus:ring-0 text-primary w-4 h-4 cursor-pointer"
+                      className="hidden"
                     />
-                    <span className={task.completed ? 'line-through text-muted-foreground' : 'text-foreground font-semibold'}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all shrink-0 ${task.completed ? 'bg-primary border-primary' : 'border-neutral-700 bg-black/25'}`}>
+                      {task.completed ? <CheckCircle2 size={12} className="text-white" /> : <span className="w-1.5 h-1.5 rounded-full bg-neutral-600"></span>}
+                    </div>
+                    <span className={task.completed ? 'line-through text-muted-foreground text-xs' : 'text-foreground font-semibold text-xs'}>
                       {task.text}
                     </span>
-                  </label>
+                  </motion.label>
                 ))}
               </div>
             </Card>

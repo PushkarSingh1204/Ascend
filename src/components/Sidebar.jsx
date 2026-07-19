@@ -157,27 +157,35 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
               key={item.path}
               to={item.path}
               className={({ isActive }) => `
-                relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 group
-                ${isActive 
-                  ? 'bg-primary/10 text-primary border border-primary/20 shadow-[0_4px_20px_rgba(134,59,255,0.06)]' 
-                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40 border border-transparent'
-                }
+                relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-350 group
+                ${isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}
               `}
             >
-              <item.icon size={16} className="shrink-0 transition-transform group-hover:scale-110 duration-200" />
-              {!isCollapsed && (
-                <motion.span
-                  initial={{ opacity: 0, x: -5 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="whitespace-nowrap"
-                >
-                  {item.name}
-                </motion.span>
-              )}
-              {isCollapsed && (
-                <div className="absolute left-16 bg-card border border-border px-2.5 py-1 rounded-lg text-[10px] font-bold text-foreground opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl z-30 delay-100">
-                  {item.name}
-                </div>
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <motion.div 
+                      layoutId="sidebarActiveBackground"
+                      className="absolute inset-0 bg-primary/10 border border-primary/20 rounded-xl -z-10 shadow-[0_4px_20px_rgba(134,59,255,0.04)]"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  <item.icon size={16} className={`shrink-0 transition-transform group-hover:scale-105 duration-200 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                  {!isCollapsed && (
+                    <motion.span
+                      initial={{ opacity: 0, x: -5 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="whitespace-nowrap"
+                    >
+                      {item.name}
+                    </motion.span>
+                  )}
+                  {isCollapsed && (
+                    <div className="absolute left-16 bg-card border border-border px-2.5 py-1 rounded-lg text-[10px] font-bold text-foreground opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl z-30 delay-100">
+                      {item.name}
+                    </div>
+                  )}
+                </>
               )}
             </NavLink>
           ))}
