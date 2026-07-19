@@ -37,6 +37,9 @@ export default function Profile() {
   
   // Profile information
   const [nameInput, setNameInput] = useState('');
+  const [budget, setBudget] = useState('Medium');
+  const [focusArea, setFocusArea] = useState('Face');
+  const [goal, setGoal] = useState('Jawline Definition');
   const [isPlus, setIsPlus] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -121,6 +124,9 @@ export default function Profile() {
     if (user && user.profile) {
       setIsPlus(!!user.profile.is_premium);
       setNameInput(user.profile.name || '');
+      setBudget(user.profile.budget || 'Medium');
+      setFocusArea(user.profile.focus_area || 'Face');
+      setGoal(user.profile.goal || 'Jawline Definition');
       if (user.profile.preferences) {
         setMorningReminder(!!user.profile.preferences.morningReminder);
         setNightReminder(!!user.profile.preferences.nightReminder);
@@ -142,6 +148,9 @@ export default function Profile() {
       setLoading(true);
       const updated = await updateProfile({
         name: nameInput,
+        budget,
+        focus_area: focusArea,
+        goal,
         preferences: {
           morningReminder,
           nightReminder,
@@ -343,6 +352,52 @@ export default function Profile() {
                   onChange={(e) => setNameInput(e.target.value)}
                   className="w-full bg-secondary/20 border border-border rounded-xl py-3 px-4 text-xs text-foreground focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
                 />
+              </div>
+
+              {/* Aesthetic & Budget Preferences */}
+              <div className="space-y-4 pt-4 border-t border-border">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">Aesthetic & Budget Preferences</label>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider block">Skincare Budget</label>
+                    <select
+                      value={budget}
+                      onChange={(e) => setBudget(e.target.value)}
+                      className="w-full bg-secondary/40 border border-border rounded-xl py-2.5 px-3 text-xs text-foreground focus:outline-none focus:border-primary transition-all bg-neutral-900"
+                    >
+                      <option value="Low">Low (Affordable / Simple)</option>
+                      <option value="Medium">Medium (Balanced)</option>
+                      <option value="High">High (Premium / Advanced)</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider block">Focus Area</label>
+                    <select
+                      value={focusArea}
+                      onChange={(e) => setFocusArea(e.target.value)}
+                      className="w-full bg-secondary/40 border border-border rounded-xl py-2.5 px-3 text-xs text-foreground focus:outline-none focus:border-primary transition-all bg-neutral-900"
+                    >
+                      <option value="Face">Face Structure</option>
+                      <option value="Fitness">Fitness & Alignment</option>
+                      <option value="Grooming">Grooming & Style</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider block">Primary Goal</label>
+                    <select
+                      value={goal}
+                      onChange={(e) => setGoal(e.target.value)}
+                      className="w-full bg-secondary/40 border border-border rounded-xl py-2.5 px-3 text-xs text-foreground focus:outline-none focus:border-primary transition-all bg-neutral-900"
+                    >
+                      <option value="Jawline Definition">Jawline Definition</option>
+                      <option value="Skin Health">Skin Health & Clarity</option>
+                      <option value="Overall Glow">Overall Symmetry & Glow</option>
+                    </select>
+                  </div>
+                </div>
               </div>
 
               {/* Interface Theme preferences */}

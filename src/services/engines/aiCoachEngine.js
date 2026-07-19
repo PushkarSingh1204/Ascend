@@ -34,6 +34,16 @@ class AICoachEngine extends BaseEngine {
       return `Based on your biometrics, I recommend you ${matchingRec.title.toLowerCase()}. Specifically, ${matchingRec.description}. This is suggested because: ${matchingRec.reason}. Expect an impact score of ${matchingRec.impact}/5 with a confidence level of ${Math.round(matchingRec.confidence * 100)}%.`;
     }
 
+    // General queries about routines or active recommendations
+    if (q.includes('routine') || q.includes('recommend') || q.includes('do next') || q.includes('plan')) {
+      if (recommendations.length > 0) {
+        const top3 = recommendations.slice(0, 3).map((r, idx) => {
+          return `${idx + 1}. [${r.category.toUpperCase()}] ${r.title} — ${r.description} (Because: ${r.reason})`;
+        }).join('\n\n');
+        return `Here are your top active routine recommendations dynamically calculated by the intelligence layer:\n\n${top3}\n\nAsk me details about any specific recommendation!`;
+      }
+    }
+
     // Default conversational fallbacks matching context
     if (q.includes('skincare') || q.includes('skin')) {
       const skinType = profile.skin_type || 'Normal';
