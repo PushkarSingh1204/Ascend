@@ -8,7 +8,7 @@ export const INITIAL_RESOURCES = [
     category: 'Mewing',
     type: 'pdf',
     difficulty: 'Beginner',
-    thumbnail: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80',
+    thumbnail: '/looksmaxing_before.jpg',
     contentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
     markdownBody: `
 # Complete Orthotropic Mewing Blueprint
@@ -41,7 +41,7 @@ Proper tongue posture is the foundation of facial orthotropics. This guide break
     category: 'Jawline',
     type: 'video',
     difficulty: 'Intermediate',
-    thumbnail: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&auto=format&fit=crop&q=80',
+    thumbnail: '/looksmaxing_after.jpg',
     contentUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     markdownBody: `
 # Jawline Masseter Hypertrophy Masterclass

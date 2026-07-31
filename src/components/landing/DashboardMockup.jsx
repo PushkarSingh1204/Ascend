@@ -134,8 +134,8 @@ export default function DashboardMockup() {
 
             <div className="rounded-[16px] overflow-hidden border border-[#1F2937] bg-[#0B1020]">
               <ImageSlider 
-                beforeImage="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80"
-                afterImage="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800&auto=format&fit=crop&q=80"
+                beforeImage="/looksmaxing_before.jpg"
+                afterImage="/looksmaxing_after.jpg"
                 beforeLabel="Baseline Photo"
                 afterLabel="Week 12 Progress"
               />

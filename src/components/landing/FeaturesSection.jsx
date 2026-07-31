@@ -76,7 +76,7 @@ export default function FeaturesSection() {
           <div className="lg:col-span-6">
             <div className="matte-card p-4 md:p-6 border border-[#1F2937] overflow-hidden group">
               <img 
-                src="https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&q=80&w=1000" 
+                src="/looksmaxing_before.jpg" 
                 alt="Biometric Scan Feature" 
                 className="w-full h-[320px] md:h-[380px] object-cover rounded-[12px] border border-[#1F2937] transition-transform duration-700 group-hover:scale-[1.02]"
                 loading="lazy"
@@ -96,7 +96,7 @@ export default function FeaturesSection() {
           <div className="lg:col-span-6 order-2 lg:order-1">
             <div className="matte-card p-4 md:p-6 border border-[#1F2937] overflow-hidden group">
               <img 
-                src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=1000" 
+                src="/looksmaxing_after.jpg" 
                 alt="Optimized Habit Builder" 
                 className="w-full h-[320px] md:h-[380px] object-cover rounded-[12px] border border-[#1F2937] transition-transform duration-700 group-hover:scale-[1.02]"
                 loading="lazy"
