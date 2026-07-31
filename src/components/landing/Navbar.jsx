@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { Sun, Moon, Menu, X, ArrowRight } from 'lucide-react';
 
+import Logo from '../Logo';
+
 export default function Navbar() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
@@ -33,12 +35,7 @@ export default function Navbar() {
       <div className="max-w-[1280px] mx-auto px-6 md:px-12 flex items-center justify-between">
         {/* Brand Logo */}
         <a href="#" className="flex items-center gap-3 group text-decoration-none">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#7C3AED] to-[#22D3EE] flex items-center justify-center font-extrabold text-white text-base shadow-md shadow-[#7C3AED]/25 transition-transform duration-250 group-hover:scale-105">
-            A
-          </div>
-          <span className="text-xl font-bold tracking-tight text-[#F8FAFC]">
-            ASCEND
-          </span>
+          <Logo size={36} />
         </a>
 
         {/* Desktop Nav Links */}

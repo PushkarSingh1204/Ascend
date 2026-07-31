@@ -1,7 +1,7 @@
-// C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\components\landing\FooterSection.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, ShieldCheck } from 'lucide-react';
+import Logo from '../Logo';
 
 export default function FooterSection() {
   const navigate = useNavigate();
@@ -45,12 +45,7 @@ export default function FooterSection() {
 
       {/* Footer Navigation & Copyright */}
       <div className="max-w-[1280px] mx-auto px-6 md:px-12 py-10 flex flex-col md:flex-row justify-between items-center gap-6 relative z-10 text-xs text-[#94A3B8]">
-        <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#7C3AED] to-[#22D3EE] flex items-center justify-center font-bold text-white text-xs">
-            A
-          </div>
-          <span className="font-bold tracking-tight text-[#F8FAFC] text-sm">ASCEND</span>
-        </div>
+        <Logo size={32} />
 
         <div className="flex items-center gap-6 font-medium">
           <a href="#features" className="hover:text-[#F8FAFC] transition-colors">Features</a>
