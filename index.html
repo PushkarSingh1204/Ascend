@@ -6,6 +6,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ascend | AI-Powered Self-Transformation & Habit Tracker</title>
     <meta name="description" content="Ascend is a premium, private self-transformation platform. Track facial harmony, manage daily routines, log sleep and water, earn XP, and unlock achievement badges." />
+    <script>
+      (function() {
+        try {
+          var raw = localStorage.getItem('ascend_theme_v2');
+          var mode = 'system';
+          if (raw) {
+            var parsed = JSON.parse(raw);
+            mode = parsed.mode || 'system';
+          } else {
+            var old = localStorage.getItem('ascend_theme');
+            if (old) mode = old;
+          }
+          
+          var isDark = true;
+          if (mode === 'light') {
+            isDark = false;
+          } else if (mode === 'dark') {
+            isDark = true;
+          } else {
+            isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          }
+          
+          if (!isDark) {
+            document.documentElement.classList.add('light');
+          } else {
+            document.documentElement.classList.remove('light');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body class="bg-background text-foreground transition-colors duration-350">
     <div id="root"></div>

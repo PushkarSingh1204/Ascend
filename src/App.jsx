@@ -24,6 +24,7 @@ const Roadmap = lazy(() => import('./pages/Roadmap'));
 const WeeklyReview = lazy(() => import('./pages/WeeklyReview'));
 const PremiumTools = lazy(() => import('./pages/PremiumTools'));
 const CalendarView = lazy(() => import('./pages/CalendarView'));
+const Resources = lazy(() => import('./pages/Resources'));
 
 // Skeleton Loading Fallback
 const PageLoader = () => (
@@ -189,6 +190,15 @@ function App() {
                     element={
                       <OnboardedRoute>
                         <CalendarView />
+                      </OnboardedRoute>
+                    } 
+                  />
+
+                  <Route 
+                    path="/resources" 
+                    element={
+                      <OnboardedRoute>
+                        <Resources />
                       </OnboardedRoute>
                     } 
                   />

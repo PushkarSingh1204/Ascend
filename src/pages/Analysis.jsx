@@ -6,6 +6,7 @@ import { useGame } from '../context/GameContext';
 import { saveAnalysis, unlockAnalysis, getAnalyses, deleteAnalysis } from '../services/db';
 import { uploadScan, getOptimizedUrl, validateImageFile } from '../services/cloudinary';
 import { analyzeFaceImage, generateTransformationTips } from '../services/mediapipe';
+import { getFacialHarmonyRating } from '../utils/facialHarmonyScale';
 import FaceMeshOverlay from '../components/FaceMeshOverlay';
 import { Card, Button, ProgressRing, Badge, Skeleton } from '../components/DesignSystem';
 import EmptyState from '../components/EmptyState';
@@ -474,41 +475,98 @@ export default function Analysis() {
       {/* STEP 4: Report dashboard */}
       {activeView === 'step4' && currentAnalysis && (
         <section className="space-y-6">
-          {/* Main metrics Card */}
-          <Card className="p-6 grid grid-cols-1 md:grid-cols-4 gap-6 bg-gradient-to-br from-primary/5 via-transparent to-transparent border-primary/10">
-            <div className="md:col-span-2 flex flex-col justify-between space-y-4">
-              <div>
-                <span className="text-[9px] font-black text-primary uppercase tracking-widest block mb-0.5">Overall Estimate Report</span>
-                <h2 className="text-xl font-black text-foreground tracking-tight">Facial Harmony Score</h2>
-              </div>
-              
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-black text-foreground">{currentAnalysis.facial_harmony_score}%</span>
-                <span className="text-xs font-semibold text-muted-foreground">/ 100 max</span>
-              </div>
-              
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Harmony calculation based on proportions (Thirds, Fifths) and bilateral alignment landmarks.
-              </p>
-            </div>
+          {(() => {
+            const rating = getFacialHarmonyRating(currentAnalysis.facial_harmony_score);
+            return (
+              <Card className="p-6 md:p-8 bg-gradient-to-br from-primary/10 via-card to-card border-primary/20 space-y-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-6 border-b border-border">
+                  <div>
+                    <span className="text-[10px] font-black text-primary uppercase tracking-widest block mb-1">
+                      Standardized Facial Harmony Rating (Tier {rating.tier} / 8)
+                    </span>
+                    <h2 className="text-2xl md:text-3xl font-black text-foreground tracking-tight flex items-center gap-3">
+                      <span>{currentAnalysis.facial_harmony_score} / 100</span>
+                      <span className={`text-xs px-3 py-1 rounded-full ${rating.badgeBg}`}>
+                        {rating.category}
+                      </span>
+                    </h2>
+                  </div>
 
-            <div className="grid grid-cols-2 md:col-span-2 gap-4">
-              {[
-                { label: 'Symmetry index', val: `${currentAnalysis.symmetry_score}%`, desc: 'Left-right balance' },
-                { label: 'Proportion index', val: `${currentAnalysis.facial_proportion_score}%`, desc: 'Vertical splits' },
-                { label: 'Improvement Pot.', val: `${currentAnalysis.improvement_potential_score}%`, desc: 'Routine head-room' },
-                { label: 'Confidence Score', val: 'High', desc: 'Sufficient illumination' }
-              ].map((sub, idx) => (
-                <div key={idx} className="bg-secondary/25 border border-border p-3 rounded-xl flex flex-col justify-between">
-                  <span className="text-[8px] font-black text-muted-foreground uppercase tracking-wider block">{sub.label}</span>
-                  <div className="mt-2">
-                    <span className="text-base font-black text-foreground block leading-none">{sub.val}</span>
-                    <span className="text-[8px] text-muted-foreground mt-0.5 block leading-none">{sub.desc}</span>
+                  <div className="flex items-center gap-3 bg-secondary/40 border border-border px-4 py-2 rounded-xl">
+                    <span className="text-xs font-bold text-muted-foreground">Population Rank:</span>
+                    <span className="text-xs font-black text-primary">{rating.percentile}</span>
                   </div>
                 </div>
-              ))}
-            </div>
-          </Card>
+
+                {/* Progress Indicator Bar */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-bold">
+                    <span className="text-muted-foreground">Harmony Level ({rating.category})</span>
+                    <span className="text-foreground">{currentAnalysis.facial_harmony_score}%</span>
+                  </div>
+                  <div className="w-full h-3 bg-secondary rounded-full overflow-hidden border border-border p-0.5">
+                    <div 
+                      className={`h-full rounded-full bg-gradient-to-r ${rating.barGradient} transition-all duration-1000`} 
+                      style={{ width: `${currentAnalysis.facial_harmony_score}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-muted-foreground leading-relaxed italic bg-secondary/20 p-3.5 rounded-xl border border-border/40">
+                  "{rating.description}"
+                </p>
+
+                {/* Strengths vs Improvement Breakdown */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
+                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider block">
+                      ✓ Structural Strengths
+                    </span>
+                    <ul className="space-y-1.5 text-xs text-foreground font-medium">
+                      {rating.strengths.map((str, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                          <span>{str}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-2">
+                    <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">
+                      • Target Improvement Areas
+                    </span>
+                    <ul className="space-y-1.5 text-xs text-foreground font-medium">
+                      {rating.improvements.map((imp, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                          <span>{imp}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Secondary Sub-metrics */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+                  {[
+                    { label: 'Symmetry Index', val: `${currentAnalysis.symmetry_score}%`, desc: 'Left-Right Balance' },
+                    { label: 'Proportion Index', val: `${currentAnalysis.facial_proportion_score}%`, desc: 'Vertical Thirds' },
+                    { label: 'Improvement Potential', val: `${currentAnalysis.improvement_potential_score}%`, desc: 'Routine Headroom' },
+                    { label: 'Confidence Score', val: 'High', desc: 'Sufficient Illumination' }
+                  ].map((sub, idx) => (
+                    <div key={idx} className="bg-secondary/25 border border-border p-3 rounded-xl flex flex-col justify-between">
+                      <span className="text-[8px] font-black text-muted-foreground uppercase tracking-wider block">{sub.label}</span>
+                      <div className="mt-2">
+                        <span className="text-base font-black text-foreground block leading-none">{sub.val}</span>
+                        <span className="text-[8px] text-muted-foreground mt-0.5 block leading-none">{sub.desc}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            );
+          })()}
 
           {/* Selector tab controls */}
           <div className="flex gap-4 border-b border-border">

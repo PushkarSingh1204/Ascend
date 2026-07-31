@@ -4,53 +4,76 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setThemeState] = useState(() => {
-    return localStorage.getItem('ascend_theme') || 'dark';
+  const [themeMode, setThemeModeState] = useState(() => {
+    try {
+      const raw = localStorage.getItem('ascend_theme_v2');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return parsed.mode || 'system';
+      }
+      const legacy = localStorage.getItem('ascend_theme');
+      if (legacy) return legacy;
+    } catch (e) {}
+    return 'system';
   });
+
+  const [resolvedTheme, setResolvedTheme] = useState('dark');
 
   useEffect(() => {
     const root = window.document.documentElement;
     
-    const applyTheme = (themeName) => {
-      // Clear previous theme overrides
-      root.classList.remove('light');
-      
-      if (themeName === 'light') {
-        root.classList.add('light');
-      } else if (themeName === 'system') {
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        if (!systemPrefersDark) {
-          root.classList.add('light');
-        }
+    const applyTheme = (mode) => {
+      let isDark = true;
+      if (mode === 'light') {
+        isDark = false;
+      } else if (mode === 'dark') {
+        isDark = true;
+      } else {
+        isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       }
+      
+      const resolved = isDark ? 'dark' : 'light';
+      setResolvedTheme(resolved);
+
+      root.classList.remove('light', 'dark');
+      if (!isDark) {
+        root.classList.add('light');
+      } else {
+        root.classList.add('dark');
+      }
+
+      localStorage.setItem('ascend_theme_v2', JSON.stringify({
+        mode: mode,
+        resolved: resolved
+      }));
     };
 
-    applyTheme(theme);
-    localStorage.setItem('ascend_theme', theme);
+    applyTheme(themeMode);
 
-    // If theme is system, listen to media query changes
-    if (theme === 'system') {
+    if (themeMode === 'system') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleSystemThemeChange = (e) => {
-        root.classList.remove('light');
-        if (!e.matches) {
-          root.classList.add('light');
-        }
+      const handleChange = (e) => {
+        applyTheme('system');
       };
-      
-      mediaQuery.addEventListener('change', handleSystemThemeChange);
-      return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
     }
-  }, [theme]);
+  }, [themeMode]);
 
   const setTheme = (newTheme) => {
     if (['dark', 'light', 'system'].includes(newTheme)) {
-      setThemeState(newTheme);
+      setThemeModeState(newTheme);
     }
   };
 
+  const toggleTheme = () => {
+    if (themeMode === 'dark') setTheme('light');
+    else if (themeMode === 'light') setTheme('system');
+    else setTheme('dark');
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider value={{ theme: themeMode, resolvedTheme, setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

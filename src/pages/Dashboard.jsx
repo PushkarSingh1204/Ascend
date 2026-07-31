@@ -7,6 +7,7 @@ import { getAnalyses, getWaterLog, getSleepLog, getJournals, getCheckins } from 
 import { getOptimizedUrl } from '../services/cloudinary';
 import { Card, Button, ProgressRing, Badge, Skeleton } from '../components/DesignSystem';
 import { recommendationEngine } from '../services/engines/recommendationEngine.js';
+import { getFacialHarmonyRating } from '../utils/facialHarmonyScale';
 
 import { 
   Flame, 
@@ -476,7 +477,14 @@ export default function Dashboard() {
                         <span className="text-[8px] font-bold text-muted-foreground uppercase block">Harmony Score</span>
                         <span className="text-base font-black text-foreground block">{latestAnalysis.facial_harmony_score}%</span>
                       </div>
-                      <Badge variant="indigo">{latestAnalysis.potential_label || 'MTN'}</Badge>
+                      {(() => {
+                        const rating = getFacialHarmonyRating(latestAnalysis.facial_harmony_score);
+                        return (
+                          <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold ${rating.badgeBg}`}>
+                            {rating.category}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>

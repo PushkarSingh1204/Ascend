@@ -43,6 +43,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Roadmap', path: '/roadmap', icon: Compass },
     { name: 'Face Harmony', path: '/analysis', icon: Sparkles },
+    { name: 'Resources Hub', path: '/resources', icon: BookOpen },
     { name: 'Progress Slider', path: '/progress', icon: ImageIcon },
     { name: 'Routines', path: '/routine', icon: CalendarDays },
     { name: 'Journal', path: '/journal', icon: BookOpen },
@@ -58,11 +59,11 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
     navigate('/');
   };
 
-  // Limit mobile dock items to 4 core sections to keep it clean and avoid duplication
+  // Mobile dock items
   const mobileDockItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Roadmap', path: '/roadmap', icon: Compass },
     { name: 'Harmony', path: '/analysis', icon: Sparkles },
+    { name: 'Resources', path: '/resources', icon: BookOpen },
     { name: 'Profile', path: '/profile', icon: User },
   ];
 
