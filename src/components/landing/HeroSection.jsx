@@ -2,8 +2,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Sparkles, ArrowRight, ShieldCheck, Star } from 'lucide-react';
+import { Sparkles, ArrowRight, CheckCircle2, ShieldCheck, Star } from 'lucide-react';
+import Typewriter from './Typewriter';
+import ServicePills from './ServicePills';
 import DashboardMockup from './DashboardMockup';
+import HeroVideo from './HeroVideo';
 
 export default function HeroSection({ 
   badgeText = "Private Client-Side AI Transformation Platform",
@@ -11,91 +14,118 @@ export default function HeroSection({
 }) {
   const navigate = useNavigate();
 
+  const trustIndicators = [
+    "AI Powered",
+    "Browser Privacy First",
+    "Personalized Roadmaps",
+    "Daily Progress Tracking"
+  ];
+
   return (
-    <section className="w-full pt-[140px] md:pt-[160px] pb-[100px] md:pb-[120px] px-6 md:px-12 flex flex-col items-center text-center relative z-10">
+    <section className="w-full relative min-h-screen pt-[130px] md:pt-[150px] pb-[100px] md:pb-[120px] px-6 md:px-12 flex flex-col justify-center items-center overflow-hidden z-10">
       
-      {/* 1. Announcement Badge */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#7C3AED]/10 border border-[#7C3AED]/25 text-[#22D3EE] text-xs font-semibold mb-8 shadow-sm"
-      >
-        <Sparkles size={14} strokeWidth={2} />
-        <span>{badgeText}</span>
-      </motion.div>
+      {/* Background Video with Native Mouse Scrubbing */}
+      <HeroVideo />
 
-      {/* 2. Headline */}
-      <motion.h1 
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-        className="text-4xl sm:text-5xl md:text-6xl lg:text-[72px] font-extrabold tracking-[-0.02em] leading-[1.08] text-[#F8FAFC] max-w-[900px] mx-auto mb-6"
-      >
-        Ascend Your <br className="hidden sm:inline" />
-        <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#7C3AED] via-[#A855F7] to-[#22D3EE]">
-          Appearance & Habits
-        </span>
-      </motion.h1>
+      <div className="max-w-[1280px] w-full mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+        
+        {/* LEFT COLUMN: Content & Typewriter & Service Pills (7 cols) */}
+        <div className="lg:col-span-7 flex flex-col items-start text-left space-y-8">
+          
+          {/* 1. Announcement Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-accent text-xs font-semibold shadow-sm"
+          >
+            <Sparkles size={14} strokeWidth={2} />
+            <span>{badgeText}</span>
+          </motion.div>
 
-      {/* 3. Subtitle */}
-      <motion.p
-        initial={{ opacity: 0, y: 25 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-        className="text-base sm:text-lg md:text-[18px] text-[#94A3B8] leading-relaxed max-w-[650px] mx-auto font-normal mb-10"
-      >
-        Ascend is a private, gamified self-transformation system that tracks facial harmony progress, schedules custom routines, and builds your transformation score with client-side AI.
-      </motion.p>
+          {/* 2. Animated Typewriter Headline */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full"
+          >
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[68px] font-extrabold tracking-[-0.02em] leading-[1.08] text-foreground">
+              <Typewriter text={"Transform\nYour Best Version."} speed={42} startDelay={400} />
+            </h1>
+          </motion.div>
 
-      {/* 4. CTA Buttons */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col sm:flex-row items-center justify-center gap-5 w-full sm:w-auto mb-10"
-      >
-        <button
-          onClick={() => navigate('/login')}
-          className="btn-primary-v2 w-full sm:w-auto px-8 py-4 text-base"
-        >
-          <span>Get Started Free</span>
-          <ArrowRight size={18} strokeWidth={2} className="btn-arrow" />
-        </button>
+          {/* 3. Supporting Subtitle */}
+          <motion.p
+            initial={{ opacity: 0, y: 25 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="text-base sm:text-lg md:text-[18px] text-muted-foreground leading-relaxed max-w-[620px] font-normal"
+          >
+            AI-powered facial analysis, habit tracking, personalized transformation roadmaps, and intelligent coaching to help you become your best self.
+          </motion.p>
 
-        <a
-          href="#workflow"
-          className="btn-secondary-v2 w-full sm:w-auto px-8 py-4 text-base"
-        >
-          <span>Explore AI Workflow</span>
-        </a>
-      </motion.div>
+          {/* 4. Action Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto"
+          >
+            <button
+              onClick={() => navigate('/login')}
+              className="btn-primary-v2 w-full sm:w-auto px-8 py-4 text-base font-bold"
+            >
+              <span>Start Free Analysis</span>
+              <ArrowRight size={18} strokeWidth={2.5} className="btn-arrow" />
+            </button>
 
-      {/* 5. Social Proof */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="flex items-center justify-center gap-3 text-[#94A3B8] text-xs font-medium mb-16"
-      >
-        <div className="flex items-center text-amber-400">
-          {[...Array(5)].map((_, i) => (
-            <Star key={i} size={14} fill="currentColor" strokeWidth={1} />
-          ))}
+            <a
+              href="#workflow"
+              className="btn-secondary-v2 w-full sm:w-auto px-8 py-4 text-base font-semibold"
+            >
+              <span>Explore Features</span>
+            </a>
+          </motion.div>
+
+          {/* 5. Trust Indicators */}
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-x-6 gap-y-3 pt-2 text-xs font-semibold text-muted-foreground"
+          >
+            {trustIndicators.map((indicator, idx) => (
+              <div key={idx} className="flex items-center gap-2 text-foreground">
+                <CheckCircle2 size={16} strokeWidth={2.5} className="text-emerald-400 shrink-0" />
+                <span>{indicator}</span>
+              </div>
+            ))}
+          </motion.div>
+
+          {/* 6. Interactive Multi-Select Category Pills */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full pt-4 border-t border-border/60"
+          >
+            <ServicePills />
+          </motion.div>
+
         </div>
-        <span className="w-1 h-1 rounded-full bg-[#374151]"></span>
-        <span>{socialProofText}</span>
-      </motion.div>
 
-      {/* 6. Interactive Dashboard Mockup */}
-      <motion.div
-        initial={{ opacity: 0, y: 40, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full"
-      >
-        <DashboardMockup />
-      </motion.div>
+        {/* RIGHT COLUMN: Floating 3D Showcase (5 cols) */}
+        <motion.div
+          initial={{ opacity: 0, y: 40, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="lg:col-span-5 w-full flex justify-center"
+        >
+          <DashboardMockup />
+        </motion.div>
+
+      </div>
 
     </section>
   );

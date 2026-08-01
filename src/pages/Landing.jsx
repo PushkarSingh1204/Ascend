@@ -12,12 +12,12 @@ import FooterSection from '../components/landing/FooterSection';
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-[#0B1020] text-[#F8FAFC] flex flex-col items-center overflow-x-hidden relative bg-mesh-slow selection:bg-[#7C3AED]/30 selection:text-[#22D3EE]">
+    <div className="min-h-screen bg-background text-foreground flex flex-col items-center overflow-x-hidden relative bg-mesh-slow selection:bg-primary/30 selection:text-accent font-sans">
       
       {/* Skip to Main Content Accessibility Link */}
       <a 
         href="#main-content" 
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] px-4 py-2 bg-[#7C3AED] text-white font-bold rounded-[8px]"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] px-4 py-2 bg-primary text-white font-bold rounded-lg shadow-lg"
       >
         Skip to main content
       </a>
