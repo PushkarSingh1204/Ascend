@@ -5,66 +5,76 @@ const DEFAULT_VIDEO_SRC = "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViG
 
 export default function HeroVideo({ videoSrc = DEFAULT_VIDEO_SRC }) {
   const videoRef = useRef(null);
-  const prevXRef = useRef(null);
-  const isSeekingRef = useRef(false);
+  const targetTimeRef = useRef(0);
+  const currentTimeRef = useRef(0);
+  const animFrameRef = useRef(null);
+  const isDesktopRef = useRef(false);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const handleResizeAndInit = () => {
-      const isDesktop = window.innerWidth >= 1024;
-      if (!isDesktop) {
-        // Mobile Autoplay
+    // Check device type and initialize video state
+    const checkDevice = () => {
+      isDesktopRef.current = window.innerWidth >= 1024;
+      if (!isDesktopRef.current) {
+        // Mobile Behavior: Autoplay, Loop, Muted
         video.muted = true;
         video.autoplay = true;
         video.loop = true;
         video.play().catch(() => {});
       } else {
-        // Desktop Scrubbing
+        // Desktop Behavior: Paused, No Autoplay, No Loop
         video.pause();
+        video.autoplay = false;
+        video.loop = false;
       }
     };
 
-    handleResizeAndInit();
+    checkDevice();
 
+    // Mouse Move Listener to calculate normalized target time
     const handleMouseMove = (e) => {
-      if (window.innerWidth < 1024 || !video || isNaN(video.duration) || video.duration <= 0) return;
+      if (!isDesktopRef.current || !video || !video.duration || isNaN(video.duration)) return;
 
-      const currentX = e.clientX;
-      if (prevXRef.current === null) {
-        prevXRef.current = currentX;
-        return;
-      }
-
-      const deltaX = currentX - prevXRef.current;
-      prevXRef.current = currentX;
-
-      // Sensitivity factor
-      const timeDelta = (deltaX / window.innerWidth) * 0.8 * video.duration;
-      let targetTime = video.currentTime + timeDelta;
-      
-      // Clamp between 0 and duration
-      targetTime = Math.max(0, Math.min(video.duration, targetTime));
-
-      if (!isSeekingRef.current) {
-        isSeekingRef.current = true;
-        video.currentTime = targetTime;
-      }
+      // Normalized X ratio across screen (0 -> 1)
+      const ratio = Math.max(0, Math.min(1, e.clientX / window.innerWidth));
+      targetTimeRef.current = ratio * video.duration;
     };
 
-    const handleSeeked = () => {
-      isSeekingRef.current = false;
+    // 60fps RequestAnimationFrame Loop with LERP Interpolation
+    const updateScrub = () => {
+      if (isDesktopRef.current && video && video.duration && !isNaN(video.duration)) {
+        const diff = targetTimeRef.current - currentTimeRef.current;
+
+        // Apply LERP (Linear Interpolation) with 0.12 factor for ultra-smooth movement
+        if (Math.abs(diff) > 0.001) {
+          currentTimeRef.current += diff * 0.12;
+          
+          // Clamp time safety boundary
+          const clamped = Math.max(0, Math.min(video.duration, currentTimeRef.current));
+          
+          // Apply to video currentTime safely without triggering React re-renders
+          try {
+            video.currentTime = clamped;
+          } catch (err) {
+            // Browser seeking safety
+          }
+        }
+      }
+      animFrameRef.current = requestAnimationFrame(updateScrub);
     };
 
-    video.addEventListener('seeked', handleSeeked);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('resize', handleResizeAndInit);
+    // Start rAF Loop
+    animFrameRef.current = requestAnimationFrame(updateScrub);
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('resize', checkDevice);
 
     return () => {
-      video.removeEventListener('seeked', handleSeeked);
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('resize', handleResizeAndInit);
+      window.removeEventListener('resize', checkDevice);
     };
   }, [videoSrc]);
 

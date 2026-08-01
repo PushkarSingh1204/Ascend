@@ -1,18 +1,45 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\components\landing\HeroSection.jsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Sparkles, ArrowRight, CheckCircle2, ShieldCheck, Star } from 'lucide-react';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react';
 import Typewriter from './Typewriter';
 import ServicePills from './ServicePills';
 import DashboardMockup from './DashboardMockup';
 import HeroVideo from './HeroVideo';
 
 export default function HeroSection({ 
-  badgeText = "Private Client-Side AI Transformation Platform",
-  socialProofText = "Rated 4.9/5 by transformation seekers • 100% Private On-Device AI"
+  badgeText = "Private Client-Side AI Transformation Platform"
 }) {
   const navigate = useNavigate();
+
+  // Subtle Mouse Parallax Tracking
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const springX = useSpring(mouseX, { stiffness: 60, damping: 25 });
+  const springY = useSpring(mouseY, { stiffness: 60, damping: 25 });
+
+  // Hero content parallax shift (8-12px)
+  const contentX = useTransform(springX, [-0.5, 0.5], [-12, 12]);
+  const contentY = useTransform(springY, [-0.5, 0.5], [-8, 8]);
+
+  // Floating cards subtle counter-shift
+  const showcaseX = useTransform(springX, [-0.5, 0.5], [14, -14]);
+  const showcaseY = useTransform(springY, [-0.5, 0.5], [10, -10]);
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (window.innerWidth < 1024) return;
+      const xPct = e.clientX / window.innerWidth - 0.5;
+      const yPct = e.clientY / window.innerHeight - 0.5;
+      mouseX.set(xPct);
+      mouseY.set(yPct);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [mouseX, mouseY]);
 
   const trustIndicators = [
     "AI Powered",
@@ -30,7 +57,10 @@ export default function HeroSection({
       <div className="max-w-[1280px] w-full mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
         
         {/* LEFT COLUMN: Content & Typewriter & Service Pills (7 cols) */}
-        <div className="lg:col-span-7 flex flex-col items-start text-left space-y-8">
+        <motion.div 
+          style={{ x: contentX, y: contentY }}
+          className="lg:col-span-7 flex flex-col items-start text-left space-y-8"
+        >
           
           {/* 1. Announcement Badge */}
           <motion.div
@@ -113,10 +143,11 @@ export default function HeroSection({
             <ServicePills />
           </motion.div>
 
-        </div>
+        </motion.div>
 
         {/* RIGHT COLUMN: Floating 3D Showcase (5 cols) */}
         <motion.div
+          style={{ x: showcaseX, y: showcaseY }}
           initial={{ opacity: 0, y: 40, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
