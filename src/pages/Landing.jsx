@@ -2,10 +2,9 @@
 import React from 'react';
 import Navbar from '../components/landing/Navbar';
 import HeroSection from '../components/landing/HeroSection';
+import StorytellingSection from '../components/landing/StorytellingSection';
 import StatsSection from '../components/landing/StatsSection';
 import FeaturesSection from '../components/landing/FeaturesSection';
-import WorkflowSection from '../components/landing/WorkflowSection';
-import TestimonialsSection from '../components/landing/TestimonialsSection';
 import PricingSection from '../components/landing/PricingSection';
 import FAQSection from '../components/landing/FAQSection';
 import FooterSection from '../components/landing/FooterSection';
@@ -22,34 +21,31 @@ export default function Landing() {
         Skip to main content
       </a>
 
-      {/* Global Fixed Navbar */}
+      {/* Global Fixed Glass Navbar */}
       <Navbar />
 
       {/* Main Content Sections */}
       <main id="main-content" className="w-full flex flex-col items-center">
-        {/* 1. Hero Section */}
+        {/* 1. Immersive AI Hero Section */}
         <HeroSection />
 
-        {/* 2. Transformation Statistics Section */}
+        {/* 2. Interactive 5-Step Storytelling Section */}
+        <StorytellingSection />
+
+        {/* 3. Transformation Statistics Section */}
         <StatsSection />
 
-        {/* 3. Alternating & Bento Features Grid */}
+        {/* 4. Alternating & Bento Features Grid */}
         <FeaturesSection />
 
-        {/* 4. AI Transformation Workflow */}
-        <WorkflowSection />
-
-        {/* 5. Member Testimonials Marquee */}
-        <TestimonialsSection />
-
-        {/* 6. Simple Pricing Tiers */}
+        {/* 5. Simple Pricing Tiers */}
         <PricingSection />
 
-        {/* 7. FAQ Accordion */}
+        {/* 6. FAQ Accordion */}
         <FAQSection />
       </main>
 
-      {/* 8. Large CTA & Footer */}
+      {/* 7. Large CTA & Footer */}
       <FooterSection />
 
     </div>
