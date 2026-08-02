@@ -2,13 +2,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
-import { useSubscription } from '../context/SubscriptionContext';
+import { useAuth, usePremium } from '../context/AuthContext';
 import { getAnalyses } from '../services/db';
 import { 
-  getResources, 
+  subscribeToResources, 
   saveResource, 
   deleteResource, 
+  updateResourceFlags,
   incrementResourceViews, 
   incrementResourceDownloads,
   getUserBookmarks,
@@ -19,6 +19,7 @@ import {
 import Toast from '../components/Toast';
 import { Card, Button, Badge } from '../components/DesignSystem';
 import EmptyState from '../components/EmptyState';
+import PremiumGate from '../components/PremiumGate';
 import { 
   BookOpen, 
   Search, 
@@ -41,8 +42,10 @@ import {
   ChevronRight,
   ShieldCheck,
   TrendingUp,
+  Flame,
   Sliders,
-  ExternalLink
+  ExternalLink,
+  Crown
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -75,7 +78,7 @@ const TYPES = [
 
 export default function Resources() {
   const { user } = useAuth();
-  const { isPremium: isPremiumUser } = useSubscription();
+  const { isPremium } = usePremium();
   const navigate = useNavigate();
 
   // Primary State
@@ -98,6 +101,14 @@ export default function Resources() {
   const [editingResource, setEditingResource] = useState(null);
   const [toast, setToast] = useState({ message: '', type: 'info' });
 
+  // Admin Toggle Check
+  const isAdmin = Boolean(
+    user?.profile?.role === 'admin' || 
+    user?.profile?.isAdmin || 
+    user?.email?.includes('admin') ||
+    user?.email === 'pushkar@ascendgod.com'
+  );
+
   // Admin Form State
   const [formState, setFormState] = useState({
     title: '',
@@ -113,6 +124,7 @@ export default function Resources() {
     tags: 'mewing, jawline',
     premium: false,
     featured: false,
+    trending: false,
     status: 'published'
   });
 
@@ -121,34 +133,33 @@ export default function Resources() {
     setTimeout(() => setToast({ message: '', type: 'info' }), 4000);
   };
 
-  // Load Data
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [resList, bkmks, prog, analyses] = await Promise.all([
-        getResources(),
-        getUserBookmarks(),
-        getUserProgress(),
-        getAnalyses()
-      ]);
+  // REAL-TIME FIRESTORE SYNCHRONIZATION
+  useEffect(() => {
+    setLoading(true);
 
-      setResources(Array.isArray(resList) ? resList : []);
+    // Load initial auxiliary user data
+    Promise.all([getUserBookmarks(), getUserProgress(), getAnalyses()]).then(([bkmks, prog, analyses]) => {
       setBookmarks(Array.isArray(bkmks) ? bkmks : []);
       setUserProgressState(prog || {});
       if (Array.isArray(analyses) && analyses.length > 0) {
         setLatestScan(analyses[0]);
       }
-    } catch (err) {
-      console.error("Resources page data load error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    });
 
-  useEffect(() => {
-    loadData();
+    // Real-time Firestore resources listener
+    const unsubscribe = subscribeToResources(
+      (data) => {
+        setResources(Array.isArray(data) ? data : []);
+        setLoading(false);
+      },
+      (err) => {
+        console.error("Resources Firestore subscription error:", err);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
   }, []);
-
 
   // Toggle Bookmark
   const handleToggleBookmark = async (e, resId) => {
@@ -167,9 +178,6 @@ export default function Resources() {
     setSelectedResource(res);
     incrementResourceViews(res.id);
     
-    // Update local views state
-    setResources(prev => prev.map(r => r.id === res.id ? { ...r, views: (r.views || 0) + 1 } : r));
-
     // Update progress
     const updatedProgress = await updateUserProgress(res.id, {
       completed: true,
@@ -180,22 +188,15 @@ export default function Resources() {
     }
   };
 
-  // Download Handler
-  const handleDownload = (e, res) => {
+  // Quick Admin Flag Toggles
+  const handleToggleAdminFlag = async (e, res, flagKey) => {
     if (e) e.stopPropagation();
-    incrementResourceDownloads(res.id);
-    showToast(`Downloading "${res.title}"...`, "success");
-    if (res.contentUrl) {
-      window.open(res.contentUrl, '_blank');
-    }
-  };
-
-  // Share Handler
-  const handleShare = (e, res) => {
-    if (e) e.stopPropagation();
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.href);
-      showToast("Resource link copied to clipboard!", "success");
+    try {
+      const updatedVal = !res[flagKey];
+      await updateResourceFlags(res.id, { [flagKey]: updatedVal });
+      showToast(`Updated "${res.title}" ${flagKey} to ${updatedVal}.`, "success");
+    } catch (err) {
+      showToast(`Failed to update ${flagKey}.`, "error");
     }
   };
 
@@ -218,7 +219,6 @@ export default function Resources() {
       showToast(editingResource ? "Resource updated successfully." : "New resource published successfully!", "success");
       setAdminModalOpen(false);
       setEditingResource(null);
-      loadData();
     } catch (err) {
       showToast("Failed to save resource.", "error");
     }
@@ -231,28 +231,37 @@ export default function Resources() {
       await deleteResource(resId);
       showToast("Resource deleted successfully.", "info");
       if (selectedResource?.id === resId) setSelectedResource(null);
-      loadData();
     } catch (err) {
       showToast("Failed to delete resource.", "error");
     }
   };
 
-  // AI Recommendation Mapping based on user's scan
+  // Filtered Lists per specifications
+  const publishedResources = useMemo(() => {
+    return resources.filter(res => isAdmin || res.status === 'published');
+  }, [resources, isAdmin]);
+
+  const featuredResources = useMemo(() => {
+    return publishedResources.filter(r => r.featured === true);
+  }, [publishedResources]);
+
+  const trendingResources = useMemo(() => {
+    return publishedResources.filter(r => r.trending === true);
+  }, [publishedResources]);
+
   const aiRecommendedResources = useMemo(() => {
-    if (!latestScan || !resources.length) return [];
-    
-    // Pick categories based on latest scan scores
+    if (!latestScan || !publishedResources.length) return [];
     const recommendedCategories = [];
     if (latestScan.symmetry_score < 80) recommendedCategories.push('Posture', 'Mewing', 'Facial Harmony');
     if (latestScan.facial_proportion_score < 80) recommendedCategories.push('Jawline', 'Beard Growth');
     recommendedCategories.push('Skincare', 'Nutrition');
 
-    return resources.filter(r => recommendedCategories.includes(r.category)).slice(0, 3);
-  }, [latestScan, resources]);
+    return publishedResources.filter(r => recommendedCategories.includes(r.category)).slice(0, 3);
+  }, [latestScan, publishedResources]);
 
-  // Filter & Search Engine
+  // Main Filtered & Sorted Engine
   const filteredResources = useMemo(() => {
-    return resources.filter(res => {
+    return publishedResources.filter(res => {
       // Tab filter
       if (activeTab === 'bookmarks' && !bookmarks.includes(res.id)) return false;
       if (activeTab === 'progress' && !userProgress[res.id]?.completed) return false;
@@ -281,7 +290,7 @@ export default function Resources() {
       if (sortBy === 'advanced') return (a.difficulty === 'Advanced' ? -1 : 1);
       return 0;
     });
-  }, [resources, bookmarks, userProgress, activeCategory, activeType, searchQuery, sortBy, activeTab]);
+  }, [publishedResources, bookmarks, userProgress, activeCategory, activeType, searchQuery, sortBy, activeTab]);
 
   return (
     <div className="space-y-8 animate-fade-in text-foreground max-w-6xl mx-auto pb-20">
@@ -289,21 +298,22 @@ export default function Resources() {
       {/* Toast Notification */}
       <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: '', type: 'info' })} />
 
-      {/* Header & Title */}
+      {/* Header & Admin Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
           <span className="text-[9px] font-black text-primary uppercase tracking-widest block mb-1">
-            Knowledge Vault
+            Knowledge Vault • Real-Time Firestore Sync
           </span>
           <h1 className="text-3xl font-black tracking-tight mb-2">
             Resources & Educational Hub
           </h1>
           <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
-            Browse science-backed guides, orthotropic protocols, skincare routines, and video masterclasses.
+            Browse science-backed orthotropic protocols, skincare routines, debloating guides, and video masterclasses.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Admin Upload Trigger */}
           <button
             onClick={() => {
               setEditingResource(null);
@@ -321,11 +331,12 @@ export default function Resources() {
                 tags: 'mewing, jawline',
                 premium: false,
                 featured: false,
+                trending: false,
                 status: 'published'
               });
               setAdminModalOpen(true);
             }}
-            className="btn-primary-v2 text-xs py-2.5 px-4"
+            className="btn-primary-v2 text-xs py-2.5 px-4 cursor-pointer"
           >
             <Plus size={16} strokeWidth={2} />
             <span>Upload Resource (Admin)</span>
@@ -333,13 +344,105 @@ export default function Resources() {
         </div>
       </div>
 
-      {/* AI Personalized Recommendations Section (Dynamic) */}
-      {aiRecommendedResources.length > 0 && (
+      {/* FEATURED RESOURCES SHOWCASE (First per specification) */}
+      {featuredResources.length > 0 && activeTab === 'browse' && !searchQuery && activeCategory === 'All' && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-amber-400">
+            <Star size={16} className="fill-amber-400" />
+            <span>Featured Guides</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {featuredResources.slice(0, 2).map(res => (
+              <div
+                key={res.id}
+                onClick={() => handleOpenDetail(res)}
+                className="matte-card p-5 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-card to-card flex flex-col justify-between space-y-4 cursor-pointer group hover:border-amber-400 transition-all shadow-xl"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-extrabold uppercase">
+                      ⭐ Featured
+                    </span>
+                    {res.premium && (
+                      <span className="px-2.5 py-0.5 rounded-full bg-primary/20 text-accent font-extrabold uppercase flex items-center gap-1">
+                        <Crown size={12} /> PRO
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-base font-black text-foreground group-hover:text-amber-300 transition-colors line-clamp-1">
+                    {res.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                    {res.description}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between text-xs pt-3 border-t border-border/80">
+                  <span className="text-[11px] font-bold text-muted-foreground">{res.category} • {res.estimatedReadTime}m read</span>
+                  <span className="font-extrabold text-amber-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                    Explore <ChevronRight size={14} />
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 🔥 TRENDING RESOURCES SECTION (Second per specification) */}
+      {trendingResources.length > 0 && activeTab === 'browse' && !searchQuery && activeCategory === 'All' && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-orange-400">
+            <span className="flex items-center gap-2">
+              <Flame size={18} className="fill-orange-400 text-orange-400 animate-pulse" />
+              🔥 Trending Resources
+            </span>
+            <span className="text-[10px] text-muted-foreground font-semibold">Live Firestore Auto-Sync</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {trendingResources.map(res => (
+              <div 
+                key={res.id}
+                onClick={() => handleOpenDetail(res)}
+                className="matte-card p-4 rounded-2xl border border-orange-500/25 bg-gradient-to-b from-orange-500/5 via-card to-card flex flex-col justify-between space-y-3 cursor-pointer group hover:border-orange-400 transition-all shadow-lg"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 font-extrabold uppercase">
+                      🔥 Trending
+                    </span>
+                    <span className="text-muted-foreground font-bold">{res.category}</span>
+                  </div>
+                  <h4 className="text-xs font-black text-foreground group-hover:text-orange-300 transition-colors line-clamp-1">
+                    {res.title}
+                  </h4>
+                  <p className="text-[11px] text-muted-foreground line-clamp-2">
+                    {res.description}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-border text-[10px]">
+                  <span className="text-muted-foreground flex items-center gap-1 font-bold">
+                    <Eye size={12} /> {res.views || 0} views
+                  </span>
+                  <span className="font-extrabold text-orange-400 flex items-center gap-0.5">
+                    Open <ChevronRight size={12} />
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* AI Personalized Recommendations Section */}
+      {aiRecommendedResources.length > 0 && activeTab === 'browse' && !searchQuery && (
         <Card className="p-6 bg-gradient-to-r from-primary/10 via-card to-card border-primary/20 space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-foreground flex items-center gap-2">
               <Sparkles size={16} strokeWidth={2} className="text-[#22D3EE]" />
-              AI Recommended For Your Scan Profile
+              Recommended For You
             </span>
             <span className="text-[10px] text-muted-foreground bg-[#22D3EE]/10 text-[#22D3EE] px-2.5 py-0.5 rounded-full font-bold">
               Personalized Map
@@ -356,17 +459,17 @@ export default function Resources() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-bold text-[#7C3AED] uppercase tracking-wider">{res.category}</span>
-                    <span className="text-[10px] text-[#94A3B8] flex items-center gap-1">
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                       <Clock size={12} /> {res.estimatedReadTime}m
                     </span>
                   </div>
-                  <h4 className="text-xs font-bold text-[#F8FAFC] line-clamp-1 group-hover:text-[#22D3EE] transition-colors">{res.title}</h4>
-                  <p className="text-[11px] text-[#94A3B8] line-clamp-2">{res.description}</p>
+                  <h4 className="text-xs font-bold text-foreground line-clamp-1 group-hover:text-[#22D3EE] transition-colors">{res.title}</h4>
+                  <p className="text-[11px] text-muted-foreground line-clamp-2">{res.description}</p>
                 </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-[#1F2937] text-[10px]">
-                  <span className="font-semibold text-[#22C55E]">Targeted Fix</span>
-                  <span className="font-bold text-[#7C3AED] flex items-center gap-1">
+                <div className="flex items-center justify-between pt-2 border-t border-border text-[10px]">
+                  <span className="font-semibold text-emerald-400">Targeted Fix</span>
+                  <span className="font-bold text-primary flex items-center gap-1">
                     Open <ChevronRight size={12} />
                   </span>
                 </div>
@@ -376,13 +479,13 @@ export default function Resources() {
         </Card>
       )}
 
-      {/* Main Tabs (Browse / Bookmarks / Progress) */}
+      {/* Main Navigation Tabs */}
       <div className="flex gap-4 border-b border-border">
         <button
           onClick={() => setActiveTab('browse')}
           className={`px-5 py-3 text-xs font-bold border-b-2 transition-all cursor-pointer ${activeTab === 'browse' ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
         >
-          All Educational Resources ({resources.length})
+          All Published Resources ({filteredResources.length})
         </button>
         <button
           onClick={() => setActiveTab('bookmarks')}
@@ -403,7 +506,6 @@ export default function Resources() {
       {/* Search & Filter Bar */}
       <div className="space-y-4">
         <div className="flex flex-col md:flex-row gap-4 items-center">
-          {/* Instant Search Bar */}
           <div className="relative flex-1 w-full">
             <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
@@ -423,55 +525,27 @@ export default function Resources() {
             )}
           </div>
 
-          {/* Type Filter */}
-          <select
-            value={activeType}
-            onChange={(e) => setActiveType(e.target.value)}
-            className="w-full md:w-44 bg-card border border-border rounded-xl px-3 py-2.5 text-xs text-foreground outline-none cursor-pointer focus:border-primary"
-          >
-            {TYPES.map(t => (
-              <option key={t.id} value={t.id}>{t.label}</option>
-            ))}
-          </select>
-
-          {/* Sort By Filter */}
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="w-full md:w-44 bg-card border border-border rounded-xl px-3 py-2.5 text-xs text-foreground outline-none cursor-pointer focus:border-primary"
-          >
-            <option value="newest">Newest First</option>
-            <option value="popular">Most Popular</option>
-            <option value="beginner">Beginner Friendly</option>
-            <option value="advanced">Advanced Protocol</option>
-          </select>
-        </div>
-
-        {/* Popular Search Tags */}
-        <div className="flex items-center gap-2 flex-wrap text-[11px] text-muted-foreground">
-          <span className="font-semibold">Popular Searches:</span>
-          {['Mewing', 'Jawline', 'Posture', 'Retinoid', 'Sodium'].map(tag => (
-            <button
-              key={tag}
-              onClick={() => setSearchQuery(tag)}
-              className="px-2.5 py-0.5 rounded-full bg-secondary border border-border hover:border-primary/50 text-foreground transition-colors cursor-pointer"
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-card border border-border rounded-xl px-3 py-2.5 text-xs text-foreground outline-none focus:border-primary cursor-pointer"
             >
-              #{tag}
-            </button>
-          ))}
+              <option value="newest">Latest Published</option>
+              <option value="popular">Most Popular Views</option>
+              <option value="beginner">Beginner Friendly</option>
+              <option value="advanced">Advanced Only</option>
+            </select>
+          </div>
         </div>
 
-        {/* 15 Category Chips */}
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-border/40">
+        {/* Category Pill Filters */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
           {CATEGORIES.map(cat => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-colors cursor-pointer ${
-                activeCategory === cat 
-                  ? 'bg-primary text-white shadow-md' 
-                  : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-border-bright'
-              }`}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${activeCategory === cat ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-secondary/60 text-muted-foreground hover:text-foreground hover:bg-secondary'}`}
             >
               {cat}
             </button>
@@ -479,441 +553,411 @@ export default function Resources() {
         </div>
       </div>
 
-      {/* Resource Cards Grid */}
-      {filteredResources.length > 0 ? (
+      {/* Main Grid View */}
+      {loading ? (
+        <div className="py-16 text-center space-y-3">
+          <div className="w-8 h-8 rounded-full border-2 border-primary/20 border-t-primary animate-spin mx-auto" />
+          <p className="text-xs text-muted-foreground font-semibold">Synchronizing Knowledge Vault with Firestore...</p>
+        </div>
+      ) : filteredResources.length === 0 ? (
+        <EmptyState 
+          title="No Resources Found"
+          description="Try broadening your category filter or search query."
+          icon={BookOpen}
+        />
+      ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredResources.map((res) => {
+          {filteredResources.map(res => {
             const isBookmarked = bookmarks.includes(res.id);
-            const isCompleted = !!userProgress[res.id]?.completed;
-            const isLocked = res.premium && !isPremiumUser;
+            const isLocked = res.premium && !isPremium;
 
             return (
-              <motion.div
+              <div
                 key={res.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
                 onClick={() => handleOpenDetail(res)}
-                className="matte-card p-5 flex flex-col justify-between space-y-4 cursor-pointer group relative overflow-hidden"
+                className="matte-card rounded-2xl border border-border bg-card overflow-hidden flex flex-col justify-between group hover:border-primary/60 transition-all cursor-pointer relative shadow-lg"
               >
-                {/* Thumbnail Header */}
-                <div className="relative w-full h-44 rounded-xl overflow-hidden bg-background border border-border">
-                  <img
-                    src={res.thumbnail || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80'}
-                    alt={res.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    loading="lazy"
-                  />
+                {/* Thumbnail / Header */}
+                <div className="relative h-44 bg-secondary overflow-hidden">
+                  {res.thumbnail ? (
+                    <img 
+                      src={res.thumbnail} 
+                      alt={res.title} 
+                      className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${isLocked ? 'blur-[2px] opacity-70' : ''}`} 
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-tr from-primary/20 to-purple-600/10 text-primary font-black text-xl">
+                      {res.category}
+                    </div>
+                  )}
 
-                  {/* Type Badge */}
-                  <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-[10px] font-bold text-white uppercase border border-white/10">
-                    {res.type}
-                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-black/40" />
 
-                  {/* Bookmark Button */}
-                  <button
-                    onClick={(e) => handleToggleBookmark(e, res.id)}
-                    className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md border transition-colors cursor-pointer ${
-                      isBookmarked 
-                        ? 'bg-primary text-white border-primary shadow-lg' 
-                        : 'bg-black/60 text-white border-white/20 hover:bg-black/80'
-                    }`}
-                    title={isBookmarked ? "Remove Bookmark" : "Bookmark Resource"}
-                  >
-                    <Bookmark size={14} className={isBookmarked ? 'fill-current' : ''} />
-                  </button>
+                  {/* Top Badges */}
+                  <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-10">
+                    <span className="px-2.5 py-1 rounded-full bg-background/80 backdrop-blur-md border border-border text-[10px] font-extrabold text-foreground uppercase tracking-wider">
+                      {res.type}
+                    </span>
 
-                  {/* Premium Overlay if Locked */}
+                    <div className="flex items-center gap-1.5">
+                      {res.trending && (
+                        <span className="px-2 py-0.5 rounded-full bg-orange-500/80 text-white text-[10px] font-black uppercase">
+                          🔥 Trending
+                        </span>
+                      )}
+                      {res.premium && (
+                        <span className="px-2 py-0.5 rounded-full bg-primary/90 text-white text-[10px] font-black uppercase flex items-center gap-1">
+                          <Crown size={10} /> PRO
+                        </span>
+                      )}
+                      <button
+                        onClick={(e) => handleToggleBookmark(e, res.id)}
+                        className="w-7 h-7 rounded-full bg-background/80 backdrop-blur-md text-foreground flex items-center justify-center hover:scale-110 transition-transform"
+                      >
+                        <Bookmark size={14} className={isBookmarked ? 'fill-primary text-primary' : ''} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Lock Icon Overlay if Locked */}
                   {isLocked && (
-                    <div className="absolute inset-0 bg-black/65 backdrop-blur-[2px] flex flex-col items-center justify-center text-center p-4">
-                      <div className="w-9 h-9 rounded-full bg-primary/20 border border-primary/40 text-primary flex items-center justify-center mb-2">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-xs z-10 text-center p-4">
+                      <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/40 text-accent flex items-center justify-center mb-1">
                         <Lock size={18} />
                       </div>
-                      <span className="text-xs font-bold text-white">Ascend Plus Resource</span>
-                      <span className="text-[10px] text-muted-foreground mt-0.5">Click to view preview</span>
+                      <span className="text-[11px] font-black text-foreground uppercase tracking-wider">PRO Member Access</span>
                     </div>
                   )}
                 </div>
 
                 {/* Content Body */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                    <span className="font-bold text-primary uppercase tracking-wider">{res.category}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="flex items-center gap-1 font-semibold">
-                        <Star size={11} className="text-amber-400 fill-amber-400" />
-                        {res.difficulty}
-                      </span>
-                      <span>•</span>
-                      <span className="flex items-center gap-1">
-                        <Clock size={11} /> {res.estimatedReadTime} min
-                      </span>
+                <div className="p-5 space-y-3 flex-1 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground font-semibold">
+                      <span className="text-primary font-bold uppercase">{res.category}</span>
+                      <span className="flex items-center gap-1"><Clock size={12} /> {res.estimatedReadTime} min</span>
                     </div>
+                    <h3 className="text-sm font-black text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
+                      {res.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                      {res.description}
+                    </p>
                   </div>
 
-                  <h3 className="text-sm font-bold text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors">
-                    {res.title}
-                  </h3>
+                  {/* Quick Admin Control Bar */}
+                  {isAdmin && (
+                    <div className="pt-3 mt-3 border-t border-border flex items-center justify-between text-[10px] font-bold text-muted-foreground">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={(e) => handleToggleAdminFlag(e, res, 'trending')}
+                          className={`px-2 py-0.5 rounded cursor-pointer ${res.trending ? 'bg-orange-500/20 text-orange-400' : 'bg-secondary hover:text-foreground'}`}
+                          title="Toggle Trending"
+                        >
+                          🔥
+                        </button>
+                        <button
+                          onClick={(e) => handleToggleAdminFlag(e, res, 'featured')}
+                          className={`px-2 py-0.5 rounded cursor-pointer ${res.featured ? 'bg-amber-500/20 text-amber-400' : 'bg-secondary hover:text-foreground'}`}
+                          title="Toggle Featured"
+                        >
+                          ⭐
+                        </button>
+                        <button
+                          onClick={(e) => handleToggleAdminFlag(e, res, 'premium')}
+                          className={`px-2 py-0.5 rounded cursor-pointer ${res.premium ? 'bg-primary/20 text-accent' : 'bg-secondary hover:text-foreground'}`}
+                          title="Toggle Premium"
+                        >
+                          ⚡
+                        </button>
+                      </div>
 
-                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                    {res.description}
-                  </p>
-                </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingResource(res);
+                            setFormState(res);
+                            setAdminModalOpen(true);
+                          }}
+                          className="hover:text-primary cursor-pointer"
+                        >
+                          <Edit3 size={14} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteResource(res.id);
+                          }}
+                          className="hover:text-red-400 cursor-pointer"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
-                {/* Card Footer Info */}
-                <div className="pt-3 border-t border-border flex items-center justify-between text-[11px] text-muted-foreground">
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1">
+                  {/* Card Footer */}
+                  <div className="pt-3 border-t border-border/60 flex items-center justify-between text-[11px]">
+                    <span className="text-muted-foreground flex items-center gap-1">
                       <Eye size={12} /> {res.views || 0}
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Download size={12} /> {res.downloads || 0}
+                    <span className="font-extrabold text-primary flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                      {isLocked ? "Unlock PDF" : "Read Guide"} <ChevronRight size={14} />
                     </span>
                   </div>
-
-                  {isCompleted && (
-                    <span className="text-[10px] font-bold text-[#22C55E] flex items-center gap-1 bg-[#22C55E]/10 px-2 py-0.5 rounded-full">
-                      <CheckCircle2 size={12} /> Completed
-                    </span>
-                  )}
                 </div>
-              </motion.div>
+
+              </div>
             );
           })}
         </div>
-      ) : (
-        <EmptyState
-          icon={BookOpen}
-          title="No Resources Found"
-          description="No educational modules matched your search or category filter. Try clearing filters or searching another topic."
-          actionText="Clear Search & Filters"
-          onAction={() => {
-            setSearchQuery('');
-            setActiveCategory('All');
-            setActiveType('all');
-          }}
-        />
       )}
 
-      {/* DETAIL MODAL */}
+      {/* RESOURCE DETAIL MODAL */}
       <AnimatePresence>
         {selectedResource && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-card border border-border rounded-2xl max-w-3xl w-full p-6 md:p-8 space-y-6 relative max-h-[90vh] overflow-y-auto my-8 shadow-2xl"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-3xl max-h-[90vh] bg-card border border-border rounded-3xl overflow-hidden flex flex-col shadow-2xl"
             >
-              {/* Modal Close Button */}
-              <button
-                onClick={() => setSelectedResource(null)}
-                className="absolute top-5 right-5 p-2 rounded-xl bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-
-              {/* Resource Hero Header */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 text-xs">
-                  <Badge variant="indigo">{selectedResource.category}</Badge>
-                  <span className="text-muted-foreground uppercase font-bold text-[10px]">{selectedResource.type}</span>
-                  <span className="text-muted-foreground">•</span>
-                  <span className="text-muted-foreground">{selectedResource.estimatedReadTime} min read/watch</span>
+              {/* Modal Header */}
+              <div className="p-6 border-b border-border flex items-center justify-between bg-secondary/30">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-black text-primary uppercase tracking-widest block">
+                    {selectedResource.category} • {selectedResource.type}
+                  </span>
+                  <h2 className="text-xl font-black text-foreground line-clamp-1">{selectedResource.title}</h2>
                 </div>
-
-                <h2 className="text-2xl font-black text-foreground">{selectedResource.title}</h2>
-                <p className="text-xs text-muted-foreground leading-relaxed">{selectedResource.description}</p>
+                <button
+                  onClick={() => setSelectedResource(null)}
+                  className="w-8 h-8 rounded-full bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
               </div>
 
-              {/* Resource Media View (Video / Image / PDF / Article) */}
-              <div className="rounded-xl overflow-hidden border border-border bg-background">
-                {selectedResource.type === 'video' ? (
-                  <div className="aspect-video w-full">
-                    {selectedResource.contentUrl.includes('youtube.com') || selectedResource.contentUrl.includes('youtu.be') ? (
-                      <iframe 
-                        className="w-full h-full"
-                        src={`https://www.youtube.com/embed/${selectedResource.contentUrl.split('v=')[1] || ''}`}
-                        title={selectedResource.title}
-                        allowFullScreen
-                      ></iframe>
-                    ) : (
-                      <video controls className="w-full h-full object-cover" src={selectedResource.contentUrl}>
-                        Your browser does not support HTML5 video.
-                      </video>
-                    )}
-                  </div>
-                ) : (
-                  <img
-                    src={selectedResource.thumbnail}
-                    alt={selectedResource.title}
-                    className="w-full h-64 object-cover"
+              {/* Modal Body */}
+              <div className="p-6 md:p-8 overflow-y-auto space-y-6 flex-1">
+                {selectedResource.premium && !isPremium ? (
+                  <PremiumGate
+                    title="Unlock Full Orthotropic Blueprint"
+                    description="This is an exclusive Ascend God PRO resource containing advanced video masterclasses, downloadable PDFs, and step-by-step biomechanical exercises."
+                    previewContent={
+                      <div className="space-y-4">
+                        <p className="text-sm font-medium leading-relaxed">{selectedResource.description}</p>
+                        <div className="p-4 rounded-xl bg-secondary/50 border border-border text-xs">
+                          {selectedResource.markdownBody || "Detailed step-by-step instructions locked for PRO members."}
+                        </div>
+                      </div>
+                    }
                   />
+                ) : (
+                  <>
+                    {selectedResource.thumbnail && (
+                      <img 
+                        src={selectedResource.thumbnail} 
+                        alt={selectedResource.title}
+                        className="w-full h-64 object-cover rounded-2xl border border-border"
+                      />
+                    )}
+
+                    <div className="space-y-4">
+                      <p className="text-sm text-muted-foreground leading-relaxed font-medium">
+                        {selectedResource.description}
+                      </p>
+
+                      {/* Content Body / Markdown */}
+                      <div className="p-6 rounded-2xl bg-secondary/30 border border-border space-y-4 text-xs leading-relaxed font-sans text-foreground whitespace-pre-line">
+                        {selectedResource.markdownBody || selectedResource.description}
+                      </div>
+
+                      {/* Content Link if External */}
+                      {selectedResource.contentUrl && (
+                        <div className="pt-2">
+                          <a
+                            href={selectedResource.contentUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-primary-v2 inline-flex items-center gap-2 text-xs py-3 px-6 rounded-xl"
+                          >
+                            <ExternalLink size={14} />
+                            <span>Access Full Document / Video Link</span>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
 
-              {/* Premium Lock Teaser Warning if user is not premium */}
-              {selectedResource.premium && !isPremiumUser && (
-                <div className="p-5 rounded-xl bg-primary/10 border border-primary/30 space-y-3 text-center">
-                  <div className="flex items-center justify-center gap-2 text-primary font-bold text-sm">
-                    <Lock size={18} />
-                    <span>Ascend Plus Premium Resource</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed max-w-md mx-auto">
-                    You are viewing a 20% free teaser preview. Upgrade to Ascend Plus to unlock the full protocol, downloadable PDF blueprints, and video walkthroughs.
-                  </p>
-                  <Button variant="primary" onClick={() => navigate('/premium')}>
-                    Upgrade to Ascend Plus
-                  </Button>
-                </div>
-              )}
-
-              {/* Markdown Content Body */}
-              <div className="prose prose-invert max-w-none text-xs text-foreground space-y-4 pt-4 border-t border-border leading-relaxed whitespace-pre-line">
-                {selectedResource.markdownBody || selectedResource.description}
+              {/* Modal Footer */}
+              <div className="p-4 border-t border-border bg-secondary/30 flex justify-between items-center text-xs text-muted-foreground">
+                <span>Author: {selectedResource.author || "Ascend Team"}</span>
+                <button
+                  onClick={() => setSelectedResource(null)}
+                  className="btn-secondary-v2 text-xs py-2 px-5 rounded-xl cursor-pointer"
+                >
+                  Close Window
+                </button>
               </div>
-
-              {/* Action Bar */}
-              <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-border">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={(e) => handleToggleBookmark(e, selectedResource.id)}
-                    className={`btn-secondary-v2 text-xs py-2 px-4 ${bookmarks.includes(selectedResource.id) ? 'bg-primary/20 text-primary border-primary' : ''}`}
-                  >
-                    <Bookmark size={14} />
-                    <span>{bookmarks.includes(selectedResource.id) ? 'Bookmarked' : 'Bookmark'}</span>
-                  </button>
-
-                  <button
-                    onClick={(e) => handleShare(e, selectedResource)}
-                    className="btn-secondary-v2 text-xs py-2 px-4"
-                  >
-                    <Share2 size={14} />
-                    <span>Share</span>
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  {selectedResource.contentUrl && (
-                    <button
-                      onClick={(e) => handleDownload(e, selectedResource)}
-                      className="btn-primary-v2 text-xs py-2 px-4"
-                    >
-                      <Download size={14} />
-                      <span>Download File ({selectedResource.downloads || 0})</span>
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => {
-                      setEditingResource(selectedResource);
-                      setFormState({
-                        title: selectedResource.title,
-                        description: selectedResource.description,
-                        category: selectedResource.category,
-                        type: selectedResource.type,
-                        difficulty: selectedResource.difficulty,
-                        thumbnail: selectedResource.thumbnail,
-                        contentUrl: selectedResource.contentUrl,
-                        markdownBody: selectedResource.markdownBody || '',
-                        author: selectedResource.author || 'Ascend Editorial Team',
-                        estimatedReadTime: selectedResource.estimatedReadTime || 10,
-                        tags: Array.isArray(selectedResource.tags) ? selectedResource.tags.join(', ') : selectedResource.tags || '',
-                        premium: !!selectedResource.premium,
-                        featured: !!selectedResource.featured,
-                        status: selectedResource.status || 'published'
-                      });
-                      setSelectedResource(null);
-                      setAdminModalOpen(true);
-                    }}
-                    className="p-2 rounded-xl bg-secondary border border-border text-muted-foreground hover:text-foreground"
-                    title="Edit Resource (Admin)"
-                  >
-                    <Edit3 size={16} />
-                  </button>
-                </div>
-              </div>
-
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
-      {/* ADMIN UPLOAD / EDIT MODAL */}
+      {/* ADMIN EDIT / CREATE MODAL */}
       <AnimatePresence>
         {adminModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-card border border-border rounded-2xl max-w-2xl w-full p-6 md:p-8 space-y-6 relative max-h-[90vh] overflow-y-auto my-8 shadow-2xl"
+              className="w-full max-w-xl max-h-[90vh] bg-card border border-border rounded-3xl overflow-hidden flex flex-col shadow-2xl"
             >
-              <button
-                onClick={() => setAdminModalOpen(false)}
-                className="absolute top-5 right-5 p-2 rounded-xl bg-secondary text-muted-foreground hover:text-foreground"
-              >
-                <X size={18} />
-              </button>
-
-              <div className="space-y-1">
-                <span className="text-[9px] font-black text-primary uppercase tracking-widest block">Admin Management</span>
-                <h2 className="text-xl font-bold text-foreground">
-                  {editingResource ? 'Edit Educational Resource' : 'Publish New Resource'}
-                </h2>
+              <div className="p-6 border-b border-border flex justify-between items-center">
+                <h3 className="text-lg font-black text-foreground">
+                  {editingResource ? "Edit Resource (Admin)" : "Publish New Resource (Admin)"}
+                </h3>
+                <button 
+                  onClick={() => setAdminModalOpen(false)}
+                  className="w-8 h-8 rounded-full bg-secondary text-muted-foreground hover:text-foreground flex items-center justify-center"
+                >
+                  <X size={16} />
+                </button>
               </div>
 
-              <form onSubmit={handleSaveAdminForm} className="space-y-4 text-xs">
+              <form onSubmit={handleSaveAdminForm} className="p-6 overflow-y-auto space-y-4 text-xs flex-1">
                 <div>
-                  <label className="block text-muted-foreground font-bold mb-1">Title</label>
+                  <label className="font-bold text-muted-foreground uppercase block mb-1">Resource Title</label>
                   <input
                     type="text"
                     required
                     value={formState.title}
                     onChange={e => setFormState({ ...formState, title: e.target.value })}
-                    className="w-full bg-background border border-border rounded-xl px-3 py-2 text-foreground outline-none focus:border-primary"
+                    className="w-full bg-background border border-border rounded-xl p-3 text-foreground outline-none focus:border-primary"
+                    placeholder="e.g. Masseter Muscle Hypertrophy Protocol"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-muted-foreground font-bold mb-1">Description</label>
+                  <label className="font-bold text-muted-foreground uppercase block mb-1">Short Description</label>
                   <textarea
+                    rows={2}
                     required
-                    rows={3}
                     value={formState.description}
                     onChange={e => setFormState({ ...formState, description: e.target.value })}
-                    className="w-full bg-background border border-border rounded-xl px-3 py-2 text-foreground outline-none focus:border-primary"
+                    className="w-full bg-background border border-border rounded-xl p-3 text-foreground outline-none focus:border-primary"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-muted-foreground font-bold mb-1">Category</label>
+                    <label className="font-bold text-muted-foreground uppercase block mb-1">Category</label>
                     <select
                       value={formState.category}
                       onChange={e => setFormState({ ...formState, category: e.target.value })}
-                      className="w-full bg-background border border-border rounded-xl px-3 py-2 text-foreground outline-none focus:border-primary"
+                      className="w-full bg-background border border-border rounded-xl p-3 text-foreground outline-none focus:border-primary"
                     >
-                      {CATEGORIES.filter(c => c !== 'All').map(c => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
+                      {CATEGORIES.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-muted-foreground font-bold mb-1">Type</label>
+                    <label className="font-bold text-muted-foreground uppercase block mb-1">Status</label>
                     <select
-                      value={formState.type}
-                      onChange={e => setFormState({ ...formState, type: e.target.value })}
-                      className="w-full bg-background border border-border rounded-xl px-3 py-2 text-foreground outline-none focus:border-primary"
+                      value={formState.status}
+                      onChange={e => setFormState({ ...formState, status: e.target.value })}
+                      className="w-full bg-background border border-border rounded-xl p-3 text-foreground outline-none focus:border-primary"
                     >
-                      {TYPES.filter(t => t.id !== 'all').map(t => (
-                        <option key={t.id} value={t.id}>{t.label}</option>
-                      ))}
+                      <option value="published">Published</option>
+                      <option value="draft">Draft</option>
+                      <option value="archived">Archived</option>
                     </select>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-muted-foreground font-bold mb-1">Difficulty</label>
-                    <select
-                      value={formState.difficulty}
-                      onChange={e => setFormState({ ...formState, difficulty: e.target.value })}
-                      className="w-full bg-background border border-border rounded-xl px-3 py-2 text-foreground outline-none focus:border-primary"
-                    >
-                      <option value="Beginner">Beginner</option>
-                      <option value="Intermediate">Intermediate</option>
-                      <option value="Advanced">Advanced</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-muted-foreground font-bold mb-1">Est. Read Time (Mins)</label>
-                    <input
-                      type="number"
-                      value={formState.estimatedReadTime}
-                      onChange={e => setFormState({ ...formState, estimatedReadTime: e.target.value })}
-                      className="w-full bg-background border border-border rounded-xl px-3 py-2 text-foreground outline-none focus:border-primary"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-muted-foreground font-bold mb-1">Thumbnail URL</label>
-                  <input
-                    type="url"
-                    value={formState.thumbnail}
-                    onChange={e => setFormState({ ...formState, thumbnail: e.target.value })}
-                    placeholder="https://images.unsplash.com/..."
-                    className="w-full bg-background border border-border rounded-xl px-3 py-2 text-foreground outline-none focus:border-primary"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-muted-foreground font-bold mb-1">Content / Video / PDF Link URL</label>
-                  <input
-                    type="url"
-                    value={formState.contentUrl}
-                    onChange={e => setFormState({ ...formState, contentUrl: e.target.value })}
-                    placeholder="https://youtube.com/watch?v=... or PDF URL"
-                    className="w-full bg-background border border-border rounded-xl px-3 py-2 text-foreground outline-none focus:border-primary"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-muted-foreground font-bold mb-1">Markdown Article Body</label>
-                  <textarea
-                    rows={5}
-                    value={formState.markdownBody}
-                    onChange={e => setFormState({ ...formState, markdownBody: e.target.value })}
-                    placeholder="# Article Title&#10;Detailed breakdown..."
-                    className="w-full bg-background border border-border rounded-xl px-3 py-2 text-foreground outline-none focus:border-primary font-mono text-[11px]"
-                  />
-                </div>
-
-                <div className="flex items-center gap-6 pt-2">
-                  <label className="flex items-center gap-2 cursor-pointer font-bold">
+                <div className="grid grid-cols-3 gap-3 pt-2">
+                  <label className="flex items-center gap-2 font-bold cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={formState.premium}
-                      onChange={e => setFormState({ ...formState, premium: e.target.checked })}
-                      className="rounded accent-primary"
+                      checked={formState.trending}
+                      onChange={e => setFormState({ ...formState, trending: e.target.checked })}
                     />
-                    <span>Requires Premium (Ascend Plus)</span>
+                    <span>🔥 Trending</span>
                   </label>
 
-                  <label className="flex items-center gap-2 cursor-pointer font-bold">
+                  <label className="flex items-center gap-2 font-bold cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formState.featured}
                       onChange={e => setFormState({ ...formState, featured: e.target.checked })}
-                      className="rounded accent-primary"
                     />
-                    <span>Featured Pin</span>
+                    <span>⭐ Featured</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 font-bold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formState.premium}
+                      onChange={e => setFormState({ ...formState, premium: e.target.checked })}
+                    />
+                    <span>⚡ PRO Only</span>
                   </label>
                 </div>
 
-                <div className="flex justify-between items-center pt-4 border-t border-border">
-                  {editingResource ? (
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteResource(editingResource.id)}
-                      className="text-red-400 text-xs font-bold hover:underline flex items-center gap-1"
-                    >
-                      <Trash2 size={14} /> Delete Resource
-                    </button>
-                  ) : <div></div>}
+                <div>
+                  <label className="font-bold text-muted-foreground uppercase block mb-1">Thumbnail Image URL</label>
+                  <input
+                    type="text"
+                    value={formState.thumbnail}
+                    onChange={e => setFormState({ ...formState, thumbnail: e.target.value })}
+                    className="w-full bg-background border border-border rounded-xl p-3 text-foreground outline-none focus:border-primary"
+                    placeholder="https://images.unsplash.com/..."
+                  />
+                </div>
 
-                  <div className="flex gap-3">
-                    <Button type="button" variant="secondary" onClick={() => setAdminModalOpen(false)}>Cancel</Button>
-                    <Button type="submit" variant="primary">
-                      {editingResource ? 'Save Changes' : 'Publish Resource'}
-                    </Button>
-                  </div>
+                <div>
+                  <label className="font-bold text-muted-foreground uppercase block mb-1">Content URL / Document Link</label>
+                  <input
+                    type="text"
+                    value={formState.contentUrl}
+                    onChange={e => setFormState({ ...formState, contentUrl: e.target.value })}
+                    className="w-full bg-background border border-border rounded-xl p-3 text-foreground outline-none focus:border-primary"
+                    placeholder="https://..."
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-muted-foreground uppercase block mb-1">Markdown Body Content</label>
+                  <textarea
+                    rows={5}
+                    value={formState.markdownBody}
+                    onChange={e => setFormState({ ...formState, markdownBody: e.target.value })}
+                    className="w-full bg-background border border-border rounded-xl p-3 text-foreground outline-none focus:border-primary font-mono text-xs"
+                  />
+                </div>
+
+                <div className="pt-4 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setAdminModalOpen(false)}
+                    className="btn-secondary-v2 text-xs py-2.5 px-5 rounded-xl cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-primary-v2 text-xs py-2.5 px-6 rounded-xl cursor-pointer"
+                  >
+                    Save & Sync Firestore
+                  </button>
                 </div>
               </form>
-
             </motion.div>
           </div>
         )}

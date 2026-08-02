@@ -8,7 +8,7 @@ import {
   signInAnonymously,
   signInWithPopup
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../services/firebase';
 
 const AuthContext = createContext();
@@ -16,12 +16,12 @@ const AuthContext = createContext();
 export const translateAuthError = (err) => {
   const apiKey = import.meta.env.VITE_FIREBASE_API_KEY || "";
   if (!apiKey || apiKey === "AIzaSyDummyKeyForCompilationPurposeOnly") {
-    return "Configuration Error: Firebase environment variables are missing on this host. If you deployed to Vercel, please add VITE_FIREBASE_API_KEY and other Firebase variables to your Vercel Project Settings.";
+    return "Configuration Error: Firebase environment variables are missing on this host. Please verify VITE_FIREBASE_API_KEY in environment variables.";
   }
 
   const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "";
   if (!authDomain) {
-    return "Configuration Error: VITE_FIREBASE_AUTH_DOMAIN is missing. Please ensure all Firebase environment variables are configured in Vercel/Local settings.";
+    return "Configuration Error: VITE_FIREBASE_AUTH_DOMAIN is missing. Please ensure all Firebase environment variables are configured.";
   }
 
   if (!err || !err.code) {
@@ -63,21 +63,26 @@ export const AuthProvider = ({ children }) => {
   const [isOnboarded, setIsOnboarded] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let snapshotUnsubscribe = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       setLoading(true);
-      try {
-        if (firebaseUser) {
-          // Fetch user profile from Firestore users collection
-          const userDocRef = doc(db, 'users', firebaseUser.uid);
-          let userDocSnap = await getDoc(userDocRef);
-          
-          let profile = null;
-          if (userDocSnap.exists()) {
-            profile = userDocSnap.data();
-          } else {
-            // Initialize user profile in Firestore
-            profile = {
+      if (snapshotUnsubscribe) {
+        snapshotUnsubscribe();
+        snapshotUnsubscribe = null;
+      }
+
+      if (firebaseUser) {
+        const userDocRef = doc(db, 'users', firebaseUser.uid);
+        
+        // Ensure default document exists if new user
+        try {
+          const snap = await getDoc(userDocRef);
+          if (!snap.exists()) {
+            const initialProfile = {
+              displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || "Guest Ascender",
               name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || "Guest Ascender",
+              email: firebaseUser.email || "guest@ascendgod.com",
               join_date: new Date().toISOString().split('T')[0],
               age: 24,
               gender: "Male",
@@ -86,15 +91,17 @@ export const AuthProvider = ({ children }) => {
               goal_description: "I want to track and refine my facial posture & skin routines.",
               focus_area: "",
               previous_experience: "Beginner",
-              // Subscription state is written only by the verified payment backend.
-              isPremium: false,
-              subscriptionStatus: 'free',
-              purchaseDate: null,
-              expiryDate: null,
-              paymentProvider: null,
-              paymentId: null,
-              freeScanUsed: false,
+              // Premium fields per specification
+              premium: false,
               is_premium: false,
+              premiumPlan: "Free Tier",
+              premiumStatus: "inactive",
+              premiumSince: null,
+              premiumExpiresAt: null,
+              stripeCustomerId: null,
+              stripeSubscriptionId: null,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
               xp: 100,
               level: 1,
               days_to_ascend: 0,
@@ -107,35 +114,57 @@ export const AuthProvider = ({ children }) => {
                 weeklyDigest: true
               }
             };
-            await setDoc(userDocRef, profile);
+            await setDoc(userDocRef, initialProfile);
           }
-
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email || 'guest@ascend.app',
-            profile: profile
-          });
-
-          // User is onboarded if focus_area is defined
-          if (profile && profile.focus_area) {
-            setIsOnboarded(true);
-          } else {
-            setIsOnboarded(false);
-          }
-        } else {
-          setUser(null);
-          setIsOnboarded(false);
+        } catch (e) {
+          console.warn("User doc initial check warning:", e);
         }
-      } catch (err) {
-        console.error("AuthContext state change logic error:", err);
+
+        // REAL-TIME FIRESTORE LISTENER (Single Source of Truth)
+        snapshotUnsubscribe = onSnapshot(userDocRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const profileData = docSnap.data();
+            
+            // Single Source of Truth for Premium Membership
+            const isPremiumUser = Boolean(
+              profileData.premium === true || 
+              profileData.is_premium === true || 
+              profileData.premiumStatus === 'active'
+            );
+
+            const activePlan = profileData.premiumPlan || (isPremiumUser ? 'Ascend God PRO' : 'Free Tier');
+            const activeStatus = profileData.premiumStatus || (isPremiumUser ? 'active' : 'inactive');
+
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || profileData.email || 'guest@ascendgod.com',
+              profile: profileData,
+              isPremium: isPremiumUser,
+              premiumPlan: activePlan,
+              premiumStatus: activeStatus,
+              premiumSince: profileData.premiumSince || null,
+              premiumExpiresAt: profileData.premiumExpiresAt || null
+            });
+
+            setIsOnboarded(Boolean(profileData && profileData.focus_area));
+          }
+          setLoading(false);
+        }, (error) => {
+          console.error("Firestore onSnapshot user listener error:", error);
+          setLoading(false);
+        });
+
+      } else {
         setUser(null);
         setIsOnboarded(false);
-      } finally {
         setLoading(false);
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      if (snapshotUnsubscribe) snapshotUnsubscribe();
+    };
   }, []);
 
   const login = async (email, password) => {
@@ -190,10 +219,12 @@ export const AuthProvider = ({ children }) => {
     if (!user) return;
     try {
       const userDocRef = doc(db, 'users', user.uid);
-      const updatedProfile = { ...user.profile, ...profileData };
-      await setDoc(userDocRef, updatedProfile);
-      
-      setUser(prev => ({ ...prev, profile: updatedProfile }));
+      const updatedProfile = { 
+        ...user.profile, 
+        ...profileData, 
+        updatedAt: serverTimestamp() 
+      };
+      await setDoc(userDocRef, updatedProfile, { merge: true });
       setIsOnboarded(true);
     } catch (err) {
       console.error("AuthContext Onboarding Completion Error:", err);
@@ -219,3 +250,19 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+
+/**
+ * Custom Hook for Premium Membership Access Control
+ */
+export const usePremium = () => {
+  const { user } = useAuth();
+  const isPremium = Boolean(user?.isPremium || user?.profile?.premium || user?.profile?.is_premium || user?.profile?.premiumStatus === 'active');
+  
+  return {
+    isPremium,
+    premiumPlan: user?.premiumPlan || (isPremium ? 'Ascend God PRO' : 'Free Tier'),
+    premiumStatus: user?.premiumStatus || (isPremium ? 'active' : 'inactive'),
+    premiumSince: user?.premiumSince || null,
+    user
+  };
+};
