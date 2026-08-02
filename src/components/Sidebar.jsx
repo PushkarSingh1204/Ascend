@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
 import { useTheme } from '../context/ThemeContext';
 import Logo from './Logo';
+import ThemeToggleSwitch from './ThemeToggleSwitch';
 import { 
   LayoutDashboard, 
   Sparkles, 
@@ -194,13 +195,10 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
 
         {/* Theme and Logout Section */}
         <div className="p-3 border-t border-border space-y-1">
-          <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-colors cursor-pointer"
-          >
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-            {!isCollapsed && <span>Toggle Theme</span>}
-          </button>
+          <div className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-muted-foreground hover:bg-secondary/20 transition-colors">
+            {!isCollapsed && <span>Theme Mode</span>}
+            <ThemeToggleSwitch />
+          </div>
           
           <button
             onClick={handleLogout}
@@ -217,13 +215,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
         <Logo size={24} />
         
         <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-            title="Toggle Theme"
-          >
-            {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-          </button>
+          <ThemeToggleSwitch />
 
           <div className="flex items-center gap-1 text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full text-[10px] font-bold">
             <Flame size={12} className="fill-orange-400" />
