@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { useSubscription } from '../context/SubscriptionContext';
 import { useGame } from '../context/GameContext';
 import { useTheme } from '../context/ThemeContext';
 import Logo from './Logo';
@@ -29,6 +30,7 @@ import {
 export default function Sidebar({ isCollapsed, setIsCollapsed }) {
   const { theme, setTheme } = useTheme();
   const { logout, user } = useAuth();
+  const { isPremium } = useSubscription();
   const { xp, level, streak, getXpForLevel, getXpRequiredForNextLevel } = useGame();
   const navigate = useNavigate();
 
@@ -138,7 +140,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
                   <span className="text-[10px] font-bold">{streak}d Streak</span>
                 </div>
                 
-                {user?.profile?.is_premium ? (
+                {isPremium ? (
                   <span className="text-[8px] uppercase font-black tracking-widest text-indigo-400 px-2 py-0.5 rounded bg-primary/10 border border-primary/20">
                     Plus
                   </span>

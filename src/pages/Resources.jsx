@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
+import { useSubscription } from '../context/SubscriptionContext';
 import { getAnalyses } from '../services/db';
 import { 
   getResources, 
@@ -74,6 +75,7 @@ const TYPES = [
 
 export default function Resources() {
   const { user } = useAuth();
+  const { isPremium: isPremiumUser } = useSubscription();
   const navigate = useNavigate();
 
   // Primary State
@@ -147,7 +149,6 @@ export default function Resources() {
     loadData();
   }, []);
 
-  const isPremiumUser = !!user?.profile?.is_premium;
 
   // Toggle Bookmark
   const handleToggleBookmark = async (e, resId) => {
@@ -661,8 +662,8 @@ export default function Resources() {
                   <p className="text-xs text-muted-foreground leading-relaxed max-w-md mx-auto">
                     You are viewing a 20% free teaser preview. Upgrade to Ascend Plus to unlock the full protocol, downloadable PDF blueprints, and video walkthroughs.
                   </p>
-                  <Button variant="primary" onClick={() => navigate('/payments')}>
-                    Upgrade to Ascend Plus ($4.99)
+                  <Button variant="primary" onClick={() => navigate('/premium')}>
+                    Upgrade to Ascend Plus
                   </Button>
                 </div>
               )}

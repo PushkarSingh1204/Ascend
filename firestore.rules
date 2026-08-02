@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /subscriptions/{userId} { allow read: if request.auth != null && request.auth.uid == userId; allow write: if false; }
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId && request.resource.data.isPremium == false;
+      allow update: if request.auth != null && request.auth.uid == userId && request.resource.data.isPremium == resource.data.isPremium && request.resource.data.subscriptionStatus == resource.data.subscriptionStatus && (request.resource.data.freeScanUsed == resource.data.freeScanUsed || (resource.data.freeScanUsed == false && request.resource.data.freeScanUsed == true));
+      match /scans/{scanId} {
+        allow read, delete: if request.auth != null && request.auth.uid == userId;
+        allow create: if request.auth != null && request.auth.uid == userId && request.resource.data.is_premium_unlocked == false && (get(/databases/$(database)/documents/subscriptions/$(userId)).data.isPremium == true || (resource.data.is_premium_unlocked == false && get(/databases/$(database)/documents/users/$(userId)).data.freeScanUsed == false && getAfter(/databases/$(database)/documents/users/$(userId)).data.freeScanUsed == true));
+        allow update: if false;
+      }
+      match /{document=**} { allow read, write: if request.auth != null && request.auth.uid == userId; }
+    }
+  }
+}

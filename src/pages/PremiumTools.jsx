@@ -1,6 +1,7 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\pages\PremiumTools.jsx
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useSubscription } from '../context/SubscriptionContext';
 import { useNavigate } from 'react-router-dom';
 import { Card, Button, Badge, Skeleton } from '../components/DesignSystem';
 import { 
@@ -20,9 +21,9 @@ import {
 
 export default function PremiumTools() {
   const { user } = useAuth();
+  const { isPremium } = useSubscription();
   const navigate = useNavigate();
   const [activeTool, setActiveTool] = useState('photo_coach');
-  const isPremium = !!user?.profile?.is_premium;
 
   // 1. Photo Coach State
   const [photoFeedback, setPhotoFeedback] = useState(null);
@@ -116,7 +117,7 @@ export default function PremiumTools() {
   };
 
   const handleUnlockMock = () => {
-    navigate('/payments?ref=premium_tools');
+    navigate('/premium');
   };
 
   // Safe checks for arrays
