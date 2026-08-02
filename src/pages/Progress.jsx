@@ -3,12 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '../context/GameContext';
 import { useAuth } from '../context/AuthContext';
-import { getProgressPhotos, addProgressPhoto, deleteProgressPhoto, getJournals, getProfile, BADGES } from '../services/db';
+import { getProgressPhotos, addProgressPhoto, deleteProgressPhoto, getJournals, getProfile, getAnalyses, BADGES } from '../services/db';
 import { uploadProgressPhoto, getOptimizedUrl, validateImageFile } from '../services/cloudinary';
 import ImageSlider from '../components/ImageSlider';
 import { Card, Button, ProgressRing, Badge, Skeleton } from '../components/DesignSystem';
 import { Camera, Calendar, PlusCircle, Trash, Sliders, RefreshCw, CheckCircle2, X } from 'lucide-react';
 import EmptyState from '../components/EmptyState';
+import XpProgressBar from '../components/game/XpProgressBar';
+import PotentialForecastCard from '../components/game/PotentialForecastCard';
 
 export default function Progress() {
   const { addXP } = useGame();
@@ -19,6 +21,7 @@ export default function Progress() {
   const [beforePhotoIdx, setBeforePhotoIdx] = useState(0);
   const [afterPhotoIdx, setAfterPhotoIdx] = useState(0);
   const [timelineItems, setTimelineItems] = useState([]);
+  const [analysisHistory, setAnalysisHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Filters State
@@ -59,6 +62,9 @@ export default function Progress() {
         setBeforePhotoIdx(0);
         setAfterPhotoIdx(safeList.length - 1);
       }
+
+      const analyses = await getAnalyses();
+      if (Array.isArray(analyses)) setAnalysisHistory(analyses);
 
       const journals = await getJournals();
       const safeJournals = Array.isArray(journals) ? journals : [];
@@ -102,12 +108,15 @@ export default function Progress() {
           id: `badge_${badgeId}`,
           date: bDate,
           type: 'badge',
-          title: `Achievement: ${badge.name}`,
-          badge
+          title: `Milestone Badge Unlocked`,
+          notes: badge.description,
+          badgeName: badge.name,
+          badgeIcon: badge.icon
         };
       }).filter(Boolean);
 
-      const combined = [...photoItems, ...journalItems, ...badgeItems].sort((a, b) => new Date(b.date) - new Date(a.date));
+      const combined = [...photoItems, ...journalItems, ...badgeItems];
+      combined.sort((a, b) => new Date(b.date) - new Date(a.date));
       setTimelineItems(combined);
     } catch (err) {
       console.error(err);
@@ -120,41 +129,25 @@ export default function Progress() {
     loadProgressData();
   }, []);
 
-  const handleFileChange = (e) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    try {
-      validateImageFile(file);
-      setError('');
-      
-      // Clean up previous preview URL to prevent memory leaks
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-
-      const objectUrl = URL.createObjectURL(file);
-      setPreviewUrl(objectUrl);
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setSelectedPhoto(event.target.result);
-      };
-      reader.readAsDataURL(file);
-    } catch (err) {
-      setError(err.message || 'File validation failed.');
-      setSelectedPhoto(null);
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-        setPreviewUrl(null);
-      }
+    setError('');
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      setError(validation.error);
+      return;
     }
+
+    setSelectedPhoto(file);
+    setPreviewUrl(URL.createObjectURL(file));
   };
 
   const handleUploadSubmit = async (e) => {
     e.preventDefault();
     if (!selectedPhoto) {
-      setError('Please select a photo first.');
+      setError("Please select an image photo.");
       return;
     }
 
@@ -164,24 +157,20 @@ export default function Progress() {
       setUploadProgress(0);
       setSuccessAnimation(false);
 
-      // 1. Upload to Cloudinary using unsigned preset and track progress
-      const { promise, cancel } = uploadProgressPhoto(
-        selectedPhoto,
-        user.uid,
-        (percent) => setUploadProgress(percent)
-      );
+      const { promise, cancel } = uploadProgressPhoto(selectedPhoto, (pct) => {
+        setUploadProgress(pct);
+      });
 
       setCancelUpload(() => cancel);
 
       const uploadedMetadata = await promise;
 
-      // 2. Save metadata to Firestore
+      // Save metadata to Firestore
       const updated = await addProgressPhoto(uploadedMetadata, notes);
 
-      // 3. Award XP
-      await addXP(100, "Log Progress Photo Baseline");
+      // Rebalanced XP reward: +20 XP for progress photo
+      await addXP(20, "Upload Progress Photo", "progress_photo");
 
-      // Revoke preview URL to free up memory
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
         setPreviewUrl(null);
@@ -233,7 +222,8 @@ export default function Progress() {
 
   if (loading) {
     return (
-      <div className="space-y-6 py-6">
+      <div className="space-y-6 py-6 max-w-4xl mx-auto">
+        <Skeleton variant="rect" height="120px" />
         <Skeleton variant="rect" height="340px" />
         <Skeleton variant="rect" height="400px" />
       </div>
@@ -263,6 +253,20 @@ export default function Progress() {
           <span>Upload Progress Photo</span>
         </Button>
       </div>
+
+      {/* REBALANCED XP PROGRESS BAR */}
+      <section>
+        <XpProgressBar />
+      </section>
+
+      {/* PREMIUM AI POTENTIAL FORECAST CARD */}
+      <section>
+        <PotentialForecastCard 
+          profile={user?.profile || {}} 
+          latestScan={analysisHistory[0] || null} 
+          scanHistory={analysisHistory} 
+        />
+      </section>
 
       {/* BEFORE / AFTER PHOTO CROSSFADE COMPARISON SLIDER */}
       <section className="space-y-4">

@@ -5,9 +5,7 @@ import {
   updateProfile, 
   submitCheckin, 
   BADGES, 
-  getDailyMissions, 
   updateMission,
-  getRoadmapMilestones,
   updateRoadmapMilestone
 } from '../services/db';
 import { useAuth } from './AuthContext';
@@ -30,10 +28,38 @@ export const GameProvider = ({ children }) => {
   const [roadmapMilestones, setRoadmapMilestones] = useState([]);
   const [roadmapPercent, setRoadmapPercent] = useState(0);
 
-  // Alerts
+  // Alerts & Notifications
   const [notification, setNotification] = useState(null);
   const [levelUpAlert, setLevelUpAlert] = useState(null);
   const [badgeAlert, setBadgeAlert] = useState(null);
+
+  // =========================================================
+  // REBALANCED PROGRESSIVE XP FORMULA & LEVEL THRESHOLDS
+  // Level 1 → 100 XP (Level 2)
+  // Level 2 → 250 XP (Level 3)
+  // Level 3 → 450 XP (Level 4)
+  // Level 4 → 700 XP (Level 5)
+  // Level 5 → 1000 XP (Level 6)
+  // Formula: getXpForLevel(lvl) = 25 * (lvl - 1)^2 + 75 * (lvl - 1)
+  // =========================================================
+  const getXpForLevel = (lvl) => {
+    if (lvl <= 1) return 0;
+    const n = lvl - 1;
+    return 25 * n * n + 75 * n;
+  };
+
+  const getXpRequiredForNextLevel = (lvl) => {
+    return getXpForLevel(lvl + 1);
+  };
+
+  const calculateLevel = (currentXp) => {
+    if (!currentXp || currentXp <= 0) return 1;
+    let lvl = 1;
+    while (getXpForLevel(lvl + 1) <= currentXp) {
+      lvl++;
+    }
+    return lvl;
+  };
 
   // Sync state on user changes and handle daily resets
   const syncGameState = async () => {
@@ -46,11 +72,9 @@ export const GameProvider = ({ children }) => {
         
         // Dynamic Daily reset trigger
         if (profile.last_active_date !== todayStr) {
-          // Reset daily missions, water/sleep logs, and routines checklists
           const resetMissions = { checkin: false, sleep: false, water: false, skincare: false, journal: false };
           const updatedRoutines = { ...profile.routines };
           
-          // Mark all tasks incomplete
           if (updatedRoutines) {
             Object.keys(updatedRoutines).forEach(cat => {
               const catTasks = updatedRoutines[cat];
@@ -68,15 +92,16 @@ export const GameProvider = ({ children }) => {
             daily_missions: resetMissions,
             routines: updatedRoutines,
             sleep_log: resetSleep,
-            water_log: resetWater
+            water_log: resetWater,
+            daily_xp_actions: [] // Reset daily awarded XP actions
           });
 
-          // Set user context
           setUser(prev => ({ ...prev, profile }));
         }
 
-        setXp(profile.xp || 0);
-        setLevel(profile.level || 1);
+        const currentXpVal = profile.xp || 0;
+        setXp(currentXpVal);
+        setLevel(calculateLevel(currentXpVal));
         setStreak(profile.streak || 0);
         setLongestStreak(profile.longest_streak || 0);
         setDaysToAscend(profile.days_to_ascend || 0);
@@ -111,29 +136,29 @@ export const GameProvider = ({ children }) => {
     syncGameState();
   }, [user]);
 
-  // Level formula: level = floor(sqrt(xp / 100)) + 1
-  const calculateLevel = (currentXp) => {
-    return Math.floor(Math.sqrt(currentXp / 100)) + 1;
-  };
-
-  const getXpForLevel = (lvl) => {
-    if (lvl <= 1) return 0;
-    return Math.pow(lvl - 1, 2) * 100;
-  };
-
-  const getXpRequiredForNextLevel = (lvl) => {
-    return getXpForLevel(lvl + 1);
-  };
-
   const triggerNotification = (message, type = 'info') => {
     setNotification({ message, type });
     setTimeout(() => {
       setNotification(null);
-    }, 3500);
+    }, 3000);
   };
 
-  const addXP = async (amount, reason) => {
+  // Add XP with Daily Action Deduplication
+  const addXP = async (amount, reason, actionKey = null) => {
     if (!user) return;
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const profile = user.profile || {};
+    const dailyActions = Array.isArray(profile.daily_xp_actions) ? profile.daily_xp_actions : [];
+
+    // Deduplication check: if actionKey is provided and already awarded today, skip duplicate
+    if (actionKey) {
+      const fullKey = `${actionKey}_${todayStr}`;
+      if (dailyActions.includes(fullKey)) {
+        return; // Skip duplicate daily XP
+      }
+      dailyActions.push(fullKey);
+    }
     
     const newXp = xp + amount;
     const newLvl = calculateLevel(newXp);
@@ -141,15 +166,18 @@ export const GameProvider = ({ children }) => {
 
     const updatedProfile = await updateProfile({
       xp: newXp,
-      level: newLvl
+      level: newLvl,
+      daily_xp_actions: dailyActions
     });
 
     setXp(newXp);
     setLevel(newLvl);
     setUser(prev => ({ ...prev, profile: { ...prev.profile, ...updatedProfile } }));
 
+    // Subtle feedback notification
     triggerNotification(`+${amount} XP: ${reason}`, 'xp');
 
+    // Only celebrate major level up milestones
     if (leveledUp) {
       setLevelUpAlert({
         oldLevel: level,
@@ -173,7 +201,7 @@ export const GameProvider = ({ children }) => {
     setUnlockedBadges(newBadges);
     setUser(prev => ({ ...prev, profile: { ...prev.profile, ...updatedProfile } }));
     
-    await addXP(badge.xp, `Achievement Badge: "${badge.name}"`);
+    await addXP(badge.xp || 50, `Achievement Badge: "${badge.name}"`, `badge_${badgeId}`);
     setBadgeAlert(badge);
   };
 
@@ -186,7 +214,7 @@ export const GameProvider = ({ children }) => {
     setRoadmapPercent(pct);
 
     if (completedStatus) {
-      await addXP(75, "Roadmap Weekly Milestone Cleared");
+      await addXP(75, "Roadmap Milestone Complete", `milestone_${milestoneId}`);
     }
   };
 
@@ -204,15 +232,19 @@ export const GameProvider = ({ children }) => {
     const updatedMissions = await updateMission('checkin', true);
     setDailyMissions(updatedMissions);
 
-    // Award XP
-    await addXP(50, "Daily Check-in Complete");
+    // Rebalanced XP: +10 XP for daily checkin
+    await addXP(10, "Daily Check-in Complete", "daily_checkin");
 
-    // Unlock streak badges
+    // Streak Rewards:
     if (profile.streak === 7) {
+      await addXP(100, "7-Day Streak Bonus!", "streak_7");
       await unlockBadge('7_day_streak');
-    }
-    if (profile.streak === 30) {
+    } else if (profile.streak === 30) {
+      await addXP(250, "30-Day Streak Bonus!", "streak_30");
       await unlockBadge('30_day_streak');
+    } else if (profile.streak === 100) {
+      await addXP(500, "100-Day Ascension Mastery!", "streak_100");
+      await unlockBadge('100_day_streak');
     }
 
     return true;
@@ -248,7 +280,7 @@ export const GameProvider = ({ children }) => {
       {notification && (
         <div className="fixed bottom-6 right-6 z-50 glassmorphism px-4 py-3 rounded-xl flex items-center gap-3 animate-fade-in shadow-xl border border-border bg-card max-w-sm text-foreground">
           <div className="text-xl">
-            {notification.type === 'xp' ? '⚡' : notification.type === 'level-up' ? '🎉' : notification.type === 'badge' ? '🏆' : 'ℹ|'}
+            {notification.type === 'xp' ? '⚡' : notification.type === 'level-up' ? '🎉' : notification.type === 'badge' ? '🏆' : 'ℹ️'}
           </div>
           <div>
             <p className="text-xs font-semibold">{notification.message}</p>

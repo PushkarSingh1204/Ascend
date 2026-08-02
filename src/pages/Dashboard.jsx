@@ -5,9 +5,11 @@ import { useAuth } from '../context/AuthContext';
 import { useGame } from '../context/GameContext';
 import { getAnalyses, getWaterLog, getSleepLog, getJournals, getCheckins } from '../services/db';
 import { getOptimizedUrl } from '../services/cloudinary';
-import { Card, Button, ProgressRing, Badge, Skeleton } from '../components/DesignSystem';
+import { Card, Button, Badge, Skeleton } from '../components/DesignSystem';
 import { recommendationEngine } from '../services/engines/recommendationEngine.js';
 import { getFacialHarmonyRating } from '../utils/facialHarmonyScale';
+import XpProgressBar from '../components/game/XpProgressBar';
+import PotentialForecastCard from '../components/game/PotentialForecastCard';
 
 import { 
   Flame, 
@@ -15,7 +17,6 @@ import {
   Sparkles, 
   ChevronRight, 
   CheckCircle2, 
-  Circle,
   Activity,
   TrendingUp,
   Compass,
@@ -35,72 +36,60 @@ export default function Dashboard() {
     unlockedBadges, 
     dailyMissions,
     roadmapMilestones,
-    performDailyCheckin,
-    getXpForLevel,
-    getXpRequiredForNextLevel
+    performDailyCheckin
   } = useGame();
-  
-  const navigate = useNavigate();
-  const [isCheckedIn, setIsCheckedIn] = useState(false);
-  const [latestAnalysis, setLatestAnalysis] = useState(null);
-  
-  // Averages
-  const [sleepAvg, setSleepAvg] = useState(7.2);
-  const [waterAvg, setWaterAvg] = useState(1800);
-  const [weeklyConsistency, setWeeklyConsistency] = useState(75);
 
-  // Activity Timeline State
+  const navigate = useNavigate();
+
+  const [latestAnalysis, setLatestAnalysis] = useState(null);
+  const [analysisHistory, setAnalysisHistory] = useState([]);
+  const [waterLog, setWaterLog] = useState({ current: 0, target: 2000 });
+  const [sleepLog, setSleepLog] = useState({ current: 0, target: 8.0 });
   const [timelineItems, setTimelineItems] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Checks if user checked in today
+  const todayStr = new Date().toISOString().split('T')[0];
+  const isCheckedIn = user?.profile?.last_active_date === todayStr && dailyMissions?.checkin;
+
+  // Calculates weekly consistency %
+  const weeklyConsistency = user?.profile?.streak ? Math.min(100, Math.round((user.profile.streak / 7) * 100)) : 71;
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const todayStr = new Date().toISOString().split('T')[0];
-      setIsCheckedIn(!!dailyMissions.checkin);
-      
-      // Fetch latest scan
+
+      // 1. Fetch latest scan and history
       const analyses = await getAnalyses();
-      let latestScan = null;
       if (Array.isArray(analyses) && analyses.length > 0) {
+        setAnalysisHistory(analyses);
         setLatestAnalysis(analyses[0]);
-        latestScan = analyses[0];
       }
 
-      // Calculate dynamic averages based on DB logs
-      const waterLog = await getWaterLog();
-      const sleepLog = await getSleepLog();
+      // 2. Fetch Logs
+      const water = await getWaterLog();
+      if (water) setWaterLog(water);
 
-      // Fetch dynamic recommendations from the engine
-      if (user && user.profile) {
-        const checkinDates = await getCheckins();
+      const sleep = await getSleepLog();
+      if (sleep) setSleepLog(sleep);
+
+      // 3. Run Recommendation Engine
+      if (user?.profile) {
         const recs = await recommendationEngine.run({
           profile: user.profile,
-          latestAnalysis: latestScan,
-          waterLogs: waterLog ? [waterLog] : [],
-          sleepLogs: sleepLog ? [sleepLog] : [],
-          checkins: checkinDates || [],
-          progressPhotos: []
+          latestAnalysis: analyses && analyses[0] ? analyses[0] : null,
+          waterLog: water || { current: 0, target: 2000 },
+          sleepLog: sleep || { current: 0, target: 8.0 }
         });
         setRecommendations(recs || []);
       }
 
-      setWaterAvg(waterLog?.current > 0 ? Math.round((waterLog.current + 1850 * 6) / 7) : 1800);
-      setSleepAvg(sleepLog?.current > 0 ? Math.round(((sleepLog.current + 7.4 * 6) / 7) * 10) / 10 : 7.2);
-
-      // Calculate weekly consistency % based on completed tasks
-      const safeMilestones = Array.isArray(roadmapMilestones) ? roadmapMilestones : [];
-      const completedMilestones = safeMilestones.filter(m => m.completed).length;
-      const routinePercent = completedMilestones > 0 ? Math.min(95, 60 + completedMilestones * 5) : 75;
-      setWeeklyConsistency(routinePercent);
-
-      // Construct Unified Chronological Activity Timeline
+      // 4. Build Recent Activity Timeline
       const items = [];
       const journals = await getJournals();
       const checkinDates = await getCheckins();
       
-      // 1. Face Scans
       const safeAnalyses = Array.isArray(analyses) ? analyses : [];
       safeAnalyses.forEach(scan => {
         items.push({
@@ -114,7 +103,6 @@ export default function Dashboard() {
         });
       });
 
-      // 2. Journal Entries
       const safeJournals = Array.isArray(journals) ? journals : [];
       safeJournals.forEach((entry) => {
         items.push({
@@ -128,7 +116,6 @@ export default function Dashboard() {
         });
       });
 
-      // 3. Badges unlocked
       const safeBadges = Array.isArray(unlockedBadges) ? unlockedBadges : [];
       safeBadges.forEach(badgeId => {
         items.push({
@@ -142,7 +129,6 @@ export default function Dashboard() {
         });
       });
 
-      // 4. Checkins
       const safeCheckins = Array.isArray(checkinDates) ? checkinDates : [];
       safeCheckins.forEach(date => {
         items.push({
@@ -156,7 +142,6 @@ export default function Dashboard() {
         });
       });
 
-      // Sort descending by date
       items.sort((a, b) => new Date(b.date) - new Date(a.date));
       setTimelineItems(items.slice(0, 5));
     } catch (err) {
@@ -167,48 +152,15 @@ export default function Dashboard() {
   };
 
   const completedMissionsCount = Object.values(dailyMissions || {}).filter(Boolean).length;
-  const milestonesCount = Array.isArray(roadmapMilestones) ? roadmapMilestones.length : 0;
-  const milestonesCompletedCount = Array.isArray(roadmapMilestones) ? roadmapMilestones.filter(m => m.completed).length : 0;
-  const badgesCount = Array.isArray(unlockedBadges) ? unlockedBadges.length : 0;
 
   useEffect(() => {
     fetchDashboardData();
-  }, [xp, level, streak, completedMissionsCount, milestonesCount, milestonesCompletedCount, badgesCount]);
+  }, [xp, level, streak, completedMissionsCount]);
 
-  const prevLevelXp = getXpForLevel(level);
-  const nextLevelXp = getXpRequiredForNextLevel(level);
-  const xpInCurrentLevel = xp - prevLevelXp;
-  const xpNeededForNext = nextLevelXp - prevLevelXp;
-  const progressPercent = xpNeededForNext > 0 ? Math.min(100, Math.round((xpInCurrentLevel / xpNeededForNext) * 100)) : 0;
-
-  const [animatedXp, setAnimatedXp] = React.useState(0);
-
-  React.useEffect(() => {
-    if (xpInCurrentLevel > 0) {
-      let start = 0;
-      const end = xpInCurrentLevel;
-      const step = Math.ceil(end / 30);
-      const timer = setInterval(() => {
-        start += step;
-        if (start >= end) {
-          clearInterval(timer);
-          setAnimatedXp(end);
-        } else {
-          setAnimatedXp(start);
-        }
-      }, 25);
-      return () => clearInterval(timer);
-    } else {
-      setAnimatedXp(0);
-    }
-  }, [xpInCurrentLevel]);
-
-  // Determine current roadmap stage details
   const safeMilestones = Array.isArray(roadmapMilestones) ? roadmapMilestones : [];
   const nextMilestone = safeMilestones.find(m => !m.completed);
   const currentWeek = nextMilestone ? nextMilestone.week : 4;
 
-  // Daily Transformation Score: computed dynamically
   const dailyTransformationScore = Math.min(100, Math.round(
     (completedMissionsCount / 5) * 35 + (weeklyConsistency) * 0.65
   ));
@@ -226,7 +178,6 @@ export default function Dashboard() {
     return 'Good Evening';
   };
 
-  // Determine Next Recommended Action based on uncompleted items or Engine Recommendations
   const getNextRecommendedAction = () => {
     if (!isCheckedIn) {
       return {
@@ -244,8 +195,6 @@ export default function Dashboard() {
         onClick: () => navigate('/analysis')
       };
     }
-    
-    // Pull the top recommendation from the intelligence pipeline
     if (recommendations && recommendations.length > 0) {
       const topRec = recommendations[0];
       return {
@@ -259,15 +208,6 @@ export default function Dashboard() {
             navigate('/roadmap');
           }
         }
-      };
-    }
-
-    if (!dailyMissions.journal) {
-      return {
-        title: "Log Reflection Journal",
-        desc: "Write down your mental focus notes or daily routines feedback.",
-        actionText: "Write entry",
-        onClick: () => navigate('/journal')
       };
     }
     return {
@@ -290,10 +230,6 @@ export default function Dashboard() {
           <Skeleton variant="rect" height="100px" />
           <Skeleton variant="rect" height="100px" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          <Skeleton className="md:col-span-3" variant="rect" height="300px" />
-          <Skeleton className="md:col-span-2" variant="rect" height="300px" />
-        </div>
       </div>
     );
   }
@@ -304,20 +240,18 @@ export default function Dashboard() {
       {/* 1. STORYTELLING HERO: WHO AM I TODAY? */}
       <section className="flex flex-col lg:flex-row gap-6 justify-between items-stretch">
         
-        {/* Profile Card with Circular XP Gauge */}
-        <Card className="flex-1 p-6 flex flex-col sm:flex-row items-center gap-6 border-primary/10 shadow-[0_8px_30px_rgba(134,59,255,0.04)] hover:shadow-[0_20px_40px_rgba(134,59,255,0.08)] transition-all duration-500">
-          <div className="relative group">
-            <ProgressRing percent={progressPercent} size={120} strokeWidth={6}>
-              <div className="w-22 h-22 rounded-full bg-gradient-to-tr from-violet-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white font-black text-2xl shadow-[0_4px_20px_rgba(134,59,255,0.25)] relative border border-white/10 group-hover:scale-102 transition-transform duration-500">
-                {user?.profile?.name?.substring(0, 2).toUpperCase() || 'TR'}
-                <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-background border border-primary/20 flex items-center justify-center text-xs font-black text-primary shadow-md">
-                  {level}
-                </div>
+        {/* Profile Card */}
+        <Card className="flex-1 p-6 flex flex-col sm:flex-row items-center gap-6 border-primary/10 shadow-xl">
+          <div className="relative group shrink-0">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-primary via-indigo-600 to-accent flex items-center justify-center text-white font-black text-2xl shadow-lg relative border border-white/10">
+              {user?.profile?.name?.substring(0, 2).toUpperCase() || 'TR'}
+              <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-background border border-primary/20 flex items-center justify-center text-xs font-black text-primary shadow-md">
+                {level}
               </div>
-            </ProgressRing>
+            </div>
           </div>
 
-          <div className="flex-1 space-y-2.5 text-center sm:text-left">
+          <div className="flex-1 space-y-2 text-center sm:text-left">
             <div>
               <h1 className="text-2xl font-black tracking-tight mb-0.5 bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text text-transparent">
                 {getGreeting()}, {user?.profile?.name || 'Transformer'}
@@ -338,7 +272,6 @@ export default function Dashboard() {
                 <span className="text-[10px] font-black">{streak}d Streak</span>
               </div>
               <Badge variant="indigo">LVL {level}</Badge>
-              <span className="text-[10px] text-muted-foreground font-bold pl-1">{animatedXp} / {xpNeededForNext} XP to next level</span>
             </div>
           </div>
         </Card>
@@ -367,7 +300,12 @@ export default function Dashboard() {
         </Card>
       </section>
 
-      {/* 2. DYNAMIC HABIT GAUGES */}
+      {/* 2. REBALANCED XP PROGRESS BAR COMPONENT */}
+      <section>
+        <XpProgressBar />
+      </section>
+
+      {/* 3. DYNAMIC HABIT GAUGES */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Transformation Index', val: `${dailyTransformationScore}%`, desc: "Today's habits ratio", icon: Activity, color: 'text-primary', glow: 'shadow-[0_8px_30px_rgba(134,59,255,0.02)]' },
@@ -395,7 +333,16 @@ export default function Dashboard() {
         })}
       </section>
 
-      {/* 3. HABIT ACTIONS & BIOMETRIC DETAILS */}
+      {/* 4. PREMIUM AI POTENTIAL FORECAST CARD */}
+      <section>
+        <PotentialForecastCard 
+          profile={user?.profile || {}} 
+          latestScan={latestAnalysis} 
+          scanHistory={analysisHistory} 
+        />
+      </section>
+
+      {/* 5. HABIT ACTIONS & BIOMETRIC DETAILS */}
       <section className="grid grid-cols-1 md:grid-cols-5 gap-6">
         
         {/* Daily Mission checklist */}
@@ -412,16 +359,16 @@ export default function Dashboard() {
 
           <div className="space-y-2">
             {[
-              { id: 'checkin', name: 'Log Daily Check-in', desc: 'Secure streak consistency bonus', xp: 50, path: () => handleCheckin() },
-              { id: 'water', name: 'Hydration Target (2L+)', desc: 'Hydrate skin & balance fluid retention', xp: 50, path: () => navigate('/routine') },
-              { id: 'sleep', name: 'Log Sleep Hours', desc: 'Ensure recovery cellular regeneration', xp: 50, path: () => navigate('/routine') },
-              { id: 'skincare', name: 'Skincare routine completed', desc: 'Ensure daily double-cleanse complete', xp: 50, path: () => navigate('/routine') },
-              { id: 'journal', name: 'Write Reflection Journal', desc: 'Maintain mental clarity logging', xp: 100, path: () => navigate('/journal') }
+              { id: 'checkin', name: 'Log Daily Check-in', desc: 'Secure streak consistency bonus', xp: 10, path: () => handleCheckin() },
+              { id: 'water', name: 'Hydration Target (2L+)', desc: 'Hydrate skin & balance fluid retention', xp: 10, path: () => navigate('/routine') },
+              { id: 'sleep', name: 'Log Sleep Hours', desc: 'Ensure recovery cellular regeneration', xp: 15, path: () => navigate('/routine') },
+              { id: 'skincare', name: 'Skincare routine completed', desc: 'Ensure daily double-cleanse complete', xp: 15, path: () => navigate('/routine') },
+              { id: 'journal', name: 'Write Reflection Journal', desc: 'Maintain mental clarity logging', xp: 10, path: () => navigate('/journal') }
             ].map((mission) => {
               const done = !!dailyMissions[mission.id];
               return (
                 <motion.div 
-                  whileHover={{ x: done ? 0 : 4, borderColor: done ? 'rgba(255,255,255,0.05)' : 'rgba(134,59,255,0.2)' }}
+                  whileHover={{ x: done ? 0 : 4 }}
                   onClick={mission.path}
                   key={mission.id} 
                   className={`p-3.5 rounded-xl border transition-all flex items-center justify-between cursor-pointer ${done ? 'bg-secondary/15 border-border/40 text-muted-foreground/80 opacity-75' : 'bg-secondary/40 border-border text-foreground'}`}
@@ -450,147 +397,65 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        {/* Latest face scan details */}
-        <Card className="md:col-span-2 p-6 flex flex-col justify-between">
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2 border-b border-border pb-3">
-              <Sparkles size={14} className="text-blue-400" />
-              Latest Scan Snapshot
-            </h3>
-            
+        {/* Biometric Scan Quick Card */}
+        <Card className="md:col-span-2 p-6 flex flex-col justify-between space-y-4">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                <Sparkles size={14} className="text-primary" />
+                Latest Biometric Scan
+              </h3>
+              <span className="text-[9px] text-muted-foreground font-semibold">
+                {latestAnalysis ? latestAnalysis.date : 'No scan'}
+              </span>
+            </div>
+
             {latestAnalysis ? (
-              <div className="space-y-4 pt-1">
-                <div className="flex gap-4 items-center">
-                  {latestAnalysis.front_photo_url && (
-                    <div className="w-16 h-20 rounded-xl overflow-hidden border border-border/60 shrink-0 relative bg-neutral-950">
-                      <img 
-                        src={getOptimizedUrl(latestAnalysis.front_photo_url)} 
-                        alt="Latest scan" 
-                        className="w-full h-full object-cover" 
-                      />
-                      <div className="absolute inset-0 bg-primary/5 mix-blend-overlay"></div>
+              <div className="space-y-3 pt-1">
+                <div className="flex items-center gap-4 p-3 rounded-xl bg-secondary/30 border border-border">
+                  {latestAnalysis.photo_url ? (
+                    <img 
+                      src={getOptimizedUrl(latestAnalysis.photo_url, { width: 120, height: 120, crop: 'fill', gravity: 'face' })} 
+                      alt="Biometric scan" 
+                      className="w-14 h-14 rounded-lg object-cover border border-border shrink-0"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-lg bg-secondary flex items-center justify-center text-xs font-bold text-muted-foreground shrink-0">
+                      SCAN
                     </div>
                   )}
-                  <div className="flex-1 space-y-2">
-                    <div className="flex justify-between items-center bg-secondary/35 border border-border p-2.5 rounded-xl">
-                      <div>
-                        <span className="text-[8px] font-bold text-muted-foreground uppercase block">Harmony Score</span>
-                        <span className="text-base font-black text-foreground block">{latestAnalysis.facial_harmony_score}%</span>
-                      </div>
-                      {(() => {
-                        const rating = getFacialHarmonyRating(latestAnalysis.facial_harmony_score);
-                        return (
-                          <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold ${rating.badgeBg}`}>
-                            {rating.category}
-                          </span>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-2 text-[10px] leading-relaxed">
-                  <div className="bg-secondary/15 p-2 rounded-lg border border-border/30">
-                    <strong className="text-muted-foreground block uppercase tracking-wider text-[8px] mb-0.5">Symmetry</strong>
-                    <span className="text-foreground font-semibold">{latestAnalysis.symmetry_score}% balance</span>
-                  </div>
-                  <div className="bg-secondary/15 p-2 rounded-lg border border-border/30">
-                    <strong className="text-muted-foreground block uppercase tracking-wider text-[8px] mb-0.5">Ratio Proportion</strong>
-                    <span className="text-foreground font-semibold">{latestAnalysis.facial_proportion_score}% golden</span>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl font-black text-foreground">{latestAnalysis.facial_harmony_score}%</span>
+                      <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                        {getFacialHarmonyRating(latestAnalysis.facial_harmony_score).tier}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground leading-tight">
+                      Symmetry: {latestAnalysis.symmetry_score}% | Proportion: {latestAnalysis.facial_proportion_score}%
+                    </p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="py-12 text-center text-xs text-muted-foreground italic">
-                No biometric analyses logged yet.
+              <div className="p-6 text-center text-xs text-muted-foreground italic border border-dashed border-border rounded-xl">
+                No biometric scan uploaded yet.
               </div>
             )}
           </div>
 
-          <Button
-            variant="secondary"
+          <Button 
+            variant="secondary" 
+            className="w-full justify-center" 
             onClick={() => navigate('/analysis')}
-            className="w-full mt-4"
           >
-            <span>{latestAnalysis ? 'Start New Scan' : 'Run First Scan'}</span>
-            <ChevronRight size={12} />
+            <span>{latestAnalysis ? 'View Full Biometric Analysis' : 'Run First Scan'}</span>
+            <ChevronRight size={14} />
           </Button>
         </Card>
       </section>
 
-      {/* 4. COGNITIVE PIPELINE RECOMMENDATIONS */}
-      {recommendations.length > 0 && (
-        <section className="space-y-4">
-          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider border-b border-border pb-3 flex items-center gap-2">
-            <Sparkles size={14} className="text-primary" />
-            Central Intelligence Layer Recommendations
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {recommendations.slice(0, 4).map((rec) => (
-              <Card key={rec.id} className="p-5 flex flex-col justify-between border-primary/10 bg-secondary/10 hover:bg-secondary/20 transition-all duration-300">
-                <div className="space-y-3">
-                  <div className="flex justify-between items-start">
-                    <Badge variant="indigo" className="text-[8px] font-black tracking-widest">{rec.category.toUpperCase()}</Badge>
-                    <span className="text-[10px] font-bold text-neutral-400">Score: {rec.score}</span>
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-black text-foreground">{rec.title}</h4>
-                    <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">{rec.description}</p>
-                  </div>
-                  <div className="border-t border-border/40 pt-2.5 space-y-1.5">
-                    <p className="text-[9px] text-muted-foreground italic">
-                      <strong className="text-primary not-italic font-bold">Because:</strong> {rec.reason}
-                    </p>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-[8px] font-bold text-neutral-400">
-                      <span>Impact: {Array(rec.impact || 3).fill('★').join('')}</span>
-                      <span>Confidence: {Math.round((rec.confidence || 0.8) * 100)}%</span>
-                      <span>Est: {rec.estimatedTime || 'N/A'}</span>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* 5. ACTIVITY TIMELINE */}
-      <section className="space-y-4">
-        <h3 className="text-xs font-bold text-foreground uppercase tracking-wider border-b border-border pb-3 flex items-center gap-2">
-          <Activity size={14} className="text-primary" />
-          Unified Activity Timeline
-        </h3>
-
-        <Card className="p-6">
-          <div className="relative border-l border-border ml-3.5 pl-6 space-y-6 py-2">
-            {timelineItems.length > 0 ? (
-              timelineItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div key={item.id} className="relative group">
-                    <span className={`absolute -left-10 top-0.5 w-7 h-7 rounded-full flex items-center justify-center border shrink-0 z-10 ${item.color}`}>
-                      <Icon size={12} />
-                    </span>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 justify-between">
-                        <span className="text-xs font-bold text-foreground">{item.title}</span>
-                        <span className="text-[9px] text-muted-foreground">
-                          {new Date(item.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground">{item.desc}</p>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="py-8 text-center text-xs text-muted-foreground italic">
-                No timeline activity logged yet. Complete today's focus goals!
-              </div>
-            )}
-          </div>
-        </Card>
-      </section>
     </div>
   );
 }
