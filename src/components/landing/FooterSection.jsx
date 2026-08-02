@@ -56,7 +56,7 @@ export default function FooterSection() {
         </div>
 
         <div>
-          <span>© 2026 Ascend Self-Transformation Platform. All rights reserved.</span>
+          <span>© 2026 Ascend God Self-Transformation Platform. All rights reserved.</span>
         </div>
       </div>
 

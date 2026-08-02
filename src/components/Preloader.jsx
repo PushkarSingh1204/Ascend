@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import Logo from './Logo';
 
-export default function Preloader({ label = "Ascending..." }) {
+export default function Preloader({ label = "Ascending God..." }) {
   return (
     <motion.div 
       initial={{ opacity: 0 }}

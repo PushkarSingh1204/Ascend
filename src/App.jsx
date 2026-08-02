@@ -29,7 +29,7 @@ const Resources = lazy(() => import('./pages/Resources'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Page Loader with Uiverse.io Speeder Preloader
-const PageLoader = () => <Preloader label="Ascending..." />;
+const PageLoader = () => <Preloader label="Ascending God..." />;
 
 // Route Guard for Protected Pages
 const ProtectedRoute = ({ children }) => {

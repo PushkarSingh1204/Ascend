@@ -33,8 +33,8 @@ export default function Logo({
   return (
     <div className={`inline-flex items-center gap-3 select-none ${className}`}>
       {logoImage}
-      <span className="text-base font-black tracking-widest text-foreground uppercase font-sans">
-        ASCEND
+      <span className="text-base font-black tracking-widest text-foreground uppercase font-sans whitespace-nowrap">
+        ASCEND GOD
       </span>
     </div>
   );
