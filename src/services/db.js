@@ -1,4 +1,4 @@
-import { doc, getDoc, updateDoc, setDoc, collection, getDocs, addDoc, query, orderBy, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, setDoc, collection, getDocs, addDoc, query, orderBy, serverTimestamp, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import { deleteImage } from './cloudinary';
 
@@ -344,7 +344,7 @@ export const getAnalyses = async () => {
 };
 
 // Save a new face symmetry harmony analysis using Cloudinary metadata
-export const saveAnalysis = async (frontMetadata, sideMetadata, scores, suggestions) => {
+export const saveAnalysis = async (frontMetadata, sideMetadata, scores, suggestions, isPremium = false) => {
   const user = auth.currentUser;
   if (!user) return null;
 
@@ -356,7 +356,8 @@ export const saveAnalysis = async (frontMetadata, sideMetadata, scores, suggesti
     front_public_id: frontMetadata.publicId,
     side_photo_url: sideMetadata.imageUrl,
     side_public_id: sideMetadata.publicId,
-    is_premium_unlocked: true,
+    // A complete report is always saved; only a verified subscription unlocks it.
+    is_premium_unlocked: isPremium,
     ...scores,
     suggestions: suggestions,
     createdAt: serverTimestamp(),
@@ -364,7 +365,13 @@ export const saveAnalysis = async (frontMetadata, sideMetadata, scores, suggesti
     type: 'scan'
   };
   
-  const docRef = await addDoc(collRef, newScan);
+  const docRef = doc(collRef);
+  const batch = writeBatch(db);
+  batch.set(docRef, newScan);
+  // This is committed atomically with the scan. Firestore rules enforce that a
+  // free account can flip this flag only once; premium accounts skip the flag.
+  if (!isPremium) batch.update(doc(db, 'users', user.uid), { freeScanUsed: true });
+  await batch.commit();
   return { id: docRef.id, ...newScan };
 };
 

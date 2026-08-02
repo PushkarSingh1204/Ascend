@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSubscription } from '../context/SubscriptionContext';
 import { useGame } from '../context/GameContext';
 import { useTheme } from '../context/ThemeContext';
 import { Card, Button, Input, Badge, Skeleton } from '../components/DesignSystem';
@@ -26,6 +27,7 @@ import { uploadProfilePhoto, getOptimizedUrl, validateImageFile } from '../servi
 export default function Profile() {
   const { theme, setTheme } = useTheme();
   const { user, setUser } = useAuth();
+  const { isPremium } = useSubscription();
   const { level, streak, longestStreak, daysToAscend } = useGame();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -122,7 +124,7 @@ export default function Profile() {
 
   useEffect(() => {
     if (user && user.profile) {
-      setIsPlus(!!user.profile.is_premium);
+      setIsPlus(isPremium);
       setNameInput(user.profile.name || '');
       setBudget(user.profile.budget || 'Medium');
       setFocusArea(user.profile.focus_area || 'Face');
@@ -133,7 +135,7 @@ export default function Profile() {
         setWeeklyDigest(!!user.profile.preferences.weeklyDigest);
       }
     }
-  }, [user]);
+  }, [user, isPremium]);
 
   // Handle immediate re-onboarding trigger if query param present
   useEffect(() => {
@@ -321,7 +323,7 @@ export default function Profile() {
 
               <Button
                 variant="primary"
-                onClick={() => navigate('/payments?ref=profile_banner')}
+                onClick={() => navigate('/premium')}
               >
                 <CreditCard size={14} className="mr-1 shrink-0" />
                 <span>Get Plus ($9.99)</span>

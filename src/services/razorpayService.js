@@ -22,8 +22,8 @@ export function loadRazorpayScript() {
  * @param {Object} options Configuration object (amount, name, email, planName, onSuccess, onFailure)
  */
 export async function openRazorpayTestCheckout({
-  amountInINR = 499,
-  planTitle = "Ascend God PRO Membership",
+  order,
+  planTitle = "Ascend Plus",
   userName = "Transformer",
   userEmail = "user@ascendgod.com",
   onSuccess,
@@ -35,12 +35,16 @@ export async function openRazorpayTestCheckout({
     return;
   }
 
-  // Razorpay Test Mode Key ID (Sandbox environment)
-  const keyId = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_AscendGod2026';
+  const keyId = import.meta.env.VITE_RAZORPAY_KEY_ID;
+  if (!keyId || !order?.id || !order?.amount) {
+    onFailure?.('Checkout is not configured. Please try again later.');
+    return;
+  }
 
   const razorpayOptions = {
     key: keyId,
-    amount: amountInINR * 100, // Amount in paise (₹499 -> 49900 paise)
+    amount: order.amount,
+    order_id: order.id,
     currency: "INR",
     name: "Ascend God",
     description: `${planTitle} (Test Mode Sandbox)`,
@@ -61,8 +65,8 @@ export async function openRazorpayTestCheckout({
       if (onSuccess) {
         onSuccess({
           paymentId: response.razorpay_payment_id,
-          orderId: response.razorpay_order_id || `test_order_${Date.now()}`,
-          signature: response.razorpay_signature || 'sandbox_test_signature'
+          orderId: response.razorpay_order_id,
+          signature: response.razorpay_signature
         });
       }
     },

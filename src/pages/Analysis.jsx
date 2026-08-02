@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSubscription } from '../context/SubscriptionContext';
 import { useGame } from '../context/GameContext';
 import { saveAnalysis, unlockAnalysis, getAnalyses, deleteAnalysis } from '../services/db';
 import { uploadScan, getOptimizedUrl, validateImageFile } from '../services/cloudinary';
@@ -27,6 +28,7 @@ import {
 
 export default function Analysis() {
   const { user } = useAuth();
+  const { isPremium } = useSubscription();
   const { addXP, unlockBadge } = useGame();
   const navigate = useNavigate();
 
@@ -142,6 +144,11 @@ export default function Analysis() {
 
   const handleStartAnalysis = async () => {
     if (!frontImage || !sideImage) return;
+    if (!isPremium && analysesList.length >= 1) {
+      setStepError('Your free scan has already been used. Upgrade to Ascend Plus for unlimited scans.');
+      setActiveView('step1');
+      return;
+    }
 
     setIsProcessing(true);
     setActiveView('step3');
@@ -187,7 +194,8 @@ export default function Analysis() {
         frontMetadata,
         sideMetadata,
         detection.scores,
-        tips
+        tips,
+        isPremium
       );
 
       // Clean up object URLs
@@ -258,13 +266,10 @@ export default function Analysis() {
   };
 
   const handleUnlockMock = () => {
-    if (currentAnalysis?.id) {
-      navigate(`/payments?analysisId=${currentAnalysis.id}`);
-    }
+    navigate('/premium');
   };
 
-  const isPremiumUser = !!user?.profile?.is_premium;
-  const isUnlocked = isPremiumUser || !!currentAnalysis?.is_premium_unlocked;
+  const isUnlocked = isPremium;
 
   // Sorted and filtered analyses list (excluding current scan) for comparison options
   const safeList = Array.isArray(analysesList) ? analysesList : [];
@@ -291,6 +296,13 @@ export default function Analysis() {
           Measure structural symmetry and proportion parameters client-side. Complete your routines to unlock your potential.
         </p>
       </div>
+
+      {!isPremium && analysesList.length >= 1 && activeView !== 'step4' && (
+        <Card className="p-5 border-primary/25 bg-primary/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div><h2 className="text-sm font-black">Your complimentary scan has been used</h2><p className="text-xs text-muted-foreground mt-1">Your full report is saved and ready to unlock. Ascend Plus includes unlimited future scans.</p></div>
+          <Button variant="primary" onClick={() => navigate('/premium')}>Upgrade to Ascend Plus</Button>
+        </Card>
+      )}
 
       {/* STEP 1: Upload Front Image */}
       {activeView === 'step1' && (
@@ -346,7 +358,7 @@ export default function Analysis() {
           <div className="flex justify-center">
             <Button
               variant="primary"
-              disabled={!frontImage}
+              disabled={!frontImage || (!isPremium && analysesList.length >= 1)}
               onClick={() => setActiveView('step2')}
             >
               <span>Next: Side Profile Photo</span>
@@ -409,7 +421,7 @@ export default function Analysis() {
             </Button>
             <Button
               variant="primary"
-              disabled={!sideImage}
+              disabled={!sideImage || (!isPremium && analysesList.length >= 1)}
               onClick={handleStartAnalysis}
             >
               <Sparkles size={12} />
@@ -516,8 +528,15 @@ export default function Analysis() {
                   "{rating.description}"
                 </p>
 
+                {!isUnlocked && (
+                  <div className="flex items-center gap-3 rounded-xl border border-border bg-secondary/25 p-3">
+                    <img src={getOptimizedUrl(currentAnalysis.front_photo_url)} alt="Scan preview" className="h-12 w-12 rounded-lg object-cover" />
+                    <div className="text-[10px]"><span className="font-black text-foreground block">Free scan preview</span><span className="text-muted-foreground">Scanned {currentAnalysis.date} · Confidence: high</span></div>
+                  </div>
+                )}
+
                 {/* Strengths vs Improvement Breakdown */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                {isUnlocked && <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                   <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 space-y-2">
                     <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider block">
                       ✓ Structural Strengths
@@ -545,10 +564,10 @@ export default function Analysis() {
                       ))}
                     </ul>
                   </div>
-                </div>
+                </div>}
 
                 {/* Secondary Sub-metrics */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+                {isUnlocked && <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
                   {[
                     { label: 'Symmetry Index', val: `${currentAnalysis.symmetry_score}%`, desc: 'Left-Right Balance' },
                     { label: 'Proportion Index', val: `${currentAnalysis.facial_proportion_score}%`, desc: 'Vertical Thirds' },
@@ -563,10 +582,20 @@ export default function Analysis() {
                       </div>
                     </div>
                   ))}
-                </div>
+                </div>}
               </Card>
             );
           })()}
+
+          {!isUnlocked && (
+            <Card className="relative overflow-hidden border-primary/25 bg-gradient-to-r from-primary/10 via-card to-card p-6 text-center">
+              <div className="absolute inset-x-10 top-2 h-16 rounded-full bg-primary/20 blur-3xl" />
+              <Lock size={20} className="relative mx-auto mb-3 text-primary" />
+              <h3 className="relative text-sm font-black">Unlock Full Report</h3>
+              <p className="relative mx-auto mt-2 max-w-md text-xs leading-relaxed text-muted-foreground">Discover your complete facial harmony report, AI recommendations, improvement roadmap, and unlimited future scans.</p>
+              <Button variant="primary" onClick={handleUnlockMock} className="relative mt-5">Upgrade to Ascend Plus</Button>
+            </Card>
+          )}
 
           {/* Selector tab controls */}
           <div className="flex gap-4 border-b border-border">

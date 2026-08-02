@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { GameProvider } from './context/GameContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { SubscriptionProvider, useSubscription } from './context/SubscriptionContext';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
 import Preloader from './components/Preloader';
@@ -19,7 +20,7 @@ const Progress = lazy(() => import('./pages/Progress'));
 const Routine = lazy(() => import('./pages/Routine'));
 const Journal = lazy(() => import('./pages/Journal'));
 const Insights = lazy(() => import('./pages/Insights'));
-const Payments = lazy(() => import('./pages/Payments'));
+const Premium = lazy(() => import('./pages/Premium'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Roadmap = lazy(() => import('./pages/Roadmap'));
 const WeeklyReview = lazy(() => import('./pages/WeeklyReview'));
@@ -75,11 +76,18 @@ const OnboardedRoute = ({ children }) => {
   );
 };
 
+const PremiumRoute = ({ children }) => {
+  const { isPremium, loading } = useSubscription();
+  if (loading) return <PageLoader />;
+  return isPremium ? children : <Navigate to="/premium" replace />;
+};
+
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <NotificationProvider>
+          <SubscriptionProvider>
           <GameProvider>
             <Router>
               <Suspense fallback={<PageLoader />}>
@@ -112,7 +120,7 @@ function App() {
                     path="/roadmap" 
                     element={
                       <OnboardedRoute>
-                        <Roadmap />
+                        <PremiumRoute><Roadmap /></PremiumRoute>
                       </OnboardedRoute>
                     } 
                   />
@@ -157,7 +165,7 @@ function App() {
                     path="/weekly-review" 
                     element={
                       <OnboardedRoute>
-                        <WeeklyReview />
+                        <PremiumRoute><WeeklyReview /></PremiumRoute>
                       </OnboardedRoute>
                     } 
                   />
@@ -166,16 +174,18 @@ function App() {
                     path="/premium-tools" 
                     element={
                       <OnboardedRoute>
-                        <PremiumTools />
+                        <PremiumRoute><PremiumTools /></PremiumRoute>
                       </OnboardedRoute>
                     } 
                   />
+
+                  <Route path="/premium" element={<OnboardedRoute><Premium /></OnboardedRoute>} />
 
                   <Route 
                     path="/insights" 
                     element={
                       <OnboardedRoute>
-                        <Insights />
+                        <PremiumRoute><Insights /></PremiumRoute>
                       </OnboardedRoute>
                     } 
                   />
@@ -211,7 +221,7 @@ function App() {
                     path="/payments" 
                     element={
                       <OnboardedRoute>
-                        <Payments />
+                        <Premium />
                       </OnboardedRoute>
                     } 
                   />
@@ -222,6 +232,7 @@ function App() {
               </Suspense>
             </Router>
           </GameProvider>
+          </SubscriptionProvider>
         </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>
