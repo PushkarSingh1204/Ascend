@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @layer base {
   :root {
-    --font-sans: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     
     /* Ascend Semantic Theme Tokens (Dark Mode Default) */
     --background: #07070b;
@@ -101,6 +101,63 @@
   --color-border-bright: var(--border-bright);
   
   --font-sans: var(--font-sans);
+}
+
+/* Global Font Family Rule */
+html, body, button, input, select, textarea {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Premium Typography System Type Scale */
+.heading-hero {
+  font-size: clamp(2.75rem, 5vw + 1rem, 4.5rem); /* 72px desktop */
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.heading-section {
+  font-size: clamp(2.25rem, 4vw, 3rem); /* 48px desktop */
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+}
+
+.heading-card {
+  font-size: clamp(1.25rem, 2.5vw, 1.5rem); /* 24px desktop */
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.heading-sub {
+  font-size: clamp(1.125rem, 2vw, 1.25rem); /* 20px desktop */
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.text-body-custom {
+  font-size: 1rem; /* 16px */
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.text-caption-custom {
+  font-size: 0.875rem; /* 14px */
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.text-button-custom {
+  font-size: 0.9375rem; /* 15px - 16px */
+  font-weight: 600;
+}
+
+.text-nav-custom {
+  font-size: 0.9375rem; /* 15px */
+  font-weight: 500;
 }
 
 /* Restricted Glassmorphism */
