@@ -596,6 +596,108 @@ body {
   100% { transform: translateX(-2000px); }
 }
 
+/* ========================================================= */
+/* Uiverse.io Retro TV Static 404 Error CSS Styles           */
+/* ========================================================= */
+.tv-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tv-screen {
+  position: relative;
+  width: 320px;
+  height: 220px;
+  background: black;
+  border: 10px solid var(--border);
+  border-radius: 14px;
+  box-shadow:
+    0 0 30px rgba(0, 0, 0, 0.9),
+    inset 0 0 50px rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+}
+
+.static {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    #000,
+    #000 1px,
+    #111 1px,
+    #fff 1px,
+    #333 2px
+  );
+  animation: flicker 0.1s steps(20) infinite;
+  z-index: 1;
+}
+
+.error-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #ef4444;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-shadow: 2px 2px 8px black, 0 0 10px rgba(239, 68, 68, 0.8);
+  z-index: 2;
+  animation: glitch 0.5s infinite;
+  white-space: nowrap;
+}
+
+.tv-stand {
+  width: 160px;
+  height: 12px;
+  background: var(--border);
+  margin-top: 10px;
+  border-radius: 6px;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.7);
+}
+
+@keyframes flicker {
+  0% {
+    opacity: 0.8;
+    transform: scaleY(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(1.01);
+  }
+  100% {
+    opacity: 0.7;
+    transform: scaleY(0.99);
+  }
+}
+
+@keyframes glitch {
+  0% {
+    transform: translate(-50%, -50%) skewX(5deg);
+    opacity: 0.9;
+  }
+  25% {
+    transform: translate(-50%, -50%) skewX(-5deg);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-50%, -50%) skewX(0deg);
+    opacity: 1;
+  }
+  75% {
+    transform: translate(-50%, -50%) skewX(-5deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-50%, -50%) skewX(5deg);
+    opacity: 0.9;
+  }
+}
+
 /* Reduced Motion Override */
 @media (prefers-reduced-motion: reduce) {
   .bg-mesh-slow {
@@ -611,3 +713,4 @@ body {
     scroll-behavior: auto !important;
   }
 }
+

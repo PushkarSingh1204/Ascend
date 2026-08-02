@@ -26,6 +26,7 @@ const WeeklyReview = lazy(() => import('./pages/WeeklyReview'));
 const PremiumTools = lazy(() => import('./pages/PremiumTools'));
 const CalendarView = lazy(() => import('./pages/CalendarView'));
 const Resources = lazy(() => import('./pages/Resources'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Page Loader with Uiverse.io Speeder Preloader
 const PageLoader = () => <Preloader label="Ascending..." />;
@@ -215,8 +216,8 @@ function App() {
                     } 
                   />
 
-                  {/* Fallback redirection */}
-                  <Route path="*" element={<Navigate to="/" replace />} />
+                  {/* Fallback 404 Route */}
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
             </Router>
