@@ -5,6 +5,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Card, Button, Input } from '../components/DesignSystem';
 import { Lock, Mail, ArrowRight, User } from 'lucide-react';
+import Logo from '../components/Logo';
 
 export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -81,13 +82,10 @@ export default function Login() {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="flex items-center gap-2.5 mb-8 cursor-pointer z-10 select-none" 
+        className="mb-8 cursor-pointer z-10 select-none" 
         onClick={() => navigate('/')}
       >
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-purple-600 flex items-center justify-center font-bold text-white shadow-[0_0_20px_rgba(134,59,255,0.2)]">
-          A
-        </div>
-        <span className="text-lg font-black tracking-widest text-foreground uppercase">ASCEND</span>
+        <Logo size={56} animated={true} />
       </motion.div>
 
       {/* Authentication Card */}

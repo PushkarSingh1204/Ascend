@@ -86,7 +86,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
                 exit={{ opacity: 0, x: -10 }}
                 className="overflow-hidden"
               >
-                <Logo size={28} />
+                <Logo size={38} />
               </motion.div>
             ) : (
               <motion.div
@@ -95,7 +95,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
                 exit={{ opacity: 0, scale: 0.8 }}
                 className="mx-auto"
               >
-                <Logo size={28} onlyIcon={true} />
+                <Logo size={36} onlyIcon={true} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -212,7 +212,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
 
       {/* MOBILE HEADER */}
       <header className="md:hidden fixed top-0 left-0 w-full h-14 glassmorphism border-b border-border z-20 flex items-center justify-between px-4 text-foreground bg-card">
-        <Logo size={24} />
+        <Logo size={32} />
         
         <div className="flex items-center gap-2.5">
           <ThemeToggleSwitch />

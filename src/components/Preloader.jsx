@@ -1,6 +1,6 @@
-// C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\components\Preloader.jsx
 import React from 'react';
 import { motion } from 'framer-motion';
+import Logo from './Logo';
 
 export default function Preloader({ label = "Ascending..." }) {
   return (
@@ -11,6 +11,11 @@ export default function Preloader({ label = "Ascending..." }) {
       transition={{ duration: 0.3 }}
       className="preloader-container"
     >
+      {/* Official Ascend Brand Logo */}
+      <div className="absolute top-12 left-1/2 -translate-x-1/2 z-30">
+        <Logo size={72} showText={true} />
+      </div>
+
       {/* Background Clouds */}
       <div className="clouds">
         <div className="cloud cloud1"></div>
