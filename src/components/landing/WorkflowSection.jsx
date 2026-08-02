@@ -32,18 +32,18 @@ export default function WorkflowSection() {
   ];
 
   return (
-    <section id="workflow" className="w-full py-[140px] px-6 md:px-12 bg-[#111827]/30 border-t border-b border-[#1F2937] relative z-10">
+    <section id="workflow" className="w-full py-[140px] px-6 md:px-12 bg-card/30 border-t border-b border-border relative z-10">
       <div className="max-w-[1280px] mx-auto space-y-16">
         
         {/* Section Header */}
         <div className="text-center max-w-[650px] mx-auto space-y-4">
-          <span className="px-3.5 py-1 rounded-full bg-[#7C3AED]/10 border border-[#7C3AED]/20 text-[#7C3AED] text-xs font-semibold uppercase tracking-wider inline-block">
+          <span className="px-3.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-accent text-xs font-semibold uppercase tracking-wider inline-block">
             Step-by-step System
           </span>
-          <h2 className="text-3xl md:text-[48px] font-bold text-[#F8FAFC] tracking-tight leading-[1.15]">
+          <h2 className="text-3xl md:text-[48px] font-bold text-foreground tracking-tight leading-[1.15]">
             How the Ascend Journey Works
           </h2>
-          <p className="text-base md:text-[18px] text-[#94A3B8] leading-relaxed">
+          <p className="text-base md:text-[18px] text-muted-foreground leading-relaxed">
             A structured, 4-step framework designed to turn consistency into visible transformation.
           </p>
         </div>
@@ -59,22 +59,22 @@ export default function WorkflowSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-30px" }}
                 transition={{ duration: 0.7, delay: idx * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                className="matte-card p-8 flex flex-col justify-between space-y-6 relative group"
+                className="matte-card p-8 flex flex-col justify-between space-y-6 relative group bg-card border border-border"
               >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold text-[#7C3AED] bg-[#7C3AED]/10 px-2.5 py-1 rounded-full border border-[#7C3AED]/20">
+                    <span className="text-xs font-extrabold text-primary bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20">
                       STEP {step.num}
                     </span>
-                    <div className="w-10 h-10 rounded-[12px] bg-[#0B1020] border border-[#1F2937] flex items-center justify-center text-[#22D3EE]">
+                    <div className="w-10 h-10 rounded-[12px] bg-secondary border border-border flex items-center justify-center text-accent">
                       <IconComp size={20} strokeWidth={2} className="transition-transform duration-300 group-hover:rotate-6" />
                     </div>
                   </div>
-                  <h3 className="text-[20px] font-bold text-[#F8FAFC] leading-snug">{step.title}</h3>
-                  <p className="text-xs md:text-sm text-[#94A3B8] leading-relaxed">{step.desc}</p>
+                  <h3 className="text-[20px] font-bold text-foreground leading-snug">{step.title}</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
                 </div>
                 
-                <div className="pt-4 border-t border-[#1F2937] flex items-center gap-2 text-xs font-semibold text-[#7C3AED] group-hover:text-[#22D3EE] transition-colors">
+                <div className="pt-4 border-t border-border flex items-center gap-2 text-xs font-semibold text-primary group-hover:text-accent transition-colors">
                   <span>Learn workflow</span>
                   <ArrowRight size={14} strokeWidth={2} className="btn-arrow" />
                 </div>

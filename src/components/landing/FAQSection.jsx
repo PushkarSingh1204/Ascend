@@ -35,13 +35,13 @@ export default function FAQSection({
         
         {/* Header */}
         <div className="text-center space-y-4">
-          <span className="px-3.5 py-1 rounded-full bg-[#7C3AED]/10 border border-[#7C3AED]/20 text-[#22D3EE] text-xs font-semibold uppercase tracking-wider inline-block">
+          <span className="px-3.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-accent text-xs font-semibold uppercase tracking-wider inline-block">
             Clear Answers
           </span>
-          <h2 className="text-3xl md:text-[48px] font-bold text-[#F8FAFC] tracking-tight leading-[1.15]">
+          <h2 className="text-3xl md:text-[48px] font-bold text-foreground tracking-tight leading-[1.15]">
             Frequently Asked Questions
           </h2>
-          <p className="text-base text-[#94A3B8]">
+          <p className="text-base text-muted-foreground">
             Everything you need to know about privacy, metrics, and transformation routines.
           </p>
         </div>
@@ -53,22 +53,22 @@ export default function FAQSection({
             return (
               <div 
                 key={idx} 
-                className="matte-card overflow-hidden transition-colors"
+                className="matte-card overflow-hidden transition-colors border border-border bg-card"
               >
                 <button
                   onClick={() => toggleFaq(idx)}
-                  className="w-full p-6 flex justify-between items-center text-left text-base font-bold text-[#F8FAFC] cursor-pointer hover:bg-[#1F2937]/40 transition-colors"
+                  className="w-full p-6 flex justify-between items-center text-left text-base font-bold text-foreground cursor-pointer hover:bg-secondary/40 transition-colors"
                   aria-expanded={isOpen}
                 >
                   <div className="flex items-center gap-3 pr-4">
-                    <HelpCircle size={18} strokeWidth={2} className="text-[#7C3AED] flex-shrink-0" />
+                    <HelpCircle size={18} strokeWidth={2} className="text-primary flex-shrink-0" />
                     <span>{faq.q}</span>
                   </div>
                   <ChevronDown 
                     size={18} 
                     strokeWidth={2} 
-                    className={`text-[#94A3B8] transition-transform duration-350 ${
-                      isOpen ? 'rotate-180 text-[#22D3EE]' : ''
+                    className={`text-muted-foreground transition-transform duration-350 ${
+                      isOpen ? 'rotate-180 text-accent' : ''
                     }`} 
                   />
                 </button>
@@ -82,7 +82,7 @@ export default function FAQSection({
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                     >
-                      <div className="px-6 pb-6 pt-2 text-sm text-[#94A3B8] leading-relaxed border-t border-[#1F2937]/50">
+                      <div className="px-6 pb-6 pt-2 text-sm text-muted-foreground leading-relaxed border-t border-border/50">
                         {faq.a}
                       </div>
                     </motion.div>

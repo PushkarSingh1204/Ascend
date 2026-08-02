@@ -45,7 +45,7 @@ export default function StatsSection({
   ] 
 }) {
   return (
-    <section className="w-full border-t border-b border-[#1F2937] bg-[#111827]/40 py-16 px-6 md:px-12 relative z-10">
+    <section className="w-full border-t border-b border-border bg-card/40 py-16 px-6 md:px-12 relative z-10">
       <div className="max-w-[1280px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
         {stats.map((stat, idx) => (
           <motion.div 
@@ -56,11 +56,11 @@ export default function StatsSection({
             transition={{ duration: 0.7, delay: idx * 0.08, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-1 p-4"
           >
-            <div className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#F8FAFC] tracking-tight">
+            <div className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
               <CountUpNumber endVal={stat.numericVal} suffix={stat.suffix} />
             </div>
-            <p className="text-xs font-bold text-[#7C3AED] uppercase tracking-wider">{stat.label}</p>
-            <p className="text-[11px] text-[#94A3B8] font-normal">{stat.note}</p>
+            <p className="text-xs font-bold text-accent uppercase tracking-wider">{stat.label}</p>
+            <p className="text-[11px] text-muted-foreground font-normal">{stat.note}</p>
           </motion.div>
         ))}
       </div>

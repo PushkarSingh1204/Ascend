@@ -43,13 +43,13 @@ export default function TestimonialsSection({
         
         {/* Header */}
         <div className="text-center max-w-[650px] mx-auto space-y-4">
-          <span className="px-3.5 py-1 rounded-full bg-[#7C3AED]/10 border border-[#7C3AED]/20 text-[#22D3EE] text-xs font-semibold uppercase tracking-wider inline-block">
+          <span className="px-3.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-accent text-xs font-semibold uppercase tracking-wider inline-block">
             Member Experiences
           </span>
-          <h2 className="text-3xl md:text-[48px] font-bold text-[#F8FAFC] tracking-tight leading-[1.15]">
+          <h2 className="text-3xl md:text-[48px] font-bold text-foreground tracking-tight leading-[1.15]">
             Trusted by Dedicated Self-Improvers
           </h2>
-          <p className="text-base md:text-[18px] text-[#94A3B8] leading-relaxed">
+          <p className="text-base md:text-[18px] text-muted-foreground leading-relaxed">
             Real member feedback on local biometric privacy, streak accountability, and daily habit consistency.
           </p>
         </div>
@@ -60,7 +60,7 @@ export default function TestimonialsSection({
             {marqueeItems.map((item, idx) => (
               <div 
                 key={idx} 
-                className="w-[320px] sm:w-[380px] matte-card p-6 flex flex-col justify-between space-y-6 flex-shrink-0"
+                className="w-[320px] sm:w-[380px] matte-card p-6 flex flex-col justify-between space-y-6 flex-shrink-0 bg-card border border-border"
               >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -69,23 +69,23 @@ export default function TestimonialsSection({
                         <Star key={i} size={14} fill="currentColor" strokeWidth={1} />
                       ))}
                     </div>
-                    <Quote size={20} strokeWidth={2} className="text-[#374151]" />
+                    <Quote size={20} strokeWidth={2} className="text-muted-foreground opacity-40" />
                   </div>
-                  <p className="text-xs sm:text-sm text-[#94A3B8] leading-relaxed font-normal">
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed font-normal">
                     "{item.text}"
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 pt-4 border-t border-[#1F2937]">
+                <div className="flex items-center gap-3 pt-4 border-t border-border">
                   <img 
                     src={item.avatar} 
                     alt={item.name} 
-                    className="w-10 h-10 rounded-full object-cover border border-[#1F2937]"
+                    className="w-10 h-10 rounded-full object-cover border border-border"
                     loading="lazy"
                   />
                   <div>
-                    <span className="text-xs font-bold text-[#F8FAFC] block">{item.name}</span>
-                    <span className="text-[11px] text-[#22D3EE] font-medium">{item.role}</span>
+                    <span className="text-xs font-bold text-foreground block">{item.name}</span>
+                    <span className="text-[11px] text-accent font-medium">{item.role}</span>
                   </div>
                 </div>
               </div>
