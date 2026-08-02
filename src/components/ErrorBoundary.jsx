@@ -1,6 +1,6 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\components\ErrorBoundary.jsx
 import React from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -28,12 +28,16 @@ export default class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="glassmorphism p-6 rounded-2xl border border-red-500/20 bg-red-950/5 text-center flex flex-col items-center justify-center space-y-4 max-w-md mx-auto my-6">
-          <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500">
-            <AlertTriangle size={24} />
+        <div className="glassmorphism p-6 rounded-2xl border border-red-500/20 bg-red-950/5 text-center flex flex-col items-center justify-center space-y-5 max-w-md mx-auto my-6">
+          <div className="tv-container" aria-label="Application error">
+            <div className="tv-screen !w-[240px] !h-[155px] !border-[8px]">
+              <div className="static" />
+              <div className="error-text !text-base">ERROR</div>
+            </div>
+            <div className="tv-stand !w-28 !h-2" />
           </div>
           <div className="space-y-1.5">
-            <h4 className="text-sm font-bold text-foreground">Component Load Interrupted</h4>
+            <h4 className="text-sm font-bold text-foreground">Signal Interrupted</h4>
             <p className="text-xs text-muted-foreground leading-relaxed max-w-xs">
               We encountered a minor visual parsing issue. The rest of your dashboard is safe.
             </p>
