@@ -7,6 +7,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
+import Preloader from './components/Preloader';
 
 // Lazy Loaded Pages
 const Landing = lazy(() => import('./pages/Landing'));
@@ -26,15 +27,8 @@ const PremiumTools = lazy(() => import('./pages/PremiumTools'));
 const CalendarView = lazy(() => import('./pages/CalendarView'));
 const Resources = lazy(() => import('./pages/Resources'));
 
-// Skeleton Loading Fallback
-const PageLoader = () => (
-  <div className="min-h-screen bg-background flex items-center justify-center text-neutral-400">
-    <div className="flex flex-col items-center gap-3">
-      <span className="w-8 h-8 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin"></span>
-      <span className="text-xs font-semibold uppercase tracking-wider text-neutral-500">Loading Ascend...</span>
-    </div>
-  </div>
-);
+// Page Loader with Uiverse.io Speeder Preloader
+const PageLoader = () => <Preloader label="Ascending..." />;
 
 // Route Guard for Protected Pages
 const ProtectedRoute = ({ children }) => {
