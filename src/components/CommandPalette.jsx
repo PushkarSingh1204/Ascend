@@ -171,7 +171,8 @@ export default function CommandPalette({ isOpen, onClose }) {
         <div className="flex-1 overflow-y-auto p-2 divide-y divide-neutral-950/40">
           {filteredItems.length > 0 ? (
             filteredItems.map((item, idx) => {
-              const Icon = item.icon;
+              if (!item) return null;
+              const Icon = item.icon || Sparkles;
               const isSelected = idx === selectedIndex;
               return (
                 <button

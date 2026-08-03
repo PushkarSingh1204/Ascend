@@ -174,7 +174,10 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
                       transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                     />
                   )}
-                  <item.icon size={16} className={`shrink-0 transition-transform group-hover:scale-105 duration-200 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                  {(() => {
+                    const IconComp = item?.icon || Sparkles;
+                    return <IconComp size={16} className={`shrink-0 transition-transform group-hover:scale-105 duration-200 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />;
+                  })()}
                   {!isCollapsed && (
                     <motion.span
                       initial={{ opacity: 0, x: -5 }}

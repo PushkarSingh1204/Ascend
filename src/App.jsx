@@ -106,12 +106,12 @@ function App() {
                     } 
                   />
 
-                  {/* Protected Pages */}
+                  {/* Protected Application Routes inside Shared App Shell */}
                   <Route 
                     path="/dashboard" 
                     element={
                       <OnboardedRoute>
-                        <Dashboard />
+                        <ErrorBoundary><Dashboard /></ErrorBoundary>
                       </OnboardedRoute>
                     } 
                   />
@@ -120,7 +120,7 @@ function App() {
                     path="/roadmap" 
                     element={
                       <OnboardedRoute>
-                        <PremiumRoute><Roadmap /></PremiumRoute>
+                        <PremiumRoute><ErrorBoundary><Roadmap /></ErrorBoundary></PremiumRoute>
                       </OnboardedRoute>
                     } 
                   />
@@ -129,7 +129,7 @@ function App() {
                     path="/analysis" 
                     element={
                       <OnboardedRoute>
-                        <Analysis />
+                        <ErrorBoundary><Analysis /></ErrorBoundary>
                       </OnboardedRoute>
                     } 
                   />
@@ -138,7 +138,7 @@ function App() {
                     path="/progress" 
                     element={
                       <OnboardedRoute>
-                        <Progress />
+                        <ErrorBoundary><Progress /></ErrorBoundary>
                       </OnboardedRoute>
                     } 
                   />
@@ -147,7 +147,7 @@ function App() {
                     path="/routine" 
                     element={
                       <OnboardedRoute>
-                        <Routine />
+                        <ErrorBoundary><Routine /></ErrorBoundary>
                       </OnboardedRoute>
                     } 
                   />
@@ -156,7 +156,7 @@ function App() {
                     path="/journal" 
                     element={
                       <OnboardedRoute>
-                        <Journal />
+                        <ErrorBoundary><Journal /></ErrorBoundary>
                       </OnboardedRoute>
                     } 
                   />
@@ -165,7 +165,7 @@ function App() {
                     path="/weekly-review" 
                     element={
                       <OnboardedRoute>
-                        <PremiumRoute><WeeklyReview /></PremiumRoute>
+                        <PremiumRoute><ErrorBoundary><WeeklyReview /></ErrorBoundary></PremiumRoute>
                       </OnboardedRoute>
                     } 
                   />
@@ -174,18 +174,18 @@ function App() {
                     path="/premium-tools" 
                     element={
                       <OnboardedRoute>
-                        <PremiumRoute><PremiumTools /></PremiumRoute>
+                        <PremiumRoute><ErrorBoundary><PremiumTools /></ErrorBoundary></PremiumRoute>
                       </OnboardedRoute>
                     } 
                   />
 
-                  <Route path="/premium" element={<OnboardedRoute><Premium /></OnboardedRoute>} />
+                  <Route path="/premium" element={<OnboardedRoute><ErrorBoundary><Premium /></ErrorBoundary></OnboardedRoute>} />
 
                   <Route 
                     path="/insights" 
                     element={
                       <OnboardedRoute>
-                        <PremiumRoute><Insights /></PremiumRoute>
+                        <PremiumRoute><ErrorBoundary><Insights /></ErrorBoundary></PremiumRoute>
                       </OnboardedRoute>
                     } 
                   />
@@ -194,7 +194,7 @@ function App() {
                     path="/calendar" 
                     element={
                       <OnboardedRoute>
-                        <CalendarView />
+                        <ErrorBoundary><CalendarView /></ErrorBoundary>
                       </OnboardedRoute>
                     } 
                   />
@@ -203,7 +203,7 @@ function App() {
                     path="/resources" 
                     element={
                       <OnboardedRoute>
-                        <Resources />
+                        <ErrorBoundary><Resources /></ErrorBoundary>
                       </OnboardedRoute>
                     } 
                   />
@@ -212,7 +212,7 @@ function App() {
                     path="/profile" 
                     element={
                       <OnboardedRoute>
-                        <Profile />
+                        <ErrorBoundary><Profile /></ErrorBoundary>
                       </OnboardedRoute>
                     } 
                   />
@@ -221,7 +221,7 @@ function App() {
                     path="/payments" 
                     element={
                       <OnboardedRoute>
-                        <Premium />
+                        <ErrorBoundary><Premium /></ErrorBoundary>
                       </OnboardedRoute>
                     } 
                   />
