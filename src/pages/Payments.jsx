@@ -2,54 +2,57 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSubscription } from '../context/SubscriptionContext';
 import { useGame } from '../context/GameContext';
-import { unlockAnalysis, updateProfile } from '../services/db';
+import { unlockAnalysis } from '../services/db';
 import { openRazorpayTestCheckout } from '../services/razorpayService';
-import { CreditCard, ShieldCheck, Lock, CheckCircle2, ChevronLeft, Zap, Sparkles, Check, AlertCircle } from 'lucide-react';
+import { PRICING } from '../config/pricing';
+import { CreditCard, ShieldCheck, Lock, CheckCircle2, ChevronLeft, Zap, Sparkles, Check, AlertCircle, Calendar } from 'lucide-react';
 import Logo from '../components/Logo';
 
 export default function Payments() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
+  const { activatePlan } = useSubscription();
   const { addXP, unlockBadge } = useGame();
 
   const analysisId = searchParams.get('analysisId');
+  const initialPlan = searchParams.get('plan') === 'yearly' ? 'yearly' : 'monthly';
+  const [selectedPlanKey, setSelectedPlanKey] = useState(initialPlan);
+
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [error, setError] = useState('');
 
-  // Redirect if no analysis ID
-  useEffect(() => {
-    if (!analysisId) {
-      navigate('/analysis');
-    }
-  }, [analysisId]);
+  const activePlanConfig = selectedPlanKey === 'yearly' ? PRICING.YEARLY : PRICING.MONTHLY;
 
   const handlePaymentSuccess = async (txDetails) => {
     setLoading(true);
     try {
-      // Set user is_premium globally for Ascend God Plus
-      const updatedProfile = await updateProfile({ is_premium: true });
-      setUser(prev => ({ ...prev, profile: updatedProfile }));
+      // Activate subscription in Firestore using SubscriptionService via SubscriptionContext
+      const activatedSub = await activatePlan({
+        planKey: selectedPlanKey,
+        paymentDetails: txDetails
+      });
 
       // Unlock specific analysis if valid
       if (analysisId && analysisId !== 'upgrade_profile') {
         await unlockAnalysis(analysisId);
       }
 
-      setPaymentDetails(txDetails);
+      setPaymentDetails(activatedSub);
       setSuccess(true);
       await unlockBadge('premium_unlocked');
-      await addXP(300, "Unlock Ascend God PRO Membership");
+      await addXP(300, `Unlock ${activePlanConfig.title}`);
 
       setTimeout(() => {
         navigate(analysisId === 'upgrade_profile' ? '/profile' : '/analysis');
       }, 2500);
     } catch (err) {
-      console.error("Payment sync error:", err);
-      setError("Failed to update profile after payment. Please contact support.");
+      console.error("Payment activation error:", err);
+      setError("Failed to update subscription after payment. Please contact support.");
     } finally {
       setLoading(false);
     }
@@ -58,13 +61,12 @@ export default function Payments() {
   const handleLaunchRazorpay = () => {
     setError('');
     openRazorpayTestCheckout({
-      amountInINR: 499,
-      planTitle: "Ascend God PRO Membership",
-      userName: user?.profile?.name || "Transformer",
+      planKey: selectedPlanKey,
+      userName: user?.profile?.name || user?.displayName || "Ascender",
       userEmail: user?.email || "user@ascendgod.com",
       onSuccess: (tx) => handlePaymentSuccess(tx),
       onFailure: (errMsg) => {
-        console.warn("Razorpay Test Payment Failure:", errMsg);
+        console.warn("Razorpay Checkout Failure:", errMsg);
         if (errMsg && !errMsg.includes("closed by user")) {
           setError(errMsg);
         }
@@ -72,11 +74,10 @@ export default function Payments() {
     });
   };
 
-  // Simulated instant test payment trigger for fast testing
   const handleInstantTestPayment = () => {
     handlePaymentSuccess({
-      paymentId: `pay_test_${Math.random().toString(36).substring(2, 10)}`,
-      orderId: `order_test_${Math.random().toString(36).substring(2, 10)}`,
+      paymentId: `pay_sandbox_${Math.random().toString(36).substring(2, 10)}`,
+      orderId: `order_sandbox_${Math.random().toString(36).substring(2, 10)}`,
       signature: 'sandbox_test_signature'
     });
   };
@@ -101,10 +102,10 @@ export default function Payments() {
         {/* Ambient Glow */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none -z-10" />
 
-        {/* Razorpay Test Mode Indicator Banner */}
+        {/* Razorpay Test Mode Banner */}
         <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-extrabold">
           <AlertCircle size={16} className="shrink-0" />
-          <span>Razorpay Test Mode Active: Sandbox environment enabled (No real money charged).</span>
+          <span>Razorpay Test Mode Active: Sandbox environment enabled (USD {activePlanConfig.formattedPrice}).</span>
         </div>
 
         {/* Success Screen */}
@@ -114,21 +115,27 @@ export default function Payments() {
               <CheckCircle2 size={36} />
             </div>
             <div className="space-y-2">
-              <h2 className="text-2xl font-black text-foreground">Razorpay Test Payment Successful!</h2>
+              <h2 className="text-2xl font-black text-foreground">Ascend Plus Activated!</h2>
               <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                Your PRO membership has been activated. Redirecting to your unlocked biometric transformation report...
+                Your {activePlanConfig.title} ({activePlanConfig.durationDays} days) has been recorded in Firebase Firestore. Redirecting to your dashboard...
               </p>
             </div>
 
             {paymentDetails && (
-              <div className="p-3.5 rounded-xl bg-secondary/30 border border-border text-start space-y-1 font-mono text-[11px]">
+              <div className="p-4 rounded-2xl bg-secondary/30 border border-border text-left space-y-2 font-mono text-[11px]">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Plan:</span>
+                  <span className="text-foreground font-bold">{paymentDetails.planName || activePlanConfig.title}</span>
+                </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Payment ID:</span>
                   <span className="text-foreground font-bold">{paymentDetails.paymentId}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Status:</span>
-                  <span className="text-emerald-400 font-bold">VERIFIED (Test Mode)</span>
+                  <span>Expiry Date:</span>
+                  <span className="text-emerald-400 font-bold">
+                    {paymentDetails.expiryDate ? new Date(paymentDetails.expiryDate).toLocaleDateString() : 'Active'}
+                  </span>
                 </div>
               </div>
             )}
@@ -140,7 +147,7 @@ export default function Payments() {
               <div>
                 <Logo size={40} showText={true} />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Unlock full facial harmony metrics, custom routines & PDF reports.
+                  Unlock full facial harmony metrics, AI Potential Forecast & PRO guides.
                 </p>
               </div>
               <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-accent font-black text-xs">
@@ -148,27 +155,46 @@ export default function Payments() {
               </span>
             </div>
 
+            {/* Plan Selector */}
+            <div className="grid grid-cols-2 gap-3 p-1.5 rounded-2xl bg-secondary/40 border border-border">
+              <button
+                type="button"
+                onClick={() => setSelectedPlanKey('monthly')}
+                className={`py-3 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer flex flex-col items-center gap-0.5 ${selectedPlanKey === 'monthly' ? 'bg-primary text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <span>Monthly Plan</span>
+                <span className="text-sm font-black">{PRICING.MONTHLY.formattedPrice} / mo</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedPlanKey('yearly')}
+                className={`py-3 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer flex flex-col items-center gap-0.5 relative ${selectedPlanKey === 'yearly' ? 'bg-primary text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <span className="absolute -top-2.5 bg-amber-500 text-black text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  Save 33%
+                </span>
+                <span>Yearly Plan</span>
+                <span className="text-sm font-black">{PRICING.YEARLY.formattedPrice} / yr</span>
+              </button>
+            </div>
+
             {/* Plan Breakdown Card */}
             <div className="p-5 rounded-2xl bg-secondary/40 border border-border space-y-4">
               <div className="flex justify-between items-center pb-3 border-b border-border">
                 <div>
-                  <strong className="text-sm font-extrabold text-foreground block">Ascend God PRO Pass</strong>
-                  <span className="text-[10px] text-muted-foreground block">Lifetime access & unlimited biometric scans</span>
+                  <strong className="text-sm font-extrabold text-foreground block">{activePlanConfig.title}</strong>
+                  <span className="text-[10px] text-muted-foreground block">{activePlanConfig.durationDays} Days Guaranteed Premium Access</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-2xl font-black text-foreground block">₹499</span>
-                  <span className="text-[10px] text-emerald-400 font-bold block">($4.99 USD equivalent)</span>
+                  <span className="text-2xl font-black text-foreground block">{activePlanConfig.formattedPrice}</span>
+                  <span className="text-[10px] text-emerald-400 font-bold block">USD Billing</span>
                 </div>
               </div>
 
               {/* Feature List */}
               <div className="space-y-2 text-xs">
-                {[
-                  "Full Facial Harmony & Symmetry Index mapping",
-                  "AI Potential Forecast & Timeline estimation",
-                  "Personalized Skincare, Sleep & Hydration Engine routines",
-                  "300 Bonus XP & Achievement Badge unlock"
-                ].map((feat, i) => (
+                {activePlanConfig.features.map((feat, i) => (
                   <div key={i} className="flex items-center gap-2 text-foreground font-medium">
                     <Check size={14} className="text-emerald-400 shrink-0" />
                     <span>{feat}</span>
@@ -195,7 +221,7 @@ export default function Payments() {
                 ) : (
                   <>
                     <CreditCard size={18} />
-                    <span>Pay ₹499 via Razorpay Test Gateway</span>
+                    <span>Pay {activePlanConfig.formattedPrice} USD via Razorpay Gateway</span>
                   </>
                 )}
               </button>
@@ -207,7 +233,7 @@ export default function Payments() {
                 className="btn-secondary-v2 w-full justify-center text-xs py-3 rounded-xl border-dashed border-border/80 text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 <Zap size={14} className="text-amber-400" />
-                <span>Simulate Instant Test Approval (Skip Modal)</span>
+                <span>Simulate Instant Test Activation (Skip Modal)</span>
               </button>
             </div>
 

@@ -1,21 +1,22 @@
 // C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\components\PremiumGate.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth, usePremium } from '../context/AuthContext';
+import { useSubscription } from '../context/SubscriptionContext';
+import { PRICING } from '../config/pricing';
 import { Lock, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
 
 /**
  * PremiumGate Component
- * Wraps premium content. Renders children if user has an active premium membership,
- * or displays a locked preview card with upgrade call-to-action if user is on Free Tier.
+ * Wraps premium content. Renders children if user has an active, valid subscription (Expiry > Current Date),
+ * or displays a locked preview card with upgrade call-to-action if user is on Free Tier or Expired.
  */
 export default function PremiumGate({ 
   children, 
   previewContent = null, 
-  title = "PRO Feature Locked", 
-  description = "Upgrade to Ascend God PRO to unlock unlimited biometric scans, potential forecasts, and premium guides." 
+  title = "Ascend Plus Feature Locked", 
+  description = `Upgrade to Ascend Plus (${PRICING.MONTHLY.formattedPrice}/mo) to unlock unlimited biometric scans, potential forecasts, and premium guides.` 
 }) {
-  const { isPremium } = usePremium();
+  const { isPremium } = useSubscription();
   const navigate = useNavigate();
 
   if (isPremium) {
@@ -45,25 +46,25 @@ export default function PremiumGate({
 
         <div className="space-y-1.5">
           <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-accent text-[10px] font-black uppercase tracking-wider">
-            Ascend God PRO Required
+            Ascend Plus Required
           </span>
           <h3 className="text-xl font-black text-foreground">{title}</h3>
           <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
         </div>
 
         <button
-          onClick={() => navigate('/payments?analysisId=upgrade_profile')}
+          onClick={() => navigate('/premium')}
           className="btn-primary-v2 w-full sm:w-auto px-8 py-3.5 text-xs font-extrabold flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-primary/25"
         >
           <Sparkles size={16} />
-          <span>Upgrade to Ascend God PRO</span>
+          <span>Subscribe to Ascend Plus · {PRICING.MONTHLY.formattedPrice}</span>
           <ArrowRight size={14} />
         </button>
 
         <div className="flex items-center gap-4 text-[10px] text-muted-foreground font-semibold pt-1">
           <span className="flex items-center gap-1">
             <ShieldCheck size={12} className="text-emerald-400" />
-            Instant Sandbox / Razorpay Access
+            Instant Activation & Firestore Sync
           </span>
           <span>•</span>
           <span>Cancel Anytime</span>

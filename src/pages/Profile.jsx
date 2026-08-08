@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import { useGame } from '../context/GameContext';
 import { useTheme } from '../context/ThemeContext';
-import { Card, Button, Input, Badge, Skeleton } from '../components/DesignSystem';
+import { Card, Button, Input, Badge, Skeleton, ProgressRing } from '../components/DesignSystem';
 import { 
   User, 
   Settings, 
@@ -19,15 +19,21 @@ import {
   RefreshCw,
   Sparkles,
   Info,
-  Camera
+  Camera,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  Zap,
+  RotateCcw
 } from 'lucide-react';
 import { getProfile, updateProfile } from '../services/db';
 import { uploadProfilePhoto, getOptimizedUrl, validateImageFile } from '../services/cloudinary';
+import { PRICING } from '../config/pricing';
 
 export default function Profile() {
   const { theme, setTheme } = useTheme();
   const { user, setUser } = useAuth();
-  const { isPremium } = useSubscription();
+  const { subscription, isPremium, status, plan, daysRemaining, expiryDate, nextBillingDate, cancelSubscription, restorePurchase } = useSubscription();
   const { level, streak, longestStreak, daysToAscend } = useGame();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -42,9 +48,9 @@ export default function Profile() {
   const [budget, setBudget] = useState('Medium');
   const [focusArea, setFocusArea] = useState('Face');
   const [goal, setGoal] = useState('Jawline Definition');
-  const [isPlus, setIsPlus] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [subActionLoading, setSubActionLoading] = useState(false);
 
   // Upload States
   const [isUploading, setIsUploading] = useState(false);
@@ -61,7 +67,6 @@ export default function Profile() {
       validateImageFile(file);
       setUploadError('');
       
-      // Clean up previous preview URL to prevent memory leaks
       if (avatarPreviewUrl) {
         URL.revokeObjectURL(avatarPreviewUrl);
       }
@@ -124,7 +129,6 @@ export default function Profile() {
 
   useEffect(() => {
     if (user && user.profile) {
-      setIsPlus(isPremium);
       setNameInput(user.profile.name || '');
       setBudget(user.profile.budget || 'Medium');
       setFocusArea(user.profile.focus_area || 'Face');
@@ -135,9 +139,8 @@ export default function Profile() {
         setWeeklyDigest(!!user.profile.preferences.weeklyDigest);
       }
     }
-  }, [user, isPremium]);
+  }, [user]);
 
-  // Handle immediate re-onboarding trigger if query param present
   useEffect(() => {
     if (searchParams.get('action') === 'reonboard') {
       navigate('/onboarding?re=true');
@@ -169,6 +172,24 @@ export default function Profile() {
     }
   };
 
+  const handleCancelSub = async () => {
+    if (!window.confirm("Are you sure you want to cancel auto-renewal? Your subscription will remain active until the current billing cycle expires.")) return;
+    setSubActionLoading(true);
+    try {
+      await cancelSubscription();
+      alert("Subscription auto-renewal has been canceled.");
+    } catch (err) {
+      alert(err.message || "Failed to cancel subscription.");
+    } finally {
+      setSubActionLoading(false);
+    }
+  };
+
+  const planTitle = plan === 'yearly' ? PRICING.YEARLY.title : plan === 'monthly' ? PRICING.MONTHLY.title : 'Ascend Free';
+  const planPrice = plan === 'yearly' ? PRICING.YEARLY.formattedPrice : plan === 'monthly' ? PRICING.MONTHLY.formattedPrice : '$0';
+  const totalDaysInPeriod = plan === 'yearly' ? 365 : 30;
+  const progressPct = isPremium ? Math.min(100, Math.max(0, Math.round((daysRemaining / totalDaysInPeriod) * 100))) : 0;
+
   return (
     <div className="space-y-8 animate-fade-in text-foreground max-w-4xl mx-auto pb-16">
       
@@ -176,10 +197,10 @@ export default function Profile() {
       <div>
         <span className="text-[9px] font-black text-primary uppercase tracking-widest block mb-1">Account settings</span>
         <h1 className="text-3xl font-black tracking-tight mb-2">
-          Profile Settings
+          Profile & Subscription Settings
         </h1>
         <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
-          Manage your daily reminders, preferences, and Ascend Plus membership status.
+          Manage your daily reminders, preferences, and Ascend Plus membership subscription.
         </p>
       </div>
 
@@ -204,7 +225,6 @@ export default function Profile() {
                 </div>
               )}
               
-              {/* Camera Trigger Overlay */}
               <label className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-[9px] text-white font-bold cursor-pointer transition-opacity">
                 <Camera size={14} className="mb-0.5" />
                 <span>EDIT</span>
@@ -217,13 +237,11 @@ export default function Profile() {
                 />
               </label>
 
-              {/* Progress Overlay / Cancel Trigger */}
               {isUploading && (
                 <button
                   type="button"
                   onClick={handleCancelAvatar}
                   className="absolute inset-0 rounded-full bg-black/80 flex flex-col items-center justify-center text-[9px] text-white font-bold hover:bg-black/90 transition-colors group cursor-pointer"
-                  title="Click to cancel upload"
                 >
                   <span className="group-hover:hidden flex flex-col items-center">
                     <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mb-1"></span>
@@ -248,10 +266,10 @@ export default function Profile() {
 
             {/* Premium tag status */}
             <div className="mt-4 w-full">
-              {isPlus ? (
+              {isPremium ? (
                 <div className="py-2.5 px-4 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-bold flex items-center justify-center gap-2">
-                  <ShieldCheck size={14} className="fill-primary/20" />
-                  Ascend Plus Active
+                  <ShieldCheck size={14} className="fill-primary/20 text-primary" />
+                  <span>{planTitle} Active</span>
                 </div>
               ) : (
                 <div className="py-2.5 px-4 rounded-xl bg-secondary border border-border text-muted-foreground text-xs font-semibold">
@@ -302,34 +320,158 @@ export default function Profile() {
 
         </div>
 
-        {/* Configurations Forms (Right 2 Columns) */}
+        {/* Configurations Forms & Subscription Card (Right 2 Columns) */}
         <div className="lg:col-span-2 space-y-6">
           
-          {/* Ascend Plus Subscription Promo Card */}
-          {!isPlus && (
-            <Card className="p-6 relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6 border-primary/25 bg-gradient-to-br from-primary/5 via-transparent to-transparent shadow-[0_8px_30px_rgba(134,59,255,0.04)]">
-              <div className="absolute -top-16 -right-16 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none"></div>
-              
-              <div className="space-y-2 text-center sm:text-left">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[9px] font-black uppercase tracking-wider">
-                  <Sparkles size={10} />
-                  <span>Ascend Plus Subscription</span>
+          {/* SUBSCRIPTION COUNTDOWN & MANAGEMENT CARD (REQUIREMENT 5 & 6) */}
+          <Card className="p-6 relative overflow-hidden border-primary/30 bg-card shadow-xl space-y-6">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-primary/10 border border-primary/20 text-primary">
+                  <Zap size={18} />
                 </div>
-                <h3 className="text-lg font-black text-foreground tracking-tight">Unlock Unlimited Facial Scans</h3>
-                <p className="text-xs text-muted-foreground max-w-md">
-                  Upgrade to Ascend Plus for $9.99/mo to unlock unlimited face scans, advanced analytics charts, and premium skincare posture templates.
-                </p>
+                <div>
+                  <h3 className="text-base font-black text-foreground">{planTitle}</h3>
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-extrabold">
+                    {isPremium ? `Status: ${subscription?.status || 'Active'}` : 'Status: Free Tier'}
+                  </span>
+                </div>
               </div>
 
-              <Button
-                variant="primary"
-                onClick={() => navigate('/premium')}
-              >
-                <CreditCard size={14} className="mr-1 shrink-0" />
-                <span>Get Plus ($9.99)</span>
-              </Button>
-            </Card>
-          )}
+              <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${isPremium ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-secondary border border-border text-muted-foreground'}`}>
+                {isPremium ? `${daysRemaining} Days Left` : 'Free Account'}
+              </span>
+            </div>
+
+            {/* Progress Ring & Subscription Breakdown */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center">
+              
+              {/* Ring Indicator */}
+              <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-secondary/30 border border-border">
+                <ProgressRing 
+                  progress={progressPct} 
+                  size={90} 
+                  strokeWidth={8}
+                >
+                  <div className="text-center">
+                    <span className="text-xl font-black text-foreground">{isPremium ? daysRemaining : 0}</span>
+                    <span className="text-[9px] text-muted-foreground block uppercase font-bold">Days Left</span>
+                  </div>
+                </ProgressRing>
+              </div>
+
+              {/* Subscription Details Grid */}
+              <div className="sm:col-span-2 space-y-3 text-xs">
+                <div className="flex justify-between items-center py-1.5 border-b border-border/60">
+                  <span className="text-muted-foreground font-semibold">Current Plan:</span>
+                  <strong className="text-foreground">{planTitle}</strong>
+                </div>
+
+                <div className="flex justify-between items-center py-1.5 border-b border-border/60">
+                  <span className="text-muted-foreground font-semibold">Billing Price:</span>
+                  <strong className="text-emerald-400 font-bold">{planPrice} {plan === 'yearly' ? '/ year' : plan === 'monthly' ? '/ month' : ''}</strong>
+                </div>
+
+                <div className="flex justify-between items-center py-1.5 border-b border-border/60">
+                  <span className="text-muted-foreground font-semibold">Renewal / Expiry Date:</span>
+                  <strong className="text-foreground">
+                    {expiryDate ? new Date(expiryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}
+                  </strong>
+                </div>
+
+                <div className="flex justify-between items-center py-1.5">
+                  <span className="text-muted-foreground font-semibold">Auto Renewal:</span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${subscription?.autoRenew !== false ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}`}>
+                    {subscription?.autoRenew !== false ? 'Auto Renew ON' : 'Auto Renew OFF'}
+                  </span>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-border">
+              {isPremium ? (
+                <>
+                  <Button
+                    variant="primary"
+                    onClick={() => navigate('/premium')}
+                    fullWidth
+                  >
+                    <Sparkles size={14} className="mr-1.5 shrink-0" />
+                    <span>Change or Upgrade Plan</span>
+                  </Button>
+                  
+                  {subscription?.autoRenew !== false && (
+                    <Button
+                      variant="muted"
+                      onClick={handleCancelSub}
+                      disabled={subActionLoading}
+                      fullWidth
+                    >
+                      <span>Cancel Auto-Renew</span>
+                    </Button>
+                  )}
+                </>
+              ) : (
+                <Button
+                  variant="primary"
+                  onClick={() => navigate('/premium')}
+                  fullWidth
+                >
+                  <CreditCard size={14} className="mr-1.5 shrink-0" />
+                  <span>Subscribe to Ascend Plus ($4.99 / mo)</span>
+                </Button>
+              )}
+            </div>
+          </Card>
+
+          {/* SUBSCRIPTION HISTORY TABLE (REQUIREMENT 14) */}
+          <Card className="p-6 space-y-4">
+            <h3 className="text-xs font-bold text-foreground flex items-center gap-2 border-b border-border pb-3 uppercase tracking-wider">
+              <Clock size={14} className="text-primary" />
+              Subscription History
+            </h3>
+
+            {subscription ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-border text-muted-foreground uppercase font-black tracking-widest text-[9px]">
+                      <th className="py-2.5 px-3">Purchase Date</th>
+                      <th className="py-2.5 px-3">Plan</th>
+                      <th className="py-2.5 px-3">Provider</th>
+                      <th className="py-2.5 px-3">Price</th>
+                      <th className="py-2.5 px-3">Expiry Date</th>
+                      <th className="py-2.5 px-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    <tr className="hover:bg-secondary/30 transition-colors">
+                      <td className="py-3 px-3 text-muted-foreground">
+                        {subscription.purchaseDate ? new Date(subscription.purchaseDate).toLocaleDateString() : 'Baseline'}
+                      </td>
+                      <td className="py-3 px-3 font-bold text-foreground">{subscription.planName || planTitle}</td>
+                      <td className="py-3 px-3 text-muted-foreground uppercase font-bold text-[10px]">{subscription.provider || 'Razorpay'}</td>
+                      <td className="py-3 px-3 text-emerald-400 font-bold">${subscription.price || (plan === 'yearly' ? 39.99 : 4.99)} USD</td>
+                      <td className="py-3 px-3 text-muted-foreground">
+                        {expiryDate ? new Date(expiryDate).toLocaleDateString() : 'N/A'}
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                          {status}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="py-6 text-center text-xs text-muted-foreground italic">
+                No active or past subscription transactions recorded yet.
+              </div>
+            )}
+          </Card>
 
           {/* Preferences forms */}
           <Card className="p-6">
@@ -339,7 +481,7 @@ export default function Profile() {
             </h3>
 
             {isSaved && (
-              <div className="mb-6 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-450 text-xs font-semibold">
+              <div className="mb-6 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
                 ✓ Preferences updated successfully.
               </div>
             )}

@@ -1,49 +1,152 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db, auth } from '../services/firebase';
+// C:\Users\pushk\.gemini\antigravity\scratch\ascend\src\context\SubscriptionContext.jsx
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from './AuthContext';
-import { openRazorpayTestCheckout } from '../services/razorpayService';
+import { SubscriptionService } from '../services/subscriptionService';
+import { PRICING } from '../config/pricing';
 
 const SubscriptionContext = createContext(null);
-
-async function api(path, body) {
-  const token = await auth.currentUser?.getIdToken();
-  if (!token) throw new Error('Please sign in before upgrading.');
-  const response = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body || {}) });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || 'Payment service is unavailable.');
-  return data;
-}
 
 export function SubscriptionProvider({ children }) {
   const { user } = useAuth();
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
-  const checkSubscription = useCallback(async () => {
-    if (!user?.uid) { setSubscription(null); setLoading(false); return null; }
-    const result = await api('/api/payments/subscription');
-    setSubscription(result.subscription || null);
-    return result.subscription;
-  }, [user?.uid]);
+
+  // Real-time Firestore Subscription Listener
   useEffect(() => {
-    if (!user?.uid) { setSubscription(null); setLoading(false); return undefined; }
-    setLoading(true);
-    return onSnapshot(doc(db, 'subscriptions', user.uid), (snapshot) => {
-      setSubscription(snapshot.exists() ? snapshot.data() : null);
+    if (!user?.uid) {
+      setSubscription(null);
       setLoading(false);
-    }, () => setLoading(false));
+      return;
+    }
+
+    setLoading(true);
+    const unsubscribe = SubscriptionService.subscribeToUserSubscription(user.uid, (subData) => {
+      if (subData) {
+        // Auto-check expiry
+        const isExp = SubscriptionService.isExpired(subData);
+        if (isExp && subData.status === 'active') {
+          subData.status = 'expired';
+        }
+        setSubscription(subData);
+      } else {
+        // Fallback check if user.profile has legacy premium flags
+        if (user?.profile?.is_premium || user?.profile?.premium) {
+          const fallbackExpiry = user.profile.premiumExpiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+          setSubscription({
+            plan: 'monthly',
+            planName: PRICING.MONTHLY.title,
+            status: 'active',
+            expiryDate: fallbackExpiry,
+            nextBillingDate: fallbackExpiry,
+            autoRenew: true,
+            currency: 'USD',
+            price: 4.99
+          });
+        } else {
+          setSubscription(null);
+        }
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user?.uid, user?.profile]);
+
+  // Computed state
+  const isPremium = useMemo(() => {
+    return SubscriptionService.isPremium(subscription);
+  }, [subscription]);
+
+  const daysRemaining = useMemo(() => {
+    return SubscriptionService.getDaysRemaining(subscription);
+  }, [subscription]);
+
+  const plan = useMemo(() => {
+    if (!isPremium) return 'free';
+    return subscription?.plan || 'monthly';
+  }, [isPremium, subscription]);
+
+  const status = useMemo(() => {
+    if (!subscription) return 'free';
+    if (SubscriptionService.isExpired(subscription)) return 'expired';
+    return subscription.status || 'free';
+  }, [subscription]);
+
+  // Activate Plan helper
+  const activatePlan = useCallback(async ({ planKey = 'monthly', paymentDetails = {} }) => {
+    if (!user?.uid) throw new Error('Authentication required');
+    const updatedSub = await SubscriptionService.activateSubscription({
+      uid: user.uid,
+      planKey,
+      paymentDetails
+    });
+    setSubscription(updatedSub);
+    return updatedSub;
   }, [user?.uid]);
-  const isPremium = subscription?.isPremium === true && subscription?.status === 'active';
-  const upgrade = useCallback(async ({ onSuccess, onFailure } = {}) => {
-    try {
-      const { order } = await api('/api/payments/create-order', { plan: 'ascend_plus' });
-      await openRazorpayTestCheckout({ order, userName: user?.profile?.name, userEmail: user?.email,
-        onSuccess: async (payment) => { try { const verified = await api('/api/payments/verify', payment); await checkSubscription(); onSuccess?.(verified.subscription); } catch (error) { onFailure?.(error.message); } },
-        onFailure
-      });
-    } catch (error) { onFailure?.(error.message); }
-  }, [checkSubscription, user?.email, user?.profile?.name]);
-  const value = useMemo(() => ({ subscription, isPremium, loading, upgrade, restorePurchase: checkSubscription, checkSubscription }), [subscription, isPremium, loading, upgrade, checkSubscription]);
-  return <SubscriptionContext.Provider value={value}>{children}</SubscriptionContext.Provider>;
+
+  // Cancel Subscription helper
+  const cancelSubscription = useCallback(async () => {
+    if (!user?.uid) return false;
+    const res = await SubscriptionService.cancelSubscription(user.uid);
+    setSubscription(prev => prev ? { ...prev, autoRenew: false, status: 'canceled' } : null);
+    return res;
+  }, [user?.uid]);
+
+  // Restore Purchase helper
+  const restorePurchase = useCallback(async () => {
+    if (!user?.uid) return null;
+    const sub = await SubscriptionService.restorePurchase(user.uid);
+    if (sub) setSubscription(sub);
+    return sub;
+  }, [user?.uid]);
+
+  // Check Status helper
+  const checkStatus = useCallback(() => {
+    if (subscription && SubscriptionService.isExpired(subscription)) {
+      setSubscription(prev => prev ? { ...prev, status: 'expired' } : null);
+      return 'expired';
+    }
+    return status;
+  }, [subscription, status]);
+
+  const value = useMemo(() => ({
+    subscription,
+    plan,
+    status,
+    isPremium,
+    daysRemaining,
+    loading,
+    pricing: PRICING,
+    expiryDate: subscription?.expiryDate || null,
+    nextBillingDate: subscription?.nextBillingDate || null,
+    activatePlan,
+    cancelSubscription,
+    restorePurchase,
+    checkStatus
+  }), [
+    subscription,
+    plan,
+    status,
+    isPremium,
+    daysRemaining,
+    loading,
+    activatePlan,
+    cancelSubscription,
+    restorePurchase,
+    checkStatus
+  ]);
+
+  return (
+    <SubscriptionContext.Provider value={value}>
+      {children}
+    </SubscriptionContext.Provider>
+  );
 }
-export const useSubscription = () => { const context = useContext(SubscriptionContext); if (!context) throw new Error('useSubscription must be used inside SubscriptionProvider'); return context; };
+
+export const useSubscription = () => {
+  const context = useContext(SubscriptionContext);
+  if (!context) {
+    throw new Error('useSubscription must be used inside SubscriptionProvider');
+  }
+  return context;
+};
